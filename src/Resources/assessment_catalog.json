@@ -1,0 +1,684 @@
+{
+  "catalogId": "devprofile-se-2026",
+  "version": "1.0.0",
+  "title": "DevProfile: Software Engineering Readiness Assessment",
+  "subtitle": "Akademisches Self-Assessment zur Diagnose von Kernkompetenzen im iOS- & Software-Engineering",
+  "description": "Dieses standardisierte Self-Assessment ermittelt Dein persönliches Stärkenprofil in vier Kernbereichen des modernen Software Engineerings: Systemarchitektur, Apple Platform Engineering, Qualitätssicherung und agile Zusammenarbeit.",
+  "dimensions": [
+    {
+      "id": "architecture",
+      "name": "Software Architecture & System Design",
+      "summary": "Modularer Entwurf, Schichtentrennung, Entwurfsmuster und Entkopplung.",
+      "iconName": "square.grid.3x3.topleft.filled",
+      "targetWeight": 1.0
+    },
+    {
+      "id": "platform",
+      "name": "Swift & Apple Platform Engineering",
+      "summary": "Idiomatischer Swift-Code, SwiftUI State Management, Concurrency und HIG-Konformität.",
+      "iconName": "apple.logo",
+      "targetWeight": 1.0
+    },
+    {
+      "id": "quality",
+      "name": "Quality Assurance & Verification",
+      "summary": "Automatisierte Unit Tests (XCTest), Testabdeckung (llvm-cov), XCUITest und defensive Invarianten.",
+      "iconName": "checkmark.shield.fill",
+      "targetWeight": 1.0
+    },
+    {
+      "id": "agile",
+      "name": "Agile Practices & Collaboration",
+      "summary": "Iterative Sprint-Steuerung, Git-Governance, akademische Dokumentation und Clean Code.",
+      "iconName": "person.2.badge.gearshape.fill",
+      "targetWeight": 1.0
+    }
+  ],
+  "archetypes": [
+    {
+      "id": "system-architect",
+      "title": "Systems & Software Architect",
+      "subtitle": "Dominante Dimension: Software Architecture & System Design",
+      "dominantDimensionId": "architecture",
+      "description": "Starke Ausprägung in modularem Denken, Entwurfsmustern und sauberer Schichtentrennung. Du planst Systeme vorausschauend und nachhaltig.",
+      "strengths": [
+        "Entwurf robuster Schichten- und Modul-Architekturen",
+        "Fundierte Abwägung von Trade-Offs (ADR-Methodik)",
+        "Minimierung von zyklischen Abhängigkeiten"
+      ],
+      "growthOpportunities": [
+        "Erhöhung der automatisierten Testabdeckung im UI-Layer",
+        "Schnellere Prototyping-Iterationen im agilen Feedback"
+      ],
+      "badgeSymbol": "building.columns.fill"
+    },
+    {
+      "id": "platform-craftsperson",
+      "title": "Apple Platform Craftsperson",
+      "subtitle": "Dominante Dimension: Swift & Platform Engineering",
+      "dominantDimensionId": "platform",
+      "description": "Exzellente Beherrschung des nativen Apple-Ökosystems, idiomatischem Swift, modernen Concurrency-Mustern und deklarativem SwiftUI.",
+      "strengths": [
+        "Idiomatischer Swift-Code unter Einhaltung der Apple API Guidelines",
+        "Reaktives State-Management mit SwiftUI und Combine",
+        "Plattformnahe Nutzung von UIKit-Bridges und System-APIs"
+      ],
+      "growthOpportunities": [
+        "Systematische Dokumentation von Architekturentscheidungen",
+        "Formalisierung von Lastenheft- und V-Modell-Prozessen"
+      ],
+      "badgeSymbol": "apple.logo"
+    },
+    {
+      "id": "quality-champion",
+      "title": "Quality & Verification Champion",
+      "subtitle": "Dominante Dimension: Quality Assurance & Verification",
+      "dominantDimensionId": "quality",
+      "description": "Strikter Fokus auf Verifizierbarkeit, deterministische Testsuiten, defensive Programmierung und lückenlose Code-Coverage.",
+      "strengths": [
+        "Umfassende XCTest- und XCUITest-Automatisierung",
+        "Grenzfallanalysen und defensive Invariantenprüfung",
+        "llvm-cov Reporting und CI/CD-Pipelines"
+      ],
+      "growthOpportunities": [
+        "Fokus auf frühe UI-Exploration vor Test-Erstarrung",
+        "Flexiblere Anpassung an sich ändernde Produktanforderungen"
+      ],
+      "badgeSymbol": "checkmark.seal.fill"
+    },
+    {
+      "id": "agile-orchestrator",
+      "title": "Agile Engineering Orchestrator",
+      "subtitle": "Dominante Dimension: Agile Practices & Collaboration",
+      "dominantDimensionId": "agile",
+      "description": "Hohe Kompetenz in iterativer Sprint-Steuerung, transparenter Versionsverwaltung, akademischer Dokumentation und Team-Synergien.",
+      "strengths": [
+        "Klare Definition of Done und Sprint-Roadmaps",
+        "Saubere Git-Governance und konventionelle Commits",
+        "Wissenschaftliche Nachvollziehbarkeit und Dokumentation"
+      ],
+      "growthOpportunities": [
+        "Tiefere Vertiefung in plattformspezifische Compiler-Optimierungen",
+        "Erweiterung hardwarenaher Profiling-Kenntnisse (Instruments)"
+      ],
+      "badgeSymbol": "person.3.sequence.fill"
+    }
+  ],
+  "questions": [
+    {
+      "id": "arch-sc-01",
+      "dimensionId": "architecture",
+      "type": "single_choice",
+      "title": "Separation of Concerns in SwiftUI",
+      "prompt": "Wie strukturierst Du Geschäftslogik und UI-Zustand in einer modernen SwiftUI-Applikation?",
+      "guidance": "Wähle den Ansatz, der Deiner regulären Entwicklungspraxis am besten entspricht.",
+      "options": [
+        {
+          "id": "arch-sc-01-a",
+          "title": "MVVM mit reaktivem ViewModel (@Observable / @MainActor)",
+          "detail": "Strikte Trennung: View bindet an ViewModel, Logik ist vollständig ohne UI testbar.",
+          "scoreWeight": 100.0
+        },
+        {
+          "id": "arch-sc-01-b",
+          "title": "Logik direkt im View-Body und @State-Variablen",
+          "detail": "Schnell für Prototypen, erschwert jedoch modulare Unit-Tests.",
+          "scoreWeight": 35.0
+        },
+        {
+          "id": "arch-sc-01-c",
+          "title": "Globale Singletons ohne Protokollverträge",
+          "detail": "Einfacher Zugriff, erzeugt jedoch starke Kopplung und Nebenläufigkeitsrisiken.",
+          "scoreWeight": 45.0
+        },
+        {
+          "id": "arch-sc-01-d",
+          "title": "Reine UI-Komponenten mit Service-Injektion über Environment",
+          "detail": "Modular, benötigt jedoch saubere Mock-Abstraktionen für Tests.",
+          "scoreWeight": 85.0
+        }
+      ]
+    },
+    {
+      "id": "arch-sc-02",
+      "dimensionId": "architecture",
+      "type": "single_choice",
+      "title": "Handhabung von Architektur-Entscheidungen (ADR)",
+      "prompt": "Wie dokumentierst Du wesentliche architektonische Weichenstellungen in Deinen Projekten?",
+      "guidance": "Denke an Trade-Off-Entscheidungen wie Framework-Auswahl oder Persistenzstrategie.",
+      "options": [
+        {
+          "id": "arch-sc-02-a",
+          "title": "Formale Architecture Decision Records (ADRs) mit Nutzwertanalyse",
+          "detail": "Systematischer Variantenvergleich mit gewichteten Kriterien und nachvollziehbarer Rationale.",
+          "scoreWeight": 100.0
+        },
+        {
+          "id": "arch-sc-02-b",
+          "title": "Kurze Notizen in Git-Commit-Messages",
+          "detail": "Kontext bleibt im Versionsverlauf, jedoch ohne systematischen Variantenvergleich.",
+          "scoreWeight": 60.0
+        },
+        {
+          "id": "arch-sc-02-c",
+          "title": "Mündliche Absprache oder intuitive Entscheidung",
+          "detail": "Geringer Dokumentationsaufwand, aber fehlende wissenschaftliche Nachvollziehbarkeit.",
+          "scoreWeight": 30.0
+        },
+        {
+          "id": "arch-sc-02-d",
+          "title": "Architektur-Kapitel im technischen Projektbericht",
+          "detail": "Detaillierte Beschreibung im Abschlussdokument, jedoch oft erst retrospektiv erstellt.",
+          "scoreWeight": 80.0
+        }
+      ]
+    },
+    {
+      "id": "arch-mc-01",
+      "dimensionId": "architecture",
+      "type": "multiple_choice",
+      "title": "Architektonische Qualitätsmerkmale (ISO/IEC 25010)",
+      "prompt": "Welche der folgenden Architekturprinzipien wendest Du aktiv beim Softwareentwurf an?",
+      "guidance": "Wähle alle Prinzipien aus, die Du gezielt implementierst.",
+      "minSelectCount": 1,
+      "maxSelectCount": 4,
+      "options": [
+        {
+          "id": "arch-mc-01-a",
+          "title": "Single Responsibility Principle (SRP)",
+          "detail": "Jedes Modul bzw. jede Klasse hat genau eine fest definierte Verantwortung.",
+          "scoreWeight": 25.0
+        },
+        {
+          "id": "arch-mc-01-b",
+          "title": "Dependency Inversion über Swift-Protokolle",
+          "detail": "Höhere Module hängen von Abstraktionen ab, nicht von konkreten Implementierungen.",
+          "scoreWeight": 25.0
+        },
+        {
+          "id": "arch-mc-01-c",
+          "title": "Defensive Invariantenprüfung an Systemgrenzen",
+          "detail": "Payloads werden direkt beim Decodieren validiert; ungültige Zustände werden abgewiesen.",
+          "scoreWeight": 25.0
+        },
+        {
+          "id": "arch-mc-01-d",
+          "title": "Entkopplung von Persistenz und Domänenmodell",
+          "detail": "Speicherformate (JSON, CoreData, SQLite) beeinflussen die Domänenstrukturen nicht direkt.",
+          "scoreWeight": 25.0
+        }
+      ]
+    },
+    {
+      "id": "arch-lk-01",
+      "dimensionId": "architecture",
+      "type": "likert_slider",
+      "title": "Modulare Schichtentrennung",
+      "prompt": "Ich trenne Domänenmodelle, Datenpersistenz, ViewModels und UI-Views konsequent in eigenständige Module und Dateien.",
+      "guidance": "Bewerte Deine Übereinstimmung von 1 (Trifft gar nicht zu) bis 5 (Trifft voll zu).",
+      "sliderMin": 1.0,
+      "sliderMax": 5.0,
+      "sliderStep": 1.0,
+      "sliderMinLabel": "Stimme überhaupt nicht zu",
+      "sliderMaxLabel": "Stimme voll und ganz zu",
+      "sliderDefault": 3.0
+    },
+    {
+      "id": "arch-lk-02",
+      "dimensionId": "architecture",
+      "type": "likert_slider",
+      "title": "Vorausschauendes Refactoring",
+      "prompt": "Wenn eine Quelldatei mehr als 250 Zeilen Code oder zu viele Verantwortlichkeiten umfasst, refaktorisiere ich sie proaktiv in kleinere Komponenten.",
+      "guidance": "Bewerte Deine Praxis zur Vermeidung von Massive View Controllers / God Objects.",
+      "sliderMin": 1.0,
+      "sliderMax": 5.0,
+      "sliderStep": 1.0,
+      "sliderMinLabel": "Stimme überhaupt nicht zu",
+      "sliderMaxLabel": "Stimme voll und ganz zu",
+      "sliderDefault": 3.0
+    },
+    {
+      "id": "arch-tx-01",
+      "dimensionId": "architecture",
+      "type": "short_text",
+      "title": "Architektur-Reflexion: Entkopplung",
+      "prompt": "Beschreibe kurz anhand eines konkreten Beispiels, wie Du in Deinen Projekten eine enge Kopplung zwischen zwei Komponenten aufgelöst hast.",
+      "guidance": "Gib mindestens 15 Zeichen ein. Erwähne Protokolle, Dependency Injection oder Event-Handling.",
+      "textPlaceholder": "Z.B.: Durch die Einführung eines QuestionServiceProtocol konnte das ViewModel...",
+      "minCharacters": 15,
+      "maxCharacters": 350
+    },
+
+    {
+      "id": "plat-sc-01",
+      "dimensionId": "platform",
+      "type": "single_choice",
+      "title": "Swift Concurrency & Thread-Sicherheit",
+      "prompt": "Wie stellst Du sicher, dass UI-Zustandsaktualisierungen in SwiftUI thread-sicher auf dem Hauptthread ausgeführt werden?",
+      "guidance": "Wähle das modernste und sicherste Paradigma in Swift 5.9+.",
+      "options": [
+        {
+          "id": "plat-sc-01-a",
+          "title": "Isolation des ViewModels über @MainActor",
+          "detail": "Kompilierzeit-Garantie, dass alle UI-relevanten Mutationen auf dem Main Thread ablaufen.",
+          "scoreWeight": 100.0
+        },
+        {
+          "id": "plat-sc-01-b",
+          "title": "Manuelle Dispatch.main.async Aufrufe an jeder Zuweisung",
+          "detail": "Funktioniert in Legacy-Code, ist jedoch fehleranfällig und unübersichtlich.",
+          "scoreWeight": 50.0
+        },
+        {
+          "id": "plat-sc-01-c",
+          "title": "Keine explizite Synchronisation; Verlass auf SwiftUI",
+          "detail": "Führt bei Hintergrundoperationen (URLSession, Timer) zu Purple Runtime Warnings.",
+          "scoreWeight": 20.0
+        },
+        {
+          "id": "plat-sc-01-d",
+          "title": "NSLock für jeden Zugriff auf UI-Eigenschaften",
+          "detail": "Gefahr von Deadlocks auf dem Hauptthread und unnötige Komplexität.",
+          "scoreWeight": 40.0
+        }
+      ]
+    },
+    {
+      "id": "plat-sc-02",
+      "dimensionId": "platform",
+      "type": "single_choice",
+      "title": "Apple Human Interface Guidelines (HIG)",
+      "prompt": "Welche Richtlinie wendest Du prioritär für berührungsempfindliche Steuerelemente auf iOS/iPadOS an?",
+      "guidance": "Beachte offizielle Mindestmaße für Barrierefreiheit und Ergonomie.",
+      "options": [
+        {
+          "id": "plat-sc-02-a",
+          "title": "Minimale Touch-Target-Größe von mindestens 44x44 pt bzw. 56 pt für Hauptaktionen",
+          "detail": "Gewährleistet treffsichere Bedienbarkeit auch bei motorischen Einschränkungen.",
+          "scoreWeight": 100.0
+        },
+        {
+          "id": "plat-sc-02-b",
+          "title": "Feste Pixel-Koordinaten basierend auf dem iPhone Pro Display",
+          "detail": "Verletzt adaptive Layouts und führt auf iPad/SE zu Schnittfehlern.",
+          "scoreWeight": 20.0
+        },
+        {
+          "id": "plat-sc-02-c",
+          "title": "Buttons beliebig verkleinern, um mehr Text auf dem Screen unterzubringen",
+          "detail": "Führt zu Bedienfrustration und Verstößen gegen Barrierefreiheitsstandards.",
+          "scoreWeight": 15.0
+        },
+        {
+          "id": "plat-sc-02-d",
+          "title": "Standard-Abstände ohne Berücksichtigung von Dynamic Type",
+          "detail": "Führt bei vergrößerter Schriftschrift zu Überlappungen.",
+          "scoreWeight": 40.0
+        }
+      ]
+    },
+    {
+      "id": "plat-mc-01",
+      "dimensionId": "platform",
+      "type": "multiple_choice",
+      "title": "Plattform-APIs und Framework-Beherrschung",
+      "prompt": "Welche der folgenden nativen Apple-Frameworks hast Du bereits produktiv in Swift eingesetzt?",
+      "guidance": "Wähle alle Technologien aus, mit denen Du vertraut bist.",
+      "minSelectCount": 1,
+      "maxSelectCount": 4,
+      "options": [
+        {
+          "id": "plat-mc-01-a",
+          "title": "SwiftUI Declarative Layout (NavigationStack, Sheets, Animations)",
+          "detail": "Deklaratives UI-Design mit State-Bindung.",
+          "scoreWeight": 25.0
+        },
+        {
+          "id": "plat-mc-01-b",
+          "title": "Combine Framework oder Swift AsyncSequence",
+          "detail": "Reaktive Datenströme, Debouncing und asynchrone Ereignisse.",
+          "scoreWeight": 25.0
+        },
+        {
+          "id": "plat-mc-01-c",
+          "title": "UIFeedbackGenerator / CoreHaptics",
+          "detail": "Multisensorisches Feedback abgestimmt auf Benutzeraktionen.",
+          "scoreWeight": 25.0
+        },
+        {
+          "id": "plat-mc-01-d",
+          "title": "VoiceOver Semantics (AccessibilityLabel, Traits, Values)",
+          "detail": "Vollständige Zugänglichkeit für Screenreader-Nutzer.",
+          "scoreWeight": 25.0
+        }
+      ]
+    },
+    {
+      "id": "plat-lk-01",
+      "dimensionId": "platform",
+      "type": "likert_slider",
+      "title": "Multi-Device Ergonomie (iPhone & iPad)",
+      "prompt": "Ich optimiere meine Benutzeroberflächen gezielt für unterschiedliche Bildschirmklassen (z. B. 640 pt Container auf dem iPad 10.2\", Landscape-Support).",
+      "guidance": "Bewerte Deine Berücksichtigung von Regular vs. Compact Size Classes.",
+      "sliderMin": 1.0,
+      "sliderMax": 5.0,
+      "sliderStep": 1.0,
+      "sliderMinLabel": "Stimme überhaupt nicht zu",
+      "sliderMaxLabel": "Stimme voll und ganz zu",
+      "sliderDefault": 3.0
+    },
+    {
+      "id": "plat-lk-02",
+      "dimensionId": "platform",
+      "type": "likert_slider",
+      "title": "Adaptives Farbsystem & Dark Mode",
+      "prompt": "Ich verwende semantische Farbtokens und prüfe die Kontrastverhältnisse mathematisch nach WCAG 2.1 AA/AAA für Hell- und Dunkelmodus.",
+      "guidance": "Bewerte Deine Sorgfalt bei der Definition von Color Assets und adaptivem Kontrast.",
+      "sliderMin": 1.0,
+      "sliderMax": 5.0,
+      "sliderStep": 1.0,
+      "sliderMinLabel": "Stimme überhaupt nicht zu",
+      "sliderMaxLabel": "Stimme voll und ganz zu",
+      "sliderDefault": 3.0
+    },
+    {
+      "id": "plat-tx-01",
+      "dimensionId": "platform",
+      "type": "short_text",
+      "title": "Plattform-Reflexion: SwiftUI State Management",
+      "prompt": "Erläutere kurz den Unterschied zwischen @State, @Binding und @Observable/@ObservedObject in SwiftUI.",
+      "guidance": "Gib mindestens 15 Zeichen ein und beschreibe den Einsatzzweck.",
+      "textPlaceholder": "@State verwaltet lokalen View-Zustand, während @Binding...",
+      "minCharacters": 15,
+      "maxCharacters": 350
+    },
+
+    {
+      "id": "qual-sc-01",
+      "dimensionId": "quality",
+      "type": "single_choice",
+      "title": "Teststrategie und Unittest-Tiefe",
+      "prompt": "Wie überprüfst Du die Korrektheit Deiner Berechnungs- und Geschäftslogik?",
+      "guidance": "Wähle das Testparadigma, das Deiner regulären Entwicklungspraxis entspricht.",
+      "options": [
+        {
+          "id": "qual-sc-01-a",
+          "title": "Automatisierte XCTest-Suiten mit deterministischen Assertions und >= 80% Coverage",
+          "detail": "Reproduzierbare Validierung von Normal-, Rand- und Fehlerfällen ohne manuelle Klicks.",
+          "scoreWeight": 100.0
+        },
+        {
+          "id": "qual-sc-01-b",
+          "title": "Manuelles Durchklicken im iOS Simulator nach jedem Build",
+          "detail": "Wichtig für das UI-Gefühl, deckt jedoch Randfälle unzuverlässig ab und skaliert nicht.",
+          "scoreWeight": 45.0
+        },
+        {
+          "id": "qual-sc-01-c",
+          "title": "Nur print-Statements und Debugger-Breakpoints bei Fehlern",
+          "detail": "Temporäre Fehlersuche ohne bleibende Regressionstests.",
+          "scoreWeight": 25.0
+        },
+        {
+          "id": "qual-sc-01-d",
+          "title": "Sporadische Tests nur für ausgewählte kritische Algorithmen",
+          "detail": "Besser als keine Tests, lässt aber Integrationsschnittstellen ungeschützt.",
+          "scoreWeight": 65.0
+        }
+      ]
+    },
+    {
+      "id": "qual-sc-02",
+      "dimensionId": "quality",
+      "type": "single_choice",
+      "title": "Defensive Invariantenprüfung & Fehlerbehandlung",
+      "prompt": "Wie reagiert Dein System, wenn ein externes JSON-Dokument ungültige oder unvollständige Daten enthält?",
+      "guidance": "Denke an Robustheit, Datenintegrität und Vermeidung von Abstürzen.",
+      "options": [
+        {
+          "id": "qual-sc-02-a",
+          "title": "Transaktionaler Rollback, saubere Error-Typen und Erhalt des intakten Zustands",
+          "detail": "Die Operation bricht kontrolliert ab, erzeugt ein Logging/Backup und lässt bestehende Daten intakt.",
+          "scoreWeight": 100.0
+        },
+        {
+          "id": "qual-sc-02-b",
+          "title": "Force-Unwrapping (try!) mit fatalem Absturz bei Fehlern",
+          "detail": "Katastrophal für die Benutzererfahrung und unzulässig in Produktionssoftware.",
+          "scoreWeight": 10.0
+        },
+        {
+          "id": "qual-sc-02-c",
+          "title": "Stilles Ignorieren von Fehlern und Verwendung von Nullwerten",
+          "detail": "Kann zu unbemerkter Datenkorruption und Folgefehlern führen.",
+          "scoreWeight": 40.0
+        },
+        {
+          "id": "qual-sc-02-d",
+          "title": "Generischer Try-Catch-Block mit leerer Fehlermeldung",
+          "detail": "Verhindert Absturz, bietet aber keine Diagnosemöglichkeit.",
+          "scoreWeight": 50.0
+        }
+      ]
+    },
+    {
+      "id": "qual-mc-01",
+      "dimensionId": "quality",
+      "type": "multiple_choice",
+      "title": "Umfang der Qualitätssicherungs-Maßnahmen",
+      "prompt": "Welche Testarten und Qualitätsprüfungen führst Du vor einer Software-Freigabe durch?",
+      "guidance": "Wähle alle Verfahren aus, die zu Deinem Standardrepertoire gehören.",
+      "minSelectCount": 1,
+      "maxSelectCount": 4,
+      "options": [
+        {
+          "id": "qual-mc-01-a",
+          "title": "Unit Tests für Berechnungs- und Bewertungslogik (XCTest)",
+          "detail": "Isolierte Tests von Modellen, Services und ViewModels.",
+          "scoreWeight": 25.0
+        },
+        {
+          "id": "qual-mc-01-b",
+          "title": "Boundary Testing (Grenzwerte: Min, Max, leere Eingaben)",
+          "detail": "Spezifische Verifikation von Extrem- und Randfällen.",
+          "scoreWeight": 25.0
+        },
+        {
+          "id": "qual-mc-01-c",
+          "title": "Instrumentierte Code-Coverage-Messung (llvm-cov)",
+          "detail": "Objektive Prüfung, welche Codezeilen und Regionen ausgeführt werden.",
+          "scoreWeight": 25.0
+        },
+        {
+          "id": "qual-mc-01-d",
+          "title": "XCUITest UI-Akzeptanztests auf realen Zielgeräten / Simulatoren",
+          "detail": "End-to-End-Prüfung der Bildschirmabläufe und Barrierefreiheit.",
+          "scoreWeight": 25.0
+        }
+      ]
+    },
+    {
+      "id": "qual-lk-01",
+      "dimensionId": "quality",
+      "type": "likert_slider",
+      "title": "Coverage-Disziplin (llvm-cov)",
+      "prompt": "Ich halte eine Testabdeckung von mindestens 80% über alle Quelldateien für einen unverzichtbaren Standard professioneller Software.",
+      "guidance": "Bewerte Deine Einstellung zu messbarer Testabdeckung.",
+      "sliderMin": 1.0,
+      "sliderMax": 5.0,
+      "sliderStep": 1.0,
+      "sliderMinLabel": "Stimme überhaupt nicht zu",
+      "sliderMaxLabel": "Stimme voll und ganz zu",
+      "sliderDefault": 3.0
+    },
+    {
+      "id": "qual-lk-02",
+      "dimensionId": "quality",
+      "type": "likert_slider",
+      "title": "Deterministische UI-Assertions",
+      "prompt": "In UI-Tests verzichte ich auf vage bedingte Überprüfungen (if-else) und setze strikte, deterministische Assertions (XCTAssertTrue/False) ein.",
+      "guidance": "Bewerte Deine Konsequenz bei der Vermeidung von Flaky Tests.",
+      "sliderMin": 1.0,
+      "sliderMax": 5.0,
+      "sliderStep": 1.0,
+      "sliderMinLabel": "Stimme überhaupt nicht zu",
+      "sliderMaxLabel": "Stimme voll und ganz zu",
+      "sliderDefault": 3.0
+    },
+    {
+      "id": "qual-tx-01",
+      "dimensionId": "quality",
+      "type": "short_text",
+      "title": "Qualitäts-Reflexion: Grenzwertanalyse",
+      "prompt": "Nenne ein Beispiel für einen Randfall (Edge Case), den Du in einem Projekt durch einen spezifischen Testfall abgesichert hast.",
+      "guidance": "Gib mindestens 15 Zeichen ein. Denke an Leere Zustände, Maximalwerte oder Drift.",
+      "textPlaceholder": "Z.B.: Bei einer maximalen Historienkapazität von 1 wurde sichergestellt, dass...",
+      "minCharacters": 15,
+      "maxCharacters": 350
+    },
+
+    {
+      "id": "agil-sc-01",
+      "dimensionId": "agile",
+      "type": "single_choice",
+      "title": "Versionskontrolle & Commit-Disziplin",
+      "prompt": "Wie führst Du Versionskontrolle (Git) während Deines Entwicklungsprozesses durch?",
+      "guidance": "Wähle das Schema, das Deiner Arbeitsweise entspricht.",
+      "options": [
+        {
+          "id": "agil-sc-01-a",
+          "title": "Atomare Commits nach Conventional Commits (feat, fix, test, docs) mit klarem Scope",
+          "detail": "Jeder Schritt ist isoliert nachvollziehbar, reversibel und professionell dokumentiert.",
+          "scoreWeight": 100.0
+        },
+        {
+          "id": "agil-sc-01-b",
+          "title": "Ein einziger großer Commit am Ende des Projekts ('Final Version')",
+          "detail": "Verliert jede historische Nachvollziehbarkeit und widerspricht akademischen Standards.",
+          "scoreWeight": 15.0
+        },
+        {
+          "id": "agil-sc-01-c",
+          "title": "Unregelmäßige Commits mit generischen Nachrichten ('update', 'wip')",
+          "detail": "Geringer Nutzen für Code-Reviews oder Fehlerursachenanalysen (Bisection).",
+          "scoreWeight": 40.0
+        },
+        {
+          "id": "agil-sc-01-d",
+          "title": "Commits nur bei größeren Meilensteinen ohne Unterteilung nach Typen",
+          "detail": "Grundlegende Historie vorhanden, aber erschwerte Fehlerlokalisierung.",
+          "scoreWeight": 65.0
+        }
+      ]
+    },
+    {
+      "id": "agil-sc-02",
+      "dimensionId": "agile",
+      "type": "single_choice",
+      "title": "Agile Sprint-Steuerung & Definition of Done",
+      "prompt": "Wann gilt eine User Story bzw. ein Feature in Deiner Entwicklungspraxis als vollständig fertiggestellt?",
+      "guidance": "Beachte die Kriterien einer vollständigen Definition of Done (DoD).",
+      "options": [
+        {
+          "id": "agil-sc-02-a",
+          "title": "Wenn Code, Unittests, Dokumentation und Abnahmekriterien auf Zielhardware erfüllt sind",
+          "detail": "Vollständige Qualitätssicherung ohne unfertige Restarbeiten.",
+          "scoreWeight": 100.0
+        },
+        {
+          "id": "agil-sc-02-b",
+          "title": "Sobald der Code im Simulator ohne offensichtlichen Fehler startet",
+          "detail": "Reiner Prototyping-Zustand; Tests und Dokumentation fehlen.",
+          "scoreWeight": 40.0
+        },
+        {
+          "id": "agil-sc-02-c",
+          "title": "Wenn die Zeit für den Sprint abgelaufen ist",
+          "detail": "Führt zu technischen Schulden und instabilen Releases.",
+          "scoreWeight": 25.0
+        },
+        {
+          "id": "agil-sc-02-d",
+          "title": "Sobald die Benutzeroberfläche visuell fertig gestaltet ist",
+          "detail": "Vernachlässigt Geschäftslogik, Randfälle und Persistenz.",
+          "scoreWeight": 35.0
+        }
+      ]
+    },
+    {
+      "id": "agil-mc-01",
+      "dimensionId": "agile",
+      "type": "multiple_choice",
+      "title": "Agile & Wissenschaftliche Dokumentationsmethoden",
+      "prompt": "Welche Artefakte erstellst Du zur Sicherung von Prozessqualität und Wissenstransfer?",
+      "guidance": "Wähle alle Artefakte aus, die Du standardmäßig erstellst.",
+      "minSelectCount": 1,
+      "maxSelectCount": 4,
+      "options": [
+        {
+          "id": "agil-mc-01-a",
+          "title": "User Stories mit BDD-Akzeptanzkriterien (Given / When / Then)",
+          "detail": "Präzise Festlegung des Soll-Verhaltens vor der Implementierung.",
+          "scoreWeight": 25.0
+        },
+        {
+          "id": "agil-mc-01-b",
+          "title": "Requirements Traceability Matrix (Anforderungs-Nachverfolgbarkeit)",
+          "detail": "Lückenloser Nachweis, welche Anforderung in welchem Code/Test erfüllt ist.",
+          "scoreWeight": 25.0
+        },
+        {
+          "id": "agil-mc-01-c",
+          "title": "Detaillierte Entwicklungsnotizen und Incident-Reports bei Fehlern",
+          "detail": "Dokumentation von Problemen, Ursachen und deren Behebung (Transfer).",
+          "scoreWeight": 25.0
+        },
+        {
+          "id": "agil-mc-01-d",
+          "title": "Strukturierter Projektbericht nach akademischen Richtlinien (IU Leitfaden)",
+          "detail": "Wissenschaftliche Ausarbeitung mit Inhalts-, Abbildungs- und Literaturverzeichnis.",
+          "scoreWeight": 25.0
+        }
+      ]
+    },
+    {
+      "id": "agil-lk-01",
+      "dimensionId": "agile",
+      "type": "likert_slider",
+      "title": "Inkrementelle Versionierung (SemVer & CalVer)",
+      "prompt": "Ich verwalte Releases strikt nach SemVer (Major.Minor.Patch) und verknüpfe interne Builds mit eindeutigen, monotonen Zeitstempeln (CalVer).",
+      "guidance": "Bewerte Deine Nachvollziehbarkeit bei Release-Tags und Build-Nummern.",
+      "sliderMin": 1.0,
+      "sliderMax": 5.0,
+      "sliderStep": 1.0,
+      "sliderMinLabel": "Stimme überhaupt nicht zu",
+      "sliderMaxLabel": "Stimme voll und ganz zu",
+      "sliderDefault": 3.0
+    },
+    {
+      "id": "agil-lk-02",
+      "dimensionId": "agile",
+      "type": "likert_slider",
+      "title": "Kontinuierliche Prozessreflexion",
+      "prompt": "Nach jedem Entwicklungsabschnitt reflektiere ich bewusst getroffene Entscheidungen und dokumentiere Herausforderungen transparent im Projektbericht.",
+      "guidance": "Bewerte Deine Bereitschaft zur selbstkritischen wissenschaftlichen Würdigung.",
+      "sliderMin": 1.0,
+      "sliderMax": 5.0,
+      "sliderStep": 1.0,
+      "sliderMinLabel": "Stimme überhaupt nicht zu",
+      "sliderMaxLabel": "Stimme voll und ganz zu",
+      "sliderDefault": 3.0
+    },
+    {
+      "id": "agil-tx-01",
+      "dimensionId": "agile",
+      "type": "short_text",
+      "title": "Agile Reflexion: Umgang mit technischen Schulden",
+      "prompt": "Wie gehst Du vor, wenn Du feststellst, dass eine temporäre Lösung die Wartbarkeit des Gesamtsystems gefährdet?",
+      "guidance": "Gib mindestens 15 Zeichen ein. Beschreibe Priorisierung, Refactoring oder Issue-Tracking.",
+      "textPlaceholder": "Z.B.: Ich dokumentiere die technische Schuld als dediziertes Refactoring-Ticket...",
+      "minCharacters": 15,
+      "maxCharacters": 350
+    }
+  ]
+}

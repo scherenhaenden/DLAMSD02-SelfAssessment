@@ -1,0 +1,19 @@
+# Xcode
+build/
+DerivedData/
+*.xcuserstate
+project.xcworkspace/xcuserdata/
+*.xcuserdatad/
+*.xcbkptlist
+*.xcresult
+
+# Swift Package Manager
+.build/
+.swiftpm/
+
+# OS / Editor artifacts
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*~
