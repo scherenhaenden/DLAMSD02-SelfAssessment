@@ -168,8 +168,9 @@ final class EvaluationEngineTests: XCTestCase {
 
     func testEvaluationRejectsDuplicateAnswers() {
         let q = catalog.questions[0]
-        let a1 = AssessmentAnswer(questionId: q.id, dimensionId: q.dimensionId, questionType: q.type, normalizedScore: 100.0)
-        let a2 = AssessmentAnswer(questionId: q.id, dimensionId: q.dimensionId, questionType: q.type, normalizedScore: 50.0)
+        let optId = q.options![0].id
+        let a1 = AssessmentAnswer(questionId: q.id, dimensionId: q.dimensionId, questionType: q.type, selectedOptionIds: [optId], normalizedScore: 100.0)
+        let a2 = AssessmentAnswer(questionId: q.id, dimensionId: q.dimensionId, questionType: q.type, selectedOptionIds: [optId], normalizedScore: 50.0)
 
         XCTAssertThrowsError(try engine.evaluate(answers: [a1, a2], catalog: catalog, durationSeconds: 10.0)) { error in
             guard case EvaluationEngineError.duplicateAnswer(let qid) = error else {
@@ -185,6 +186,7 @@ final class EvaluationEngineTests: XCTestCase {
             questionId: "unknown-question-id",
             dimensionId: "architecture",
             questionType: .singleChoice,
+            selectedOptionIds: ["any"],
             normalizedScore: 100.0
         )
 
@@ -199,10 +201,12 @@ final class EvaluationEngineTests: XCTestCase {
 
     func testEvaluationRejectsMismatchedDimension() {
         let q = catalog.questions.first(where: { $0.dimensionId == "architecture" })!
+        let optId = q.options![0].id
         let forged = AssessmentAnswer(
             questionId: q.id,
             dimensionId: "quality", // Mismatched
             questionType: q.type,
+            selectedOptionIds: [optId],
             normalizedScore: 100.0
         )
 
@@ -295,5 +299,179 @@ final class EvaluationEngineTests: XCTestCase {
 
         let answer = try JSONDecoder().decode(AssessmentAnswer.self, from: json)
         XCTAssertEqual(answer.normalizedScore, 100.0, "Decoder must strictly clamp normalizedScore to 100.0")
+    }
+
+    // MARK: - Incomplete Assessment & Payload Validation Tests
+
+    private func makeCompleteAnswers() -> [AssessmentAnswer] {
+        var answers: [AssessmentAnswer] = []
+        for question in catalog.questions {
+            var selectedIds: [String]?
+            var sliderVal: Double?
+            var text: String?
+
+            switch question.type {
+            case .singleChoice:
+                selectedIds = [question.options!.first!.id]
+            case .multipleChoice:
+                selectedIds = [question.options!.first!.id]
+            case .likertSlider:
+                sliderVal = 3.0
+            case .shortText:
+                text = "Saubere Architektur mit MVVM, Protocol Abstraktion und strikten Tests."
+            }
+
+            answers.append(AssessmentAnswer(
+                questionId: question.id,
+                dimensionId: question.dimensionId,
+                questionType: question.type,
+                selectedOptionIds: selectedIds,
+                sliderValue: sliderVal,
+                textInput: text
+            ))
+        }
+        return answers
+    }
+
+    func testEvaluationRejectsIncompleteAssessment() {
+        var answers = makeCompleteAnswers()
+        answers.removeLast() // Now missing 1 question
+
+        XCTAssertThrowsError(try engine.evaluate(answers: answers, catalog: catalog, durationSeconds: 60.0)) { error in
+            guard case EvaluationEngineError.incompleteAssessment(let missing) = error else {
+                XCTFail("Expected incompleteAssessment error, got: \(error)")
+                return
+            }
+            XCTAssertEqual(missing.count, 1)
+        }
+    }
+
+    func testEvaluationRejectsCatalogIntegrityViolation() {
+        let q1 = AssessmentQuestion(id: "dup", dimensionId: "architecture", type: .likertSlider, title: "Q", prompt: "P")
+        let q2 = AssessmentQuestion(id: "dup", dimensionId: "architecture", type: .likertSlider, title: "Q", prompt: "P")
+        let brokenCatalog = AssessmentCatalog(
+            catalogId: "bad",
+            version: "1.0",
+            title: "T",
+            subtitle: "S",
+            description: "D",
+            dimensions: AssessmentDimension.standardDimensions,
+            questions: [q1, q2],
+            archetypes: ArchetypeProfile.standardArchetypes
+        )
+
+        let answer = AssessmentAnswer(questionId: "dup", dimensionId: "architecture", questionType: .likertSlider, sliderValue: 3.0)
+
+        XCTAssertThrowsError(try engine.evaluate(answers: [answer], catalog: brokenCatalog, durationSeconds: 10.0)) { error in
+            guard case EvaluationEngineError.catalogIntegrityViolation = error else {
+                XCTFail("Expected catalogIntegrityViolation error, got: \(error)")
+                return
+            }
+        }
+    }
+
+    func testEvaluationRejectsInvalidSingleChoicePayload() {
+        var answers = makeCompleteAnswers()
+        // Replace single choice answer with an unknown option ID
+        if let idx = answers.firstIndex(where: { $0.questionType == .singleChoice }) {
+            let original = answers[idx]
+            answers[idx] = AssessmentAnswer(
+                questionId: original.questionId,
+                dimensionId: original.dimensionId,
+                questionType: original.questionType,
+                selectedOptionIds: ["non-existent-option-id"]
+            )
+
+            XCTAssertThrowsError(try engine.evaluate(answers: answers, catalog: catalog, durationSeconds: 60.0)) { error in
+                guard case EvaluationEngineError.invalidPayload(let qid, _) = error else {
+                    XCTFail("Expected invalidPayload error, got: \(error)")
+                    return
+                }
+                XCTAssertEqual(qid, original.questionId)
+            }
+        }
+    }
+
+    func testEvaluationRejectsInvalidMultipleChoicePayload() {
+        var answers = makeCompleteAnswers()
+        if let idx = answers.firstIndex(where: { $0.questionType == .multipleChoice }) {
+            let original = answers[idx]
+            // Empty selection for multiple choice
+            answers[idx] = AssessmentAnswer(
+                questionId: original.questionId,
+                dimensionId: original.dimensionId,
+                questionType: original.questionType,
+                selectedOptionIds: []
+            )
+
+            XCTAssertThrowsError(try engine.evaluate(answers: answers, catalog: catalog, durationSeconds: 60.0)) { error in
+                guard case EvaluationEngineError.invalidPayload(let qid, _) = error else {
+                    XCTFail("Expected invalidPayload error, got: \(error)")
+                    return
+                }
+                XCTAssertEqual(qid, original.questionId)
+            }
+        }
+    }
+
+    func testEvaluationRejectsInvalidSliderPayload() {
+        var answers = makeCompleteAnswers()
+        if let idx = answers.firstIndex(where: { $0.questionType == .likertSlider }) {
+            let original = answers[idx]
+            // Slider value out of bounds
+            answers[idx] = AssessmentAnswer(
+                questionId: original.questionId,
+                dimensionId: original.dimensionId,
+                questionType: original.questionType,
+                sliderValue: 99.0
+            )
+
+            XCTAssertThrowsError(try engine.evaluate(answers: answers, catalog: catalog, durationSeconds: 60.0)) { error in
+                guard case EvaluationEngineError.invalidPayload(let qid, _) = error else {
+                    XCTFail("Expected invalidPayload error, got: \(error)")
+                    return
+                }
+                XCTAssertEqual(qid, original.questionId)
+            }
+        }
+    }
+
+    func testEvaluationRejectsInvalidShortTextPayload() {
+        var answers = makeCompleteAnswers()
+        if let idx = answers.firstIndex(where: { $0.questionType == .shortText }) {
+            let original = answers[idx]
+            // Text too short (< 15 chars)
+            answers[idx] = AssessmentAnswer(
+                questionId: original.questionId,
+                dimensionId: original.dimensionId,
+                questionType: original.questionType,
+                textInput: "Zu kurz"
+            )
+
+            XCTAssertThrowsError(try engine.evaluate(answers: answers, catalog: catalog, durationSeconds: 60.0)) { error in
+                guard case EvaluationEngineError.invalidPayload(let qid, _) = error else {
+                    XCTFail("Expected invalidPayload error, got: \(error)")
+                    return
+                }
+                XCTAssertEqual(qid, original.questionId)
+            }
+        }
+    }
+
+    func testEvaluationEngineErrorDescriptions() {
+        let errors: [EvaluationEngineError] = [
+            .emptyAnswers,
+            .duplicateAnswer(questionId: "q1"),
+            .unknownQuestion(questionId: "q2"),
+            .mismatchedDimension(questionId: "q3", expected: "arch", actual: "qual"),
+            .mismatchedType(questionId: "q4", expected: .singleChoice, actual: .likertSlider),
+            .incompleteAssessment(missingQuestionIds: ["q5"]),
+            .invalidPayload(questionId: "q6", reason: "bad"),
+            .catalogIntegrityViolation(reason: "broken")
+        ]
+
+        for err in errors {
+            XCTAssertFalse(err.errorDescription!.isEmpty)
+        }
     }
 }

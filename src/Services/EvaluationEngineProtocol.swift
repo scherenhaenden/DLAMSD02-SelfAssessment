@@ -108,14 +108,22 @@ public final class AssessmentEvaluationEngine: EvaluationEngineProtocol {
         catalog: AssessmentCatalog,
         durationSeconds: Double
     ) throws -> AssessmentRecord {
+        // 1. Verify catalog integrity defensively before building maps
+        do {
+            try catalog.validateIntegrity()
+        } catch {
+            throw EvaluationEngineError.catalogIntegrityViolation(reason: error.localizedDescription)
+        }
+
+        // 2. Answers collection must not be empty
         guard !answers.isEmpty else {
             throw EvaluationEngineError.emptyAnswers
         }
 
-        // Map catalog questions by ID for fast, strict lookup
+        // Map catalog questions by ID for fast lookup
         let questionMap = Dictionary(uniqueKeysWithValues: catalog.questions.map { ($0.id, $0) })
 
-        // Check for duplicates and validate answers against active catalog
+        // Check for duplicates, unknown questions, mismatches, and payload validity
         var seenQuestionIds = Set<String>()
         var verifiedAnswers: [AssessmentAnswer] = []
 
@@ -145,7 +153,83 @@ public final class AssessmentEvaluationEngine: EvaluationEngineProtocol {
                 )
             }
 
-            // Recalculate score from raw input payload rather than blindly trusting answer.normalizedScore
+            // Strict payload validation per question type
+            switch question.type {
+            case .singleChoice:
+                guard let selectedId = answer.selectedOptionIds?.first,
+                      let options = question.options,
+                      options.contains(where: { $0.id == selectedId }) else {
+                    throw EvaluationEngineError.invalidPayload(
+                        questionId: question.id,
+                        reason: "Single choice requires a valid option selection matching catalog options."
+                    )
+                }
+
+            case .multipleChoice:
+                guard let selectedIds = answer.selectedOptionIds, !selectedIds.isEmpty,
+                      let options = question.options else {
+                    throw EvaluationEngineError.invalidPayload(
+                        questionId: question.id,
+                        reason: "Multiple choice requires non-empty option selections."
+                    )
+                }
+                let validIds = Set(options.map(\.id))
+                guard selectedIds.allSatisfy({ validIds.contains($0) }) else {
+                    throw EvaluationEngineError.invalidPayload(
+                        questionId: question.id,
+                        reason: "Multiple choice contains option identifiers not present in catalog."
+                    )
+                }
+                let minSelect = question.minSelectCount ?? 1
+                let maxSelect = question.maxSelectCount ?? options.count
+                guard selectedIds.count >= minSelect && selectedIds.count <= maxSelect else {
+                    throw EvaluationEngineError.invalidPayload(
+                        questionId: question.id,
+                        reason: "Multiple choice selection count (\(selectedIds.count)) violates bounds [\(minSelect) ... \(maxSelect)]."
+                    )
+                }
+
+            case .likertSlider:
+                guard let sliderVal = answer.sliderValue else {
+                    throw EvaluationEngineError.invalidPayload(
+                        questionId: question.id,
+                        reason: "Slider question requires an explicit numeric value."
+                    )
+                }
+                let minVal = question.sliderMin ?? 1.0
+                let maxVal = question.sliderMax ?? 5.0
+                guard sliderVal >= minVal && sliderVal <= maxVal else {
+                    throw EvaluationEngineError.invalidPayload(
+                        questionId: question.id,
+                        reason: "Slider value \(sliderVal) falls outside allowed range [\(minVal) ... \(maxVal)]."
+                    )
+                }
+
+            case .shortText:
+                guard let text = answer.textInput?.trimmingCharacters(in: .whitespacesAndNewlines),
+                      !text.isEmpty else {
+                    throw EvaluationEngineError.invalidPayload(
+                        questionId: question.id,
+                        reason: "Short text question requires non-empty textual reflection."
+                    )
+                }
+                let minLen = question.minCharacters ?? 15
+                let maxLen = question.maxCharacters ?? 350
+                guard text.count >= minLen else {
+                    throw EvaluationEngineError.invalidPayload(
+                        questionId: question.id,
+                        reason: "Short text response length (\(text.count)) is less than minimum required (\(minLen))."
+                    )
+                }
+                guard text.count <= maxLen else {
+                    throw EvaluationEngineError.invalidPayload(
+                        questionId: question.id,
+                        reason: "Short text response length (\(text.count)) exceeds maximum allowed (\(maxLen))."
+                    )
+                }
+            }
+
+            // Recalculate score from validated raw input payload
             let derivedScore = scoreQuestion(
                 question: question,
                 selectedOptionIds: answer.selectedOptionIds,
@@ -163,6 +247,13 @@ public final class AssessmentEvaluationEngine: EvaluationEngineProtocol {
                 normalizedScore: derivedScore
             )
             verifiedAnswers.append(verifiedAnswer)
+        }
+
+        // 3. Completeness check: verify that all catalog questions were answered
+        let catalogQuestionIds = Set(catalog.questions.map(\.id))
+        let missingQuestionIds = catalogQuestionIds.subtracting(seenQuestionIds)
+        guard missingQuestionIds.isEmpty else {
+            throw EvaluationEngineError.incompleteAssessment(missingQuestionIds: Array(missingQuestionIds).sorted())
         }
 
         // Group answers by dimension
@@ -253,6 +344,9 @@ public enum EvaluationEngineError: LocalizedError, Equatable {
     case unknownQuestion(questionId: String)
     case mismatchedDimension(questionId: String, expected: String, actual: String)
     case mismatchedType(questionId: String, expected: QuestionType, actual: QuestionType)
+    case incompleteAssessment(missingQuestionIds: [String])
+    case invalidPayload(questionId: String, reason: String)
+    case catalogIntegrityViolation(reason: String)
 
     public var errorDescription: String? {
         switch self {
@@ -266,6 +360,12 @@ public enum EvaluationEngineError: LocalizedError, Equatable {
             return "Answer for '\(qid)' declared dimension '\(act)' but catalog defines '\(exp)'."
         case .mismatchedType(let qid, let exp, let act):
             return "Answer for '\(qid)' declared type '\(act.rawValue)' but catalog defines '\(exp.rawValue)'."
+        case .incompleteAssessment(let missing):
+            return "Assessment is incomplete. Missing answers for: \(missing.joined(separator: ", "))."
+        case .invalidPayload(let qid, let reason):
+            return "Invalid answer payload for question '\(qid)': \(reason)"
+        case .catalogIntegrityViolation(let reason):
+            return "Cannot evaluate against invalid catalog: \(reason)"
         }
     }
 }

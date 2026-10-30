@@ -22,7 +22,7 @@ public struct AssessmentAnswer: Identifiable, Codable, Sendable, Hashable {
         selectedOptionIds: [String]? = nil,
         sliderValue: Double? = nil,
         textInput: String? = nil,
-        normalizedScore: Double
+        normalizedScore: Double = 0.0
     ) {
         self.questionId = questionId
         self.dimensionId = dimensionId

@@ -156,4 +156,23 @@ final class ColorTokenTests: XCTestCase {
         XCTAssertEqual(customTheme.layout.maxContentWidthiPad, 700.0)
         XCTAssertEqual(customTheme.layout.minTouchTargetSize, 48.0)
     }
+
+    func testAdaptiveColorTokenSwiftUIResolution() {
+        let token = theme.colors.textPrimary
+        // Exercise swiftUIColor getter
+        _ = token.lightRGB.swiftUIColor
+        _ = token.darkRGB.swiftUIColor
+
+        // Exercise dynamic SwiftUI color property
+        _ = token.color
+
+        // Exercise fallback dimension lookup
+        let fallbackToken = theme.colorToken(forDimension: "unknown-dimension-id")
+        XCTAssertEqual(fallbackToken, theme.colors.textSecondary)
+
+        // Exercise hashing and equality
+        XCTAssertEqual(token, theme.colors.textPrimary)
+        XCTAssertNotEqual(token, theme.colors.textSecondary)
+        XCTAssertEqual(token.hashValue, theme.colors.textPrimary.hashValue)
+    }
 }

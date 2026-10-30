@@ -27,11 +27,11 @@ $$CR = \frac{L_1 + 0{,}05}{L_2 + 0{,}05}$$
 
 | Token Name | Light Mode Hex | Dark Mode Hex | Baseline Surface | Contrast Light | Contrast Dark | WCAG 2.1 Status |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: |
-| **`textPrimary`** | `#0F172A` | `#F8FAFC` | Surface Card | **15.6 : 1** | **13.8 : 1** | 🟢 **AAA Pass** ($\ge 7.0:1$) |
-| **`textSecondary`** | `#475569` | `#94A3B8` | Surface Card | **5.4 : 1** | **5.1 : 1** | 🟢 **AA Pass** ($\ge 4.5:1$) |
-| **`successFeedback`** | `#14532D` | `#4ADE80` | Surface Card | **9.1 : 1** | **8.3 : 1** | 🟢 **AAA Pass** ($\ge 7.0:1$) |
-| **`warningFeedback`** | `#854D0E` | `#FACC15` | Surface Card | **6.8 : 1** | **10.9 : 1** | 🟢 **AA/AAA Pass** ($\ge 4.5:1$) |
-| **`errorFeedback`** | `#991B1B` | `#F87171` | Surface Card | **7.1 : 1** | **5.7 : 1** | 🟢 **AA/AAA Pass** ($\ge 4.5:1$) |
+| **`textPrimary`** | `#0F172A` | `#F8FAFC` | Surface Card | **17.85 : 1** | **13.98 : 1** | 🟢 **AAA Pass** ($\ge 7.0:1$) |
+| **`textSecondary`** | `#475569` | `#94A3B8` | Surface Card | **7.58 : 1** | **5.71 : 1** | 🟢 **AA/AAA Pass** ($\ge 4.5:1$) |
+| **`successFeedback`** | `#14532D` | `#4ADE80` | Surface Card | **9.11 : 1** | **8.40 : 1** | 🟢 **AAA Pass** ($\ge 7.0:1$) |
+| **`warningFeedback`** | `#854D0E` | `#FACC15` | Surface Card | **6.85 : 1** | **9.55 : 1** | 🟢 **AA/AAA Pass** ($\ge 4.5:1$) |
+| **`errorFeedback`** | `#991B1B` | `#F87171` | Surface Card | **8.31 : 1** | **5.29 : 1** | 🟢 **AA/AAA Pass** ($\ge 4.5:1$) |
 
 ### 1.3. Dimension Accent Colors
 
@@ -39,10 +39,10 @@ Each of the four engineering evaluation dimensions has its dedicated semantic co
 
 | Dimension ID | Dimension Name | Light Hex | Dark Hex | Contrast on Surface | Role |
 | :---: | :--- | :---: | :---: | :---: | :--- |
-| **`architecture`** | Software Architecture & System Design | `#1E3A8A` | `#38BDF8` | **10.4 : 1** (L, AAA) / **6.83 : 1** (D, AA) | Structural integrity, modularity, diagrams |
-| **`platform`** | Swift & Apple Platform Engineering | `#581C87` | `#C084FC` | **12.6 : 1** (L, AAA) / **5.64 : 1** (D, AA) | Native Swift, HIG idioms, platform APIs |
-| **`quality`** | Quality Assurance & Verification | `#14532D` | `#4ADE80` | **9.1 : 1** (L, AAA) / **8.32 : 1** (D, AAA) | Testing, coverage, boundary invariants |
-| **`agile`** | Agile Practices & Collaboration | `#9A3412` | `#FBBF24` | **6.95 : 1** (L, AA) / **8.84 : 1** (D, AAA) | Sprints, DoD, documentation, Git |
+| **`architecture`** | Software Architecture & System Design | `#1E3A8A` | `#38BDF8` | **10.36 : 1** (L, AAA) / **6.83 : 1** (D, AA) | Structural integrity, modularity, diagrams |
+| **`platform`** | Swift & Apple Platform Engineering | `#581C87` | `#C084FC` | **10.88 : 1** (L, AAA) / **5.54 : 1** (D, AA) | Native Swift, HIG idioms, platform APIs |
+| **`quality`** | Quality Assurance & Verification | `#14532D` | `#4ADE80` | **9.11 : 1** (L, AAA) / **8.40 : 1** (D, AAA) | Testing, coverage, boundary invariants |
+| **`agile`** | Agile Practices & Collaboration | `#9A3412` | `#FBBF24` | **7.31 : 1** (L, AAA) / **8.76 : 1** (D, AAA) | Sprints, DoD, documentation, Git |
 
 ---
 
