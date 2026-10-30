@@ -162,13 +162,22 @@ final class UIComponentTests: XCTestCase {
             onToggle: { _ in }
         )
 
+        // Render with standard size category on narrow screen
+        let standardSize = renderInHost(
+            grid.environment(\.sizeCategory, .medium),
+            width: 320,
+            height: 600
+        )
+
         // Render with extra large accessibility dynamic type
         let largeTextSize = renderInHost(
             grid.environment(\.sizeCategory, .accessibilityExtraExtraLarge),
             width: 320, // narrow screen
             height: 600
         )
+        XCTAssertGreaterThan(standardSize.height, 0)
         XCTAssertGreaterThan(largeTextSize.height, 0)
+        XCTAssertGreaterThanOrEqual(largeTextSize.height, standardSize.height, "Accessibility Extra Extra Large font must expand or equal the layout height")
     }
 
     // MARK: - LikertSliderCard Tests

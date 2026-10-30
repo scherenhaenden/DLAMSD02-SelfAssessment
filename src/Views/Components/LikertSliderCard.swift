@@ -40,6 +40,7 @@ public struct LikertSliderCard: View {
                 Text(verbalAnchor)
                     .font(.headline)
                     .foregroundColor(theme.colors.textPrimary.color)
+                    .accessibilityIdentifier("likertSlider.verbalAnchor")
                 Spacer()
                 Text(formattedScore)
                     .font(.title2)
@@ -51,6 +52,7 @@ public struct LikertSliderCard: View {
                         RoundedRectangle(cornerRadius: theme.cornerRadius.small, style: .continuous)
                             .fill(accentColor.opacity(0.12))
                     )
+                    .accessibilityIdentifier("likertSlider.scoreBadge")
             }
 
             // Slider control

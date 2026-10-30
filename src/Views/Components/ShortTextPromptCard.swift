@@ -51,6 +51,7 @@ public struct ShortTextPromptCard: View {
                 .scrollContentBackground(.hidden)
                 .accessibilityIdentifier("shortTextEditor")
                 .accessibilityLabel(placeholder)
+                .accessibilityValue(text)
                 .accessibilityHint("Eingabefeld für deinen Reflexionstext.")
                 #else
                 TextEditor(text: Binding(
@@ -61,6 +62,7 @@ public struct ShortTextPromptCard: View {
                 .frame(minHeight: 110)
                 .accessibilityIdentifier("shortTextEditor")
                 .accessibilityLabel(placeholder)
+                .accessibilityValue(text)
                 .accessibilityHint("Eingabefeld für deinen Reflexionstext.")
                 #endif
             }
@@ -80,6 +82,7 @@ public struct ShortTextPromptCard: View {
                 HStack(spacing: theme.spacing.xs) {
                     Image(systemName: statusIcon)
                         .font(.caption2)
+                        .accessibilityHidden(true)
                     Text(statusMessage)
                         .font(.caption)
                 }
@@ -96,6 +99,7 @@ public struct ShortTextPromptCard: View {
             .accessibilityElement(children: .combine)
             .accessibilityLabel("Reflexionsstatus: \(trimmedCount) von maximal \(maxCharacters) Zeichen. \(statusMessage)")
             .accessibilityValue("\(trimmedCount) Zeichen")
+            .accessibilityIdentifier("shortTextStatus")
         }
     }
 

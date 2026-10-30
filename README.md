@@ -4,13 +4,15 @@ Native SwiftUI self-assessment application developed for **DLAMSD02 Apple Mobile
 
 ## Current Development Stage
 
-Version **0.3.1** (Build `20261030.101500`), Sprint 3.1: Audit Hardening, Native XCUITest Interaction Suite, Dynamic Type & Multi-Device Verification.
+Version **0.3.2** (Build `20261030.111500`), Sprint 3.2: Formal Acceptance Testing, Verified State Assertions & Closing Milestone.
 
 ### Implemented
 
-- **Native XCUITest Interaction Suite (Codex Audit Round 3 Resolved):**
-  - Live simulator execution of 3 UI integration tests (`AssessYourselfUITests`) verifying real touches, slider drag, typing in `TextEditor`, and mutual exclusion.
-  - Test Harness `renderInHost` eliminates all SwiftUI `Environment` warnings across unit tests.
+- **Verified XCUITest Acceptance Suite (Codex Audit Round 4 Resolved):**
+  - Live simulator execution of 3 UI integration tests (`AssessYourselfUITests`) with explicit state and counter assertions after every single tap.
+  - Stepped slider: Verifies initial `4 / 5` ("Eher hoch") and dynamic transition to `1 / 5` ("Sehr niedrig") after dragging to 0.0.
+  - Short text reflection: Verifies initial empty state with placeholder and warning milestone, followed by typing, editor text assertion, and live counter updates.
+  - Zero compiler warnings in XCUITest target (`chipSwiftPM` fully integrated into bidirectional toggle assertions).
 - **Barrierefreiheit & Kontrast-Härtung (WCAG AA):**
   - `ShortTextPromptCard`: Inset placeholder uses unattenuated `textSecondary` token, achieving **7.58 : 1** (Light) and **5.71 : 1** (Dark) contrast against card surface.
   - VoiceOver accessibility attributes added to `TextEditor` (`accessibilityLabel`, `accessibilityHint`, live character counter values).
@@ -27,7 +29,7 @@ Version **0.3.1** (Build `20261030.101500`), Sprint 3.1: Audit Hardening, Native
 - **Test Suite & Code Coverage:**
   - **51 XCTest unit tests** passing with 100% success rate across SwiftPM.
   - **3 XCUITest integration tests** passing with 100% success rate on iOS Simulator.
-  - **93.09% global line coverage** (`llvm-cov report`), with **$\ge 82.22\%$ on every individual source file**.
+  - **93.15% global line coverage** (`llvm-cov report`), with **$\ge 82.22\%$ on every individual source file**.
 
 ## Open and Build
 
@@ -80,6 +82,7 @@ docs/                      Sprint documentation and technical verification repor
 | **0.2.2** | Completeness contract, payload validation, $\ge 84\%$ coverage, ADR matrices | ✅ Completed |
 | **0.3.0** | Modular atomic UI components (Choice, Chips, Slider, Text), native iOS App target | ✅ Completed |
 | **0.3.1** | UI interaction tests (XCUITest), a11y & contrast hardening, $\ge 80\%$ coverage per file | ✅ Completed |
+| **0.3.2** | Verified XCUITest state assertions, slider delta, empty/typed text, closing Sprint 3 | ✅ Completed |
 | **0.4.0** | AssessmentViewModel, sequential navigation flow & question coordinator | 🟡 Next |
 | **0.5.0** | Interactive validation, transition feedback, decoupled haptics | ⚪ Planned |
 | **0.6.0** | Result analytics, competency dashboard, archetype categorization | ⚪ Planned |

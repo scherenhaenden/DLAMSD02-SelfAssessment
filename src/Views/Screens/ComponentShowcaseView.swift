@@ -13,8 +13,8 @@ public struct ComponentShowcaseView: View {
     // Interactive state for Slider
     @State private var sliderValue: Double = 4.0
 
-    // Interactive state for Short Text
-    @State private var reflectionText: String = "Wir setzen strikte Schichtentrennung und Invariantenprüfung mit TDD ein."
+    // Interactive state for Short Text (initially empty to demonstrate placeholder and milestone transitions)
+    @State private var reflectionText: String = ""
 
     public init() {}
 

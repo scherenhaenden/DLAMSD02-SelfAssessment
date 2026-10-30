@@ -34,14 +34,17 @@ public struct MultiSelectChipGrid: View {
                 Text(statusText)
                     .font(.footnote)
                     .foregroundColor(isWithinBounds ? theme.colors.textSecondary.color : theme.colors.warningFeedback.color)
+                    .accessibilityIdentifier("multiChip.statusText")
                 Spacer()
                 Text("\(selectedIds.count)/\(maxSelectCount)")
                     .font(.footnote)
                     .fontWeight(.semibold)
                     .foregroundColor(isWithinBounds ? accentColor : theme.colors.warningFeedback.color)
+                    .accessibilityIdentifier("multiChip.counterPill")
             }
             .accessibilityElement(children: .combine)
             .accessibilityLabel("Selection status: \(selectedIds.count) of maximum \(maxSelectCount) selected. Required minimum: \(minSelectCount).")
+            .accessibilityIdentifier("multiChip.statusHeader")
 
             // Grid of selectable chips (adaptive columns with unbounded dynamic text scaling)
             LazyVGrid(
