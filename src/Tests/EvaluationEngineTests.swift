@@ -93,16 +93,16 @@ final class EvaluationEngineTests: XCTestCase {
     func testScoreShortTextAwardsKeywordsAndLength() {
         let question = catalog.questions.first(where: { $0.type == .shortText })!
 
-        // Short below minimum
+        // Short below minimum (15 characters)
         let shortScore = engine.scoreQuestion(
             question: question,
             selectedOptionIds: nil,
             sliderValue: nil,
             textInput: "Kurz"
         )
-        XCTAssertLessThan(shortScore, 40.0)
+        XCTAssertLessThanOrEqual(shortScore, 30.0)
 
-        // Rich with technical keywords
+        // Rich with exact technical keyword tokens
         let richText = "Wir verwenden ein sauberes ViewModel mit SwiftUI und XCTest, um Protokoll und Invarianten abzusichern."
         let richScore = engine.scoreQuestion(
             question: question,
@@ -113,20 +113,44 @@ final class EvaluationEngineTests: XCTestCase {
         XCTAssertGreaterThanOrEqual(richScore, 90.0)
     }
 
-    func testFullEvaluationSynthesizesArchetype() throws {
-        // Generate answers where architecture questions score 100% and others 50%
+    func testFullEvaluationSynthesizesArchetypeWithRealisticPayloads() throws {
         var answers: [AssessmentAnswer] = []
 
         for question in catalog.questions {
-            let score: Double = (question.dimensionId == "architecture") ? 100.0 : 50.0
+            var selectedIds: [String]?
+            var sliderVal: Double?
+            var text: String?
+
+            switch question.type {
+            case .singleChoice:
+                let targetWeight: Double = (question.dimensionId == "architecture") ? 100.0 : 35.0
+                if let option = question.options?.first(where: { $0.scoreWeight == targetWeight }) ?? question.options?.first {
+                    selectedIds = [option.id]
+                }
+            case .multipleChoice:
+                if question.dimensionId == "architecture" {
+                    selectedIds = question.options?.map(\.id)
+                } else {
+                    selectedIds = question.options?.prefix(1).map(\.id)
+                }
+            case .likertSlider:
+                sliderVal = (question.dimensionId == "architecture") ? 5.0 : 2.0
+            case .shortText:
+                if question.dimensionId == "architecture" {
+                    text = "Wir verwenden saubere MVVM Schichten, Protocol Abstraktion und strikte Invarianten zur Entkopplung."
+                } else {
+                    text = "Eine einfache Standardbeschreibung ohne vertiefte Methodik."
+                }
+            }
+
             let answer = AssessmentAnswer(
                 questionId: question.id,
                 dimensionId: question.dimensionId,
                 questionType: question.type,
-                selectedOptionIds: nil,
-                sliderValue: nil,
-                textInput: nil,
-                normalizedScore: score
+                selectedOptionIds: selectedIds,
+                sliderValue: sliderVal,
+                textInput: text,
+                normalizedScore: 0.0 // Engine will recompute derived score
             )
             answers.append(answer)
         }
@@ -138,9 +162,138 @@ final class EvaluationEngineTests: XCTestCase {
         )
 
         XCTAssertEqual(record.catalogId, catalog.catalogId)
-        XCTAssertEqual(record.dimensionScores["architecture"], 100.0)
-        XCTAssertEqual(record.dimensionScores["platform"], 50.0)
+        XCTAssertGreaterThan(record.dimensionScores["architecture"]!, record.dimensionScores["platform"]!)
         XCTAssertEqual(record.archetype.id, "system-architect")
-        XCTAssertEqual(record.overallScore, (100.0 + 50.0 * 3) / 4.0, accuracy: 0.001)
+    }
+
+    func testEvaluationRejectsDuplicateAnswers() {
+        let q = catalog.questions[0]
+        let a1 = AssessmentAnswer(questionId: q.id, dimensionId: q.dimensionId, questionType: q.type, normalizedScore: 100.0)
+        let a2 = AssessmentAnswer(questionId: q.id, dimensionId: q.dimensionId, questionType: q.type, normalizedScore: 50.0)
+
+        XCTAssertThrowsError(try engine.evaluate(answers: [a1, a2], catalog: catalog, durationSeconds: 10.0)) { error in
+            guard case EvaluationEngineError.duplicateAnswer(let qid) = error else {
+                XCTFail("Expected duplicateAnswer error, got: \(error)")
+                return
+            }
+            XCTAssertEqual(qid, q.id)
+        }
+    }
+
+    func testEvaluationRejectsUnknownQuestionId() {
+        let fake = AssessmentAnswer(
+            questionId: "unknown-question-id",
+            dimensionId: "architecture",
+            questionType: .singleChoice,
+            normalizedScore: 100.0
+        )
+
+        XCTAssertThrowsError(try engine.evaluate(answers: [fake], catalog: catalog, durationSeconds: 10.0)) { error in
+            guard case EvaluationEngineError.unknownQuestion(let qid) = error else {
+                XCTFail("Expected unknownQuestion error, got: \(error)")
+                return
+            }
+            XCTAssertEqual(qid, "unknown-question-id")
+        }
+    }
+
+    func testEvaluationRejectsMismatchedDimension() {
+        let q = catalog.questions.first(where: { $0.dimensionId == "architecture" })!
+        let forged = AssessmentAnswer(
+            questionId: q.id,
+            dimensionId: "quality", // Mismatched
+            questionType: q.type,
+            normalizedScore: 100.0
+        )
+
+        XCTAssertThrowsError(try engine.evaluate(answers: [forged], catalog: catalog, durationSeconds: 10.0)) { error in
+            guard case EvaluationEngineError.mismatchedDimension(let qid, let exp, let act) = error else {
+                XCTFail("Expected mismatchedDimension error, got: \(error)")
+                return
+            }
+            XCTAssertEqual(qid, q.id)
+            XCTAssertEqual(exp, "architecture")
+            XCTAssertEqual(act, "quality")
+        }
+    }
+
+    func testArchetypeTieBreakingIs100PercentDeterministic() {
+        // When all dimensions score zero, ensure 50 repeated executions return the exact same archetype
+        let zeroScores: [String: Double] = [
+            "architecture": 0.0,
+            "platform": 0.0,
+            "quality": 0.0,
+            "agile": 0.0
+        ]
+
+        let firstArchetype = engine.selectDominantArchetype(
+            dimensionScores: zeroScores,
+            dimensions: catalog.dimensions,
+            archetypes: catalog.archetypes
+        )
+
+        // In catalog.dimensions, the first declared dimension is "architecture" -> "system-architect"
+        XCTAssertEqual(firstArchetype.id, "system-architect")
+
+        for _ in 1...50 {
+            let repeated = engine.selectDominantArchetype(
+                dimensionScores: zeroScores,
+                dimensions: catalog.dimensions,
+                archetypes: catalog.archetypes
+            )
+            XCTAssertEqual(repeated.id, firstArchetype.id, "Tie-breaker must be 100% deterministic across iterations")
+        }
+    }
+
+    func testStrictTransitivityOfRecordComparison() {
+        // Reproduce Codex's cycle test with micro-variations in scores and timestamps
+        let baseDate = Date()
+        let recA = AssessmentRecord(
+            catalogId: "cat",
+            completedAt: baseDate.addingTimeInterval(30),
+            durationSeconds: 100.0,
+            dimensionScores: [:],
+            overallScore: 50.0,
+            archetype: ArchetypeProfile.standardArchetypes[0],
+            answers: []
+        )
+        let recB = AssessmentRecord(
+            catalogId: "cat",
+            completedAt: baseDate.addingTimeInterval(20),
+            durationSeconds: 100.0,
+            dimensionScores: [:],
+            overallScore: 50.00075,
+            archetype: ArchetypeProfile.standardArchetypes[0],
+            answers: []
+        )
+        let recC = AssessmentRecord(
+            catalogId: "cat",
+            completedAt: baseDate.addingTimeInterval(10),
+            durationSeconds: 100.0,
+            dimensionScores: [:],
+            overallScore: 50.0015,
+            archetype: ArchetypeProfile.standardArchetypes[0],
+            answers: []
+        )
+
+        // Strict ordering: recA (50.0) < recB (50.00075) < recC (50.0015)
+        XCTAssertTrue(recA < recB)
+        XCTAssertTrue(recB < recC)
+        XCTAssertTrue(recA < recC, "Transitivity must hold: if A < B and B < C, then A < C")
+        XCTAssertFalse(recC < recA, "Antisymmetry must hold: if A < C, then not C < A")
+    }
+
+    func testDecoderClampsForgedNormalizedScoreJSON() throws {
+        let json = """
+        {
+            "questionId": "arch-sc-01",
+            "dimensionId": "architecture",
+            "questionType": "single_choice",
+            "normalizedScore": 999.0
+        }
+        """.data(using: .utf8)!
+
+        let answer = try JSONDecoder().decode(AssessmentAnswer.self, from: json)
+        XCTAssertEqual(answer.normalizedScore, 100.0, "Decoder must strictly clamp normalizedScore to 100.0")
     }
 }

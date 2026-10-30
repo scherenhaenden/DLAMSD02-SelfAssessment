@@ -12,7 +12,7 @@ public struct AssessmentAnswer: Identifiable, Codable, Sendable, Hashable {
     public let sliderValue: Double?
     public let textInput: String?
 
-    /// Normalized score awarded for this response (scale 0.0 to 100.0).
+    /// Normalized score awarded for this response (strictly clamped to 0.0 ... 100.0).
     public let normalizedScore: Double
 
     public init(
@@ -31,6 +31,20 @@ public struct AssessmentAnswer: Identifiable, Codable, Sendable, Hashable {
         self.sliderValue = sliderValue
         self.textInput = textInput
         self.normalizedScore = min(100.0, max(0.0, normalizedScore))
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.questionId = try container.decode(String.self, forKey: .questionId)
+        self.dimensionId = try container.decode(String.self, forKey: .dimensionId)
+        self.questionType = try container.decode(QuestionType.self, forKey: .questionType)
+        self.selectedOptionIds = try container.decodeIfPresent([String].self, forKey: .selectedOptionIds)
+        self.sliderValue = try container.decodeIfPresent(Double.self, forKey: .sliderValue)
+        self.textInput = try container.decodeIfPresent(String.self, forKey: .textInput)
+
+        // Strict defensive decoding: Clamp raw decoded score to [0.0 ... 100.0]
+        let rawScore = try container.decode(Double.self, forKey: .normalizedScore)
+        self.normalizedScore = min(100.0, max(0.0, rawScore))
     }
 }
 
@@ -73,14 +87,21 @@ public struct AssessmentRecord: Identifiable, Codable, Sendable, Comparable {
         self.answers = answers
     }
 
-    /// Four-tier canonical comparison (Score, Quality/Dimension balance, duration, recency).
+    /// Strict canonical 4-tier comparison satisfying mathematical strict weak ordering and transitivity:
+    /// Tier 1: Overall Score (ascending)
+    /// Tier 2: Completion timestamp (ascending / older first)
+    /// Tier 3: Duration (descending / faster duration is superior)
+    /// Tier 4: Canonical UUID tie-breaker (lexicographical)
     public static func < (lhs: AssessmentRecord, rhs: AssessmentRecord) -> Bool {
-        if abs(lhs.overallScore - rhs.overallScore) > 0.001 {
+        if lhs.overallScore != rhs.overallScore {
             return lhs.overallScore < rhs.overallScore
         }
         if lhs.completedAt != rhs.completedAt {
             return lhs.completedAt < rhs.completedAt
         }
-        return lhs.durationSeconds > rhs.durationSeconds
+        if lhs.durationSeconds != rhs.durationSeconds {
+            return lhs.durationSeconds > rhs.durationSeconds
+        }
+        return lhs.id.uuidString < rhs.id.uuidString
     }
 }

@@ -80,13 +80,49 @@ public struct AssessmentQuestion: Identifiable, Codable, Sendable, Hashable {
         }
 
         switch type {
-        case .singleChoice, .multipleChoice:
+        case .singleChoice:
             guard let options = options, options.count >= 2 else {
                 throw AssessmentValidationError.insufficientOptions(questionId: id, count: options?.count ?? 0)
+            }
+            for opt in options {
+                guard !opt.id.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+                    throw AssessmentValidationError.emptyOptionIdentifier(questionId: id)
+                }
+                guard !opt.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+                    throw AssessmentValidationError.emptyOptionTitle(questionId: id, optionId: opt.id)
+                }
             }
             let uniqueOptionIds = Set(options.map(\.id))
             guard uniqueOptionIds.count == options.count else {
                 throw AssessmentValidationError.duplicateOptionIdentifiers(questionId: id)
+            }
+
+        case .multipleChoice:
+            guard let options = options, options.count >= 2 else {
+                throw AssessmentValidationError.insufficientOptions(questionId: id, count: options?.count ?? 0)
+            }
+            for opt in options {
+                guard !opt.id.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+                    throw AssessmentValidationError.emptyOptionIdentifier(questionId: id)
+                }
+                guard !opt.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+                    throw AssessmentValidationError.emptyOptionTitle(questionId: id, optionId: opt.id)
+                }
+            }
+            let uniqueOptionIds = Set(options.map(\.id))
+            guard uniqueOptionIds.count == options.count else {
+                throw AssessmentValidationError.duplicateOptionIdentifiers(questionId: id)
+            }
+
+            let minCount = minSelectCount ?? 1
+            let maxCount = maxSelectCount ?? options.count
+            guard minCount >= 1 && minCount <= maxCount && maxCount <= options.count else {
+                throw AssessmentValidationError.invalidMultiSelectBounds(
+                    questionId: id,
+                    min: minCount,
+                    max: maxCount,
+                    optionCount: options.count
+                )
             }
 
         case .likertSlider:
@@ -95,10 +131,25 @@ public struct AssessmentQuestion: Identifiable, Codable, Sendable, Hashable {
             guard minVal < maxVal else {
                 throw AssessmentValidationError.invalidSliderRange(questionId: id, min: minVal, max: maxVal)
             }
+            if let step = sliderStep {
+                guard step > 0.0 else {
+                    throw AssessmentValidationError.invalidSliderStep(questionId: id, step: step)
+                }
+            }
+            if let defaultVal = sliderDefault {
+                guard defaultVal >= minVal && defaultVal <= maxVal else {
+                    throw AssessmentValidationError.invalidSliderDefault(
+                        questionId: id,
+                        defaultVal: defaultVal,
+                        min: minVal,
+                        max: maxVal
+                    )
+                }
+            }
 
         case .shortText:
-            let minLen = minCharacters ?? 10
-            let maxLen = maxCharacters ?? 500
+            let minLen = minCharacters ?? 15
+            let maxLen = maxCharacters ?? 350
             guard minLen > 0, minLen <= maxLen else {
                 throw AssessmentValidationError.invalidTextBounds(questionId: id, min: minLen, max: maxLen)
             }
@@ -112,8 +163,13 @@ public enum AssessmentValidationError: LocalizedError, Equatable {
     case emptyDimensionIdentifier(questionId: String)
     case emptyPrompt(questionId: String)
     case insufficientOptions(questionId: String, count: Int)
+    case emptyOptionIdentifier(questionId: String)
+    case emptyOptionTitle(questionId: String, optionId: String)
     case duplicateOptionIdentifiers(questionId: String)
+    case invalidMultiSelectBounds(questionId: String, min: Int, max: Int, optionCount: Int)
     case invalidSliderRange(questionId: String, min: Double, max: Double)
+    case invalidSliderStep(questionId: String, step: Double)
+    case invalidSliderDefault(questionId: String, defaultVal: Double, min: Double, max: Double)
     case invalidTextBounds(questionId: String, min: Int, max: Int)
 
     public var errorDescription: String? {
@@ -126,10 +182,20 @@ public enum AssessmentValidationError: LocalizedError, Equatable {
             return "Assessment question '\(qid)' prompt cannot be empty."
         case .insufficientOptions(let qid, let count):
             return "Choice question '\(qid)' requires at least 2 options, found \(count)."
+        case .emptyOptionIdentifier(let qid):
+            return "Choice question '\(qid)' contains an option with an empty identifier."
+        case .emptyOptionTitle(let qid, let optId):
+            return "Choice question '\(qid)' option '\(optId)' cannot have an empty title."
         case .duplicateOptionIdentifiers(let qid):
             return "Choice question '\(qid)' contains duplicate option identifiers."
+        case .invalidMultiSelectBounds(let qid, let min, let max, let count):
+            return "Multi-select question '\(qid)' has invalid selection bounds (min: \(min), max: \(max), options: \(count))."
         case .invalidSliderRange(let qid, let min, let max):
             return "Slider question '\(qid)' has invalid range (min: \(min), max: \(max))."
+        case .invalidSliderStep(let qid, let step):
+            return "Slider question '\(qid)' has non-positive step value (\(step))."
+        case .invalidSliderDefault(let qid, let val, let min, let max):
+            return "Slider question '\(qid)' default value \(val) falls outside range [\(min) ... \(max)]."
         case .invalidTextBounds(let qid, let min, let max):
             return "Short text question '\(qid)' has invalid character length constraints (min: \(min), max: \(max))."
         }

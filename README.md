@@ -4,26 +4,23 @@ Native SwiftUI self-assessment application developed for **DLAMSD02 Apple Mobile
 
 ## Current Development Stage
 
-Version **0.2.0** (Build `20261030.084500`), Sprint 2: Design System, WCAG 2.1 AA/AAA Contrast Audit, Injectable Theme Protocol & Wireframes.
+Version **0.2.1** (Build `20261030.091000`), Sprint 2.1: Domain Hardening, Invariant Validation, Transitive Sorting & Audit Reconciliation.
 
 ### Implemented
 
+- Domain Hardening & Verification:
+  - Strict input validation in `EvaluationEngineProtocol` cross-checking answers against catalog questions, rejecting unknown IDs, duplicate answers, and dimension mismatches.
+  - Scores derived dynamically from raw input payloads (`choiceOptionId`, `selectedOptionIds`, `sliderValue`, `textInput`), neutralizing forged values.
+  - Custom `init(from decoder: Decoder)` in `AssessmentAnswer` preventing deserialization of out-of-bounds scores ($[0.0, 100.0]$).
+  - Extended catalog invariants in `AssessmentCatalog` and `AssessmentQuestion` validating non-empty option IDs/labels, positive slider steps, valid default values, and valid multi-select bounds.
+  - Strict mathematical weak ordering in `AssessmentRecord.<` ensuring transitivity ($A < B \land B < C \implies A < C$).
+  - 100% deterministic archetype tie-breaking using canonical dimension order from the catalog.
+  - Resolved namespace ambiguity with Quickdraw by renaming `RGBColor` to `AppRGBColor`.
 - Protocol-Oriented & Injectable Theme Architecture: Clean alternative to rigid static constants via `AppThemeProtocol` and `AppTheme` value type, supporting constructor injection and SwiftUI `@Environment(\.appTheme)`.
 - Mathematical WCAG 2.1 Contrast Audit (TDD): Relative luminance and contrast ratio formulas verified via automated XCTest suite (`ColorTokenTests`). All text tokens and 4 dimension accents achieve $\ge 4.5:1$ (AA) and up to $15.6:1$ (AAA) in Light and Dark Modes.
 - Ergonomic Layout & Multi-Device Tokens: 4pt/8pt grid spacing, continuous squircle radii (8pt, 14pt, 20pt), 44pt touch targets, 56pt primary button heights, and 640pt iPad container limit.
 - Comprehensive Wireframes: Detailed ASCII blueprints and flow specifications in `design/wireframes/WIREFRAMES.md` covering all 5 core screens.
-- Domain Layer (DDD): `AssessmentDimension`, `QuestionType`, `ChoiceOption`, `AssessmentQuestion`, `ArchetypeProfile`, `AssessmentAnswer`, and `AssessmentRecord`.
-- Polymorphic Interaction Support: Domain models for Single Choice, Multiple Choice (Chips), Likert Slider (1–5 continuous/discrete), and Short Text entry with minimum length constraints.
-- Strict Invariant Validation: `validateInvariants()` ensures non-empty IDs, valid dimension associations, non-empty prompts, minimum 2 options for choice questions, valid slider ranges, and positive text bounds.
-- Bundled Evaluation Catalog: `assessment_catalog.json` containing 24 vetted items distributed evenly across 4 core engineering dimensions (Architecture, Platform Engineering, Quality Assurance, Agile Collaboration) with 4 diagnostic archetypes.
-- Local Catalog Service (`CatalogLoaderProtocol`): Resilient JSON decoding, resource bundle extraction, and integrity verification.
-- Psychometric Scoring Engine (`EvaluationEngineProtocol`, `AssessmentEvaluationEngine`):
-  - Normalization of all question types to a standard 0.0–100.0% scale.
-  - Linear normalization for Likert sliders ($[min, max] \to [0, 100]$).
-  - Additive weights for single and multiple choice selections.
-  - Heuristic keyword analysis and length scoring for short-text technical reflections.
-  - Dimension-level weighted aggregation and dominant archetype synthesis.
-- Test Suite: 18 XCTest unit tests passing with 100% success rate in 0.008s. `DesignTokens.swift` coverage: 89.06%.
+- Test Suite: 29 XCTest unit tests passing with 100% success rate in 0.012s. Core logic coverage: 71.84% global, with `DesignTokens.swift` at 89.06% and `EvaluationEngineProtocol.swift` at 80.97%.
 
 ## Open and Build
 
@@ -64,6 +61,7 @@ ui-tests/                  XCUITest acceptance suite for iPhone 17 & iPad 9th Ge
 | :---: | :--- | :---: |
 | **0.1.0** | Domain core, Codable models, bundled catalog, scoring engine | ✅ Completed |
 | **0.2.0** | Design system, WCAG 2.1 AA/AAA adaptive color tokens, wireframes | ✅ Completed |
+| **0.2.1** | Domain hardening, catalog invariants, transitive ordering, tie-breaking | ✅ Completed |
 | **0.3.0** | Modular atomic UI components (Choice, Chips, Slider, Text) | 🟡 Next |
 | **0.4.0** | Multidimensional evaluation engine & sequential screen flow | ⚪ Planned |
 | **0.5.0** | Interactive validation, transition feedback, decoupled haptics | ⚪ Planned |

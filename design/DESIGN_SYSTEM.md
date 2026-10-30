@@ -39,10 +39,10 @@ Each of the four engineering evaluation dimensions has its dedicated semantic co
 
 | Dimension ID | Dimension Name | Light Hex | Dark Hex | Contrast on Surface | Role |
 | :---: | :--- | :---: | :---: | :---: | :--- |
-| **`architecture`** | Software Architecture & System Design | `#1E3A8A` | `#38BDF8` | **10.4 : 1** (L) / **7.0 : 1** (D) | Structural integrity, modularity, diagrams |
-| **`platform`** | Swift & Apple Platform Engineering | `#581C87` | `#C084FC` | **12.6 : 1** (L) / **5.6 : 1** (D) | Native Swift, HIG idioms, platform APIs |
-| **`quality`** | Quality Assurance & Verification | `#14532D` | `#4ADE80` | **9.1 : 1** (L) / **8.3 : 1** (D) | Testing, coverage, boundary invariants |
-| **`agile`** | Agile Practices & Collaboration | `#9A3412` | `#FBBF24` | **6.95 : 1** (L) / **8.8 : 1** (D) | Sprints, DoD, documentation, Git |
+| **`architecture`** | Software Architecture & System Design | `#1E3A8A` | `#38BDF8` | **10.4 : 1** (L, AAA) / **6.83 : 1** (D, AA) | Structural integrity, modularity, diagrams |
+| **`platform`** | Swift & Apple Platform Engineering | `#581C87` | `#C084FC` | **12.6 : 1** (L, AAA) / **5.64 : 1** (D, AA) | Native Swift, HIG idioms, platform APIs |
+| **`quality`** | Quality Assurance & Verification | `#14532D` | `#4ADE80` | **9.1 : 1** (L, AAA) / **8.32 : 1** (D, AAA) | Testing, coverage, boundary invariants |
+| **`agile`** | Agile Practices & Collaboration | `#9A3412` | `#FBBF24` | **6.95 : 1** (L, AA) / **8.84 : 1** (D, AAA) | Sprints, DoD, documentation, Git |
 
 ---
 

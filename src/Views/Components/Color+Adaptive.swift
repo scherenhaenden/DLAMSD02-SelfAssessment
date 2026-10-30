@@ -7,7 +7,7 @@ import AppKit
 #endif
 
 /// A normalized RGB color representation in sRGB color space [0.0 ... 1.0].
-public struct RGBColor: Sendable, Hashable {
+public struct AppRGBColor: Sendable, Hashable {
     public let r: Double
     public let g: Double
     public let b: Double
@@ -33,10 +33,10 @@ public struct RGBColor: Sendable, Hashable {
 
 /// A semantic adaptive color pair with guaranteed WCAG contrast.
 public struct AdaptiveColorToken: Sendable, Hashable {
-    public let lightRGB: RGBColor
-    public let darkRGB: RGBColor
+    public let lightRGB: AppRGBColor
+    public let darkRGB: AppRGBColor
 
-    public init(lightRGB: RGBColor, darkRGB: RGBColor) {
+    public init(lightRGB: AppRGBColor, darkRGB: AppRGBColor) {
         self.lightRGB = lightRGB
         self.darkRGB = darkRGB
     }

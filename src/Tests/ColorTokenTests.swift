@@ -16,13 +16,13 @@ final class ColorTokenTests: XCTestCase {
 
     // MARK: - WCAG 2.1 Relative Luminance & Contrast Calculation Helpers
 
-    private func relativeLuminance(r: Double, g: Double, b: Double) -> Double {
+    private func relativeLuminance(rgb: AppRGBColor) -> Double {
         func channelLinear(_ c: Double) -> Double {
             return c <= 0.04045 ? (c / 12.92) : pow((c + 0.055) / 1.055, 2.4)
         }
-        let rLin = channelLinear(r)
-        let gLin = channelLinear(g)
-        let bLin = channelLinear(b)
+        let rLin = channelLinear(rgb.r)
+        let gLin = channelLinear(rgb.g)
+        let bLin = channelLinear(rgb.b)
         return 0.2126 * rLin + 0.7152 * gLin + 0.0722 * bLin
     }
 
@@ -32,77 +32,100 @@ final class ColorTokenTests: XCTestCase {
         return (brighter + 0.05) / (darker + 0.05)
     }
 
-    // MARK: - Unit Tests
+    // MARK: - Luminance & Threshold Unit Tests
 
     func testMathematicalLuminanceCalculation() {
         // Pure black luminance must be 0.0
-        let blackL = relativeLuminance(r: 0.0, g: 0.0, b: 0.0)
+        let blackL = relativeLuminance(rgb: AppRGBColor(r: 0.0, g: 0.0, b: 0.0))
         XCTAssertEqual(blackL, 0.0, accuracy: 0.0001)
 
         // Pure white luminance must be 1.0
-        let whiteL = relativeLuminance(r: 1.0, g: 1.0, b: 1.0)
+        let whiteL = relativeLuminance(rgb: AppRGBColor(r: 1.0, g: 1.0, b: 1.0))
         XCTAssertEqual(whiteL, 1.0, accuracy: 0.0001)
 
         // White on Black contrast ratio must be 21.0
         let maxContrast = contrastRatio(l1: whiteL, l2: blackL)
         XCTAssertEqual(maxContrast, 21.0, accuracy: 0.01)
+
+        // Piecewise sRGB boundary test: exactly at and around 0.04045 threshold
+        let atThreshold = relativeLuminance(rgb: AppRGBColor(r: 0.04045, g: 0.04045, b: 0.04045))
+        let expectedLin = 0.04045 / 12.92
+        XCTAssertEqual(atThreshold, expectedLin, accuracy: 0.0001)
     }
 
-    func testLightModeTextOnSurfaceMeetsWCAGAA() {
-        // Light mode surface background: #FFFFFF (L = 1.0)
-        let surfaceL = relativeLuminance(r: 1.0, g: 1.0, b: 1.0)
+    // MARK: - Text and Feedback Contrast Tests (All 5 Tokens on Theme Surfaces)
 
-        // Primary text light: #0F172A (r: 15/255, g: 23/255, b: 42/255)
-        let textRgb = theme.colors.textPrimary.lightRGB
-        let textL = relativeLuminance(r: textRgb.r, g: textRgb.g, b: textRgb.b)
-        let ratio = contrastRatio(l1: surfaceL, l2: textL)
+    func testTextTokensMeetWCAGAAOnCardSurfaces() {
+        let lightSurfaceL = relativeLuminance(rgb: theme.colors.surfaceCard.lightRGB)
+        let darkSurfaceL = relativeLuminance(rgb: theme.colors.surfaceCard.darkRGB)
 
-        // WCAG AAA requires >= 7.0:1
-        XCTAssertGreaterThanOrEqual(ratio, 7.0, "Primary text in Light Mode must meet WCAG AAA (>= 7.0:1)")
+        // 1. Text Primary (Light & Dark)
+        let primaryLightL = relativeLuminance(rgb: theme.colors.textPrimary.lightRGB)
+        let primaryDarkL = relativeLuminance(rgb: theme.colors.textPrimary.darkRGB)
+        let crPrimaryLight = contrastRatio(l1: lightSurfaceL, l2: primaryLightL)
+        let crPrimaryDark = contrastRatio(l1: primaryDarkL, l2: darkSurfaceL)
+
+        XCTAssertGreaterThanOrEqual(crPrimaryLight, 7.0, "Primary text Light Mode must meet AAA (>= 7.0:1)")
+        XCTAssertGreaterThanOrEqual(crPrimaryDark, 7.0, "Primary text Dark Mode must meet AAA (>= 7.0:1)")
+
+        // 2. Text Secondary (Light & Dark)
+        let secLightL = relativeLuminance(rgb: theme.colors.textSecondary.lightRGB)
+        let secDarkL = relativeLuminance(rgb: theme.colors.textSecondary.darkRGB)
+        let crSecLight = contrastRatio(l1: lightSurfaceL, l2: secLightL)
+        let crSecDark = contrastRatio(l1: secDarkL, l2: darkSurfaceL)
+
+        XCTAssertGreaterThanOrEqual(crSecLight, 4.5, "Secondary text Light Mode must meet AA (>= 4.5:1)")
+        XCTAssertGreaterThanOrEqual(crSecDark, 4.5, "Secondary text Dark Mode must meet AA (>= 4.5:1)")
     }
 
-    func testDarkModeTextOnSurfaceMeetsWCAGAA() {
-        // Dark mode card surface: #1E293B (r: 30/255, g: 41/255, b: 59/255)
-        let surfaceRgb = theme.colors.surfaceCard.darkRGB
-        let surfaceL = relativeLuminance(r: surfaceRgb.r, g: surfaceRgb.g, b: surfaceRgb.b)
+    func testFeedbackTokensMeetWCAGAAOnCardSurfaces() {
+        let lightSurfaceL = relativeLuminance(rgb: theme.colors.surfaceCard.lightRGB)
+        let darkSurfaceL = relativeLuminance(rgb: theme.colors.surfaceCard.darkRGB)
 
-        // Primary text dark: #F8FAFC (r: 248/255, g: 250/255, b: 252/255)
-        let textRgb = theme.colors.textPrimary.darkRGB
-        let textL = relativeLuminance(r: textRgb.r, g: textRgb.g, b: textRgb.b)
-        let ratio = contrastRatio(l1: textL, l2: surfaceL)
+        // 3. Success Feedback
+        let succLightL = relativeLuminance(rgb: theme.colors.successFeedback.lightRGB)
+        let succDarkL = relativeLuminance(rgb: theme.colors.successFeedback.darkRGB)
+        XCTAssertGreaterThanOrEqual(contrastRatio(l1: lightSurfaceL, l2: succLightL), 4.5, "Success light must meet AA")
+        XCTAssertGreaterThanOrEqual(contrastRatio(l1: succDarkL, l2: darkSurfaceL), 4.5, "Success dark must meet AA")
 
-        // WCAG AAA requires >= 7.0:1
-        XCTAssertGreaterThanOrEqual(ratio, 7.0, "Primary text in Dark Mode must meet WCAG AAA (>= 7.0:1)")
+        // 4. Warning Feedback
+        let warnLightL = relativeLuminance(rgb: theme.colors.warningFeedback.lightRGB)
+        let warnDarkL = relativeLuminance(rgb: theme.colors.warningFeedback.darkRGB)
+        XCTAssertGreaterThanOrEqual(contrastRatio(l1: lightSurfaceL, l2: warnLightL), 4.5, "Warning light must meet AA")
+        XCTAssertGreaterThanOrEqual(contrastRatio(l1: warnDarkL, l2: darkSurfaceL), 4.5, "Warning dark must meet AA")
+
+        // 5. Error Feedback
+        let errLightL = relativeLuminance(rgb: theme.colors.errorFeedback.lightRGB)
+        let errDarkL = relativeLuminance(rgb: theme.colors.errorFeedback.darkRGB)
+        XCTAssertGreaterThanOrEqual(contrastRatio(l1: lightSurfaceL, l2: errLightL), 4.5, "Error light must meet AA")
+        XCTAssertGreaterThanOrEqual(contrastRatio(l1: errDarkL, l2: darkSurfaceL), 4.5, "Error dark must meet AA")
     }
 
     func testDimensionAccentColorsMeetWCAGAAForNormalText() {
-        let whiteL = relativeLuminance(r: 1.0, g: 1.0, b: 1.0)
-        let darkSurfaceL = relativeLuminance(r: 30.0 / 255.0, g: 41.0 / 255.0, b: 59.0 / 255.0)
+        let lightSurfaceL = relativeLuminance(rgb: theme.colors.surfaceCard.lightRGB)
+        let darkSurfaceL = relativeLuminance(rgb: theme.colors.surfaceCard.darkRGB)
 
-        // Test each dimension's light and dark tokens via instance method
         let dimensions = ["architecture", "platform", "quality", "agile"]
 
         for dimId in dimensions {
             let token = theme.colorToken(forDimension: dimId)
 
-            // Light mode token against white background
-            let lightRgb = token.lightRGB
-            let lightL = relativeLuminance(r: lightRgb.r, g: lightRgb.g, b: lightRgb.b)
-            let lightRatio = contrastRatio(l1: whiteL, l2: lightL)
+            // Light mode token against light surface
+            let lightL = relativeLuminance(rgb: token.lightRGB)
+            let lightRatio = contrastRatio(l1: lightSurfaceL, l2: lightL)
             XCTAssertGreaterThanOrEqual(
                 lightRatio,
                 4.5,
-                "Dimension '\(dimId)' Light Mode accent must achieve at least 4.5:1 against white"
+                "Dimension '\(dimId)' Light Mode accent must achieve at least 4.5:1 against surfaceCard"
             )
 
-            // Dark mode token against dark surface (#1E293B)
-            let darkRgb = token.darkRGB
-            let darkL = relativeLuminance(r: darkRgb.r, g: darkRgb.g, b: darkRgb.b)
+            // Dark mode token against dark surface
+            let darkL = relativeLuminance(rgb: token.darkRGB)
             let darkRatio = contrastRatio(l1: darkL, l2: darkSurfaceL)
             XCTAssertGreaterThanOrEqual(
                 darkRatio,
                 4.5,
-                "Dimension '\(dimId)' Dark Mode accent must achieve at least 4.5:1 against dark surface"
+                "Dimension '\(dimId)' Dark Mode accent must achieve at least 4.5:1 against surfaceCard"
             )
         }
     }
@@ -124,7 +147,6 @@ final class ColorTokenTests: XCTestCase {
     }
 
     func testCustomInjectedThemePolymorphism() {
-        // Demonstrate DI without static coupling: create a high-density, custom-spaced theme
         let customTheme = AppTheme(
             spacing: SpacingTokens(xs: 2.0, sm: 4.0, md: 8.0, lg: 12.0, xl: 16.0),
             layout: LayoutTokens(maxContentWidthiPad: 700.0, minTouchTargetSize: 48.0, primaryButtonHeight: 60.0)

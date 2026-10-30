@@ -71,32 +71,32 @@ public struct ColorTokens: Sendable, Hashable {
 
     public init(
         background: AdaptiveColorToken = AdaptiveColorToken(
-            lightRGB: RGBColor(hex: 0xF8FAFC),
-            darkRGB: RGBColor(hex: 0x090D16)
+            lightRGB: AppRGBColor(hex: 0xF8FAFC),
+            darkRGB: AppRGBColor(hex: 0x090D16)
         ),
         surfaceCard: AdaptiveColorToken = AdaptiveColorToken(
-            lightRGB: RGBColor(hex: 0xFFFFFF),
-            darkRGB: RGBColor(hex: 0x1E293B)
+            lightRGB: AppRGBColor(hex: 0xFFFFFF),
+            darkRGB: AppRGBColor(hex: 0x1E293B)
         ),
         textPrimary: AdaptiveColorToken = AdaptiveColorToken(
-            lightRGB: RGBColor(hex: 0x0F172A),
-            darkRGB: RGBColor(hex: 0xF8FAFC)
+            lightRGB: AppRGBColor(hex: 0x0F172A),
+            darkRGB: AppRGBColor(hex: 0xF8FAFC)
         ),
         textSecondary: AdaptiveColorToken = AdaptiveColorToken(
-            lightRGB: RGBColor(hex: 0x475569),
-            darkRGB: RGBColor(hex: 0x94A3B8)
+            lightRGB: AppRGBColor(hex: 0x475569),
+            darkRGB: AppRGBColor(hex: 0x94A3B8)
         ),
         successFeedback: AdaptiveColorToken = AdaptiveColorToken(
-            lightRGB: RGBColor(hex: 0x14532D),
-            darkRGB: RGBColor(hex: 0x4ADE80)
+            lightRGB: AppRGBColor(hex: 0x14532D),
+            darkRGB: AppRGBColor(hex: 0x4ADE80)
         ),
         warningFeedback: AdaptiveColorToken = AdaptiveColorToken(
-            lightRGB: RGBColor(hex: 0x854D0E),
-            darkRGB: RGBColor(hex: 0xFACC15)
+            lightRGB: AppRGBColor(hex: 0x854D0E),
+            darkRGB: AppRGBColor(hex: 0xFACC15)
         ),
         errorFeedback: AdaptiveColorToken = AdaptiveColorToken(
-            lightRGB: RGBColor(hex: 0x991B1B),
-            darkRGB: RGBColor(hex: 0xF87171)
+            lightRGB: AppRGBColor(hex: 0x991B1B),
+            darkRGB: AppRGBColor(hex: 0xF87171)
         )
     ) {
         self.background = background
@@ -149,20 +149,20 @@ public struct AppTheme: AppThemeProtocol, Sendable {
         } else {
             self.dimensionColors = [
                 "architecture": AdaptiveColorToken(
-                    lightRGB: RGBColor(hex: 0x1E3A8A),
-                    darkRGB: RGBColor(hex: 0x38BDF8)
+                    lightRGB: AppRGBColor(hex: 0x1E3A8A),
+                    darkRGB: AppRGBColor(hex: 0x38BDF8)
                 ),
                 "platform": AdaptiveColorToken(
-                    lightRGB: RGBColor(hex: 0x581C87),
-                    darkRGB: RGBColor(hex: 0xC084FC)
+                    lightRGB: AppRGBColor(hex: 0x581C87),
+                    darkRGB: AppRGBColor(hex: 0xC084FC)
                 ),
                 "quality": AdaptiveColorToken(
-                    lightRGB: RGBColor(hex: 0x14532D),
-                    darkRGB: RGBColor(hex: 0x4ADE80)
+                    lightRGB: AppRGBColor(hex: 0x14532D),
+                    darkRGB: AppRGBColor(hex: 0x4ADE80)
                 ),
                 "agile": AdaptiveColorToken(
-                    lightRGB: RGBColor(hex: 0x9A3412),
-                    darkRGB: RGBColor(hex: 0xFBBF24)
+                    lightRGB: AppRGBColor(hex: 0x9A3412),
+                    darkRGB: AppRGBColor(hex: 0xFBBF24)
                 )
             ]
         }

@@ -34,7 +34,7 @@ public struct AssessmentCatalog: Identifiable, Codable, Sendable {
 
     /// Performs comprehensive catalog integrity verification.
     public func validateIntegrity() throws {
-        guard !catalogId.isEmpty else {
+        guard !catalogId.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
             throw AssessmentCatalogError.missingCatalogId
         }
         guard !dimensions.isEmpty else {
@@ -44,20 +44,45 @@ public struct AssessmentCatalog: Identifiable, Codable, Sendable {
             throw AssessmentCatalogError.emptyQuestions
         }
 
+        // Validate dimension uniqueness
         let dimensionIds = Set(dimensions.map(\.id))
         guard dimensionIds.count == dimensions.count else {
             throw AssessmentCatalogError.duplicateDimensionIds
         }
 
+        // Validate question uniqueness and valid dimension mapping
+        var seenQuestionIds = Set<String>()
         for question in questions {
+            guard !seenQuestionIds.contains(question.id) else {
+                throw AssessmentCatalogError.duplicateQuestionId(questionId: question.id)
+            }
+            seenQuestionIds.insert(question.id)
+
             try question.validateInvariants()
+
             guard dimensionIds.contains(question.dimensionId) else {
                 throw AssessmentCatalogError.unmappedDimension(questionId: question.id, dimensionId: question.dimensionId)
             }
         }
 
+        // Validate archetypes
         guard !archetypes.isEmpty else {
             throw AssessmentCatalogError.emptyArchetypes
+        }
+
+        var seenArchetypeIds = Set<String>()
+        for archetype in archetypes {
+            guard !seenArchetypeIds.contains(archetype.id) else {
+                throw AssessmentCatalogError.duplicateArchetypeId(archetypeId: archetype.id)
+            }
+            seenArchetypeIds.insert(archetype.id)
+
+            guard dimensionIds.contains(archetype.dominantDimensionId) else {
+                throw AssessmentCatalogError.unmappedArchetypeDimension(
+                    archetypeId: archetype.id,
+                    dimensionId: archetype.dominantDimensionId
+                )
+            }
         }
     }
 }
@@ -67,8 +92,11 @@ public enum AssessmentCatalogError: LocalizedError, Equatable {
     case emptyDimensions
     case emptyQuestions
     case duplicateDimensionIds
+    case duplicateQuestionId(questionId: String)
     case unmappedDimension(questionId: String, dimensionId: String)
     case emptyArchetypes
+    case duplicateArchetypeId(archetypeId: String)
+    case unmappedArchetypeDimension(archetypeId: String, dimensionId: String)
 
     public var errorDescription: String? {
         switch self {
@@ -80,10 +108,16 @@ public enum AssessmentCatalogError: LocalizedError, Equatable {
             return "Assessment catalog contains no questions."
         case .duplicateDimensionIds:
             return "Assessment catalog contains duplicate dimension identifiers."
+        case .duplicateQuestionId(let qid):
+            return "Assessment catalog contains duplicate question identifier '\(qid)'."
         case .unmappedDimension(let qid, let dim):
             return "Question '\(qid)' references undefined dimension '\(dim)'."
         case .emptyArchetypes:
             return "Assessment catalog must define at least one diagnostic archetype."
+        case .duplicateArchetypeId(let aid):
+            return "Assessment catalog contains duplicate archetype identifier '\(aid)'."
+        case .unmappedArchetypeDimension(let aid, let dim):
+            return "Archetype '\(aid)' references undefined dominant dimension '\(dim)'."
         }
     }
 }
