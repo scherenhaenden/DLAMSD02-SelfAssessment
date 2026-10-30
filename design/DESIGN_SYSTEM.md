@@ -67,3 +67,54 @@ Spacing.xl = 32 pt   (Hero headers and bottom action bar offsets)
 * **Minimum Touch Target:** $\ge 44 \times 44\,\text{pt}$ (strict adherence to HIG).
 * **Primary Interactive Button Height:** $\ge 56\,\text{pt}$ with full-width centered bounding box for thumb accessibility.
 * **iPadOS Regular Size Class Container:** Centered width capped at **640 pt** on iPad (9th generation, 10.2") in both Portrait and Landscape to avoid visual line dispersal (maintaining 50–75 characters per line).
+
+---
+
+## 3. Atomic Assessment UI Components
+
+In Sprint 3 (`v0.3.0`), the four foundational atomic input components were developed in SwiftUI, encapsulating the four question modalities with strict adherence to the Design System tokens and HIG accessibility:
+
+### 3.1. ChoiceOptionButton (Single Choice)
+* **Purpose:** Mutually exclusive option selection with immediate visual and tactile feedback.
+* **Visual States:**
+  * *Unselected:* Card surface fill (`surfaceCard`), subtle 1 pt border (`textSecondary` at 20% opacity), hollow circle indicator (`circle`).
+  * *Selected:* Dimension-accented 2 pt continuous squircle border, subtle dimension tint fill (12% opacity), filled radio indicator (`largecircle.fill.circle`).
+* **Ergonomics & Accessibility:**
+  * Height $\ge 56\,\text{pt}$ with vertical thumb-friendly padding.
+  * Traits: `.isButton`, conditionally `.isSelected`.
+  * Dynamic Accessibility Hint: *"Selected. Double tap to change selection."* vs. *"Not selected. Double tap to select."*
+
+### 3.2. MultiSelectChipGrid (Multiple Choice)
+* **Purpose:** Multi-selection within defined minimum and maximum selection constraints.
+* **Layout:**
+  * 2-column adaptive grid (`LazyVGrid`) with flexible column width ($\ge 140\,\text{pt}$).
+  * Interactive chips with touch targets $\ge 44 \times 44\,\text{pt}$.
+* **Live Constraint Feedback:**
+  * Selection counter pill showing `selected/max`.
+  * Status text adapting dynamically:
+    * Exact quota ($min = max$): *"Wähle genau X Optionen"*
+    * Bounded range ($min > 1$): *"Wähle zwischen X und Y Optionen"*
+    * Standard: *"Mehrfachauswahl (maximal Y)"*
+  * Semantic color transition: `warningFeedback` when below minimum or exceeding maximum; dimension accent when within valid range.
+
+### 3.3. LikertSliderCard (Stepped Slider)
+* **Purpose:** Standardized rating scale (1.0 to 5.0) for self-efficacy evaluation.
+* **Visual Structure:**
+  * Value badge header featuring an accented score pill (e.g. `Wert: 4.0 / 5.0`).
+  * Verbal anchor row rendering textual indicators (e.g. *"Stimme überhaupt nicht zu"* $\leftrightarrow$ *"Stimme voll und ganz zu"*).
+  * Native stepped `Slider` styled with dimension accent color.
+* **Accessibility:**
+  * Supports `.accessibilityAdjustableAction` for increment/decrement gestures by configured step size.
+  * VoiceOver reads: *"Slider, value X of Y, step Z"*.
+
+### 3.4. ShortTextPromptCard (Reflective Text)
+* **Purpose:** Qualitative free-text self-reflection with live boundary supervision.
+* **Visual Structure:**
+  * Inset `TextEditor` with custom placeholder overlay that disappears upon user input.
+  * Live character count with three semantic states:
+    1. *Below minimum:* Displays remaining characters needed with subtle warning tone.
+    2. *Valid range ($min \le len \le max$):* Displays character count with `successFeedback` border and badge.
+    3. *Exceeded maximum:* Displays excess character count with `errorFeedback` border and negative milestone marker.
+* **Ergonomics:**
+  * Fixed comfortable height (140 pt) preventing abrupt layout shifts during typing.
+  * Dismiss keyboard affordance and explicit VoiceOver character status announcement.

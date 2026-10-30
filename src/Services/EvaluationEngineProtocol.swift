@@ -29,7 +29,9 @@ public final class AssessmentEvaluationEngine: EvaluationEngineProtocol {
     ) -> Double {
         switch question.type {
         case .singleChoice:
-            guard let selectedId = selectedOptionIds?.first,
+            guard let selectedIds = selectedOptionIds,
+                  selectedIds.count == 1,
+                  let selectedId = selectedIds.first,
                   let option = question.options?.first(where: { $0.id == selectedId }) else {
                 return 0.0
             }
@@ -37,6 +39,7 @@ public final class AssessmentEvaluationEngine: EvaluationEngineProtocol {
 
         case .multipleChoice:
             guard let selectedIds = selectedOptionIds, !selectedIds.isEmpty,
+                  Set(selectedIds).count == selectedIds.count,
                   let options = question.options else {
                 return 0.0
             }
@@ -156,12 +159,14 @@ public final class AssessmentEvaluationEngine: EvaluationEngineProtocol {
             // Strict payload validation per question type
             switch question.type {
             case .singleChoice:
-                guard let selectedId = answer.selectedOptionIds?.first,
+                guard let selectedIds = answer.selectedOptionIds,
+                      selectedIds.count == 1,
+                      let selectedId = selectedIds.first,
                       let options = question.options,
                       options.contains(where: { $0.id == selectedId }) else {
                     throw EvaluationEngineError.invalidPayload(
                         questionId: question.id,
-                        reason: "Single choice requires a valid option selection matching catalog options."
+                        reason: "Single choice requires exactly one valid option selection matching catalog options."
                     )
                 }
 
@@ -171,6 +176,13 @@ public final class AssessmentEvaluationEngine: EvaluationEngineProtocol {
                     throw EvaluationEngineError.invalidPayload(
                         questionId: question.id,
                         reason: "Multiple choice requires non-empty option selections."
+                    )
+                }
+                let uniqueSelectedIds = Set(selectedIds)
+                guard uniqueSelectedIds.count == selectedIds.count else {
+                    throw EvaluationEngineError.invalidPayload(
+                        questionId: question.id,
+                        reason: "Multiple choice contains duplicate selected option identifiers."
                     )
                 }
                 let validIds = Set(options.map(\.id))
@@ -203,6 +215,18 @@ public final class AssessmentEvaluationEngine: EvaluationEngineProtocol {
                         questionId: question.id,
                         reason: "Slider value \(sliderVal) falls outside allowed range [\(minVal) ... \(maxVal)]."
                     )
+                }
+                if let step = question.sliderStep, step > 0.0 {
+                    let delta = sliderVal - minVal
+                    let remainder = delta.truncatingRemainder(dividingBy: step)
+                    let tolerance = 0.0001
+                    let isStepMultiple = abs(remainder) < tolerance || abs(remainder - step) < tolerance
+                    guard isStepMultiple else {
+                        throw EvaluationEngineError.invalidPayload(
+                            questionId: question.id,
+                            reason: "Slider value \(sliderVal) does not conform to configured step \(step) from minimum \(minVal)."
+                        )
+                    }
                 }
 
             case .shortText:

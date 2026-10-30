@@ -11,9 +11,13 @@ public protocol CatalogLoaderProtocol: Sendable {
 public final class LocalCatalogService: CatalogLoaderProtocol {
     private let bundle: Bundle
 
-    /// Default initializer using the SPM module resource bundle.
+    /// Default initializer using the SPM module resource bundle or Bundle.main for native app bundles.
     public init() {
+        #if SWIFT_PACKAGE
         self.bundle = .module
+        #else
+        self.bundle = .main
+        #endif
     }
 
     /// Custom initializer allowing dependency injection of a specific bundle (e.g. for testing).

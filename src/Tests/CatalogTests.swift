@@ -225,52 +225,85 @@ final class CatalogTests: XCTestCase {
     // MARK: - Exhaustive Catalog & Question Invariant Error Tests
 
     func testCatalogRejectsMissingCatalogIdAndEmptyEntities() {
-        let validQ = AssessmentQuestion(id: "q-1", dimensionId: "architecture", type: .likertSlider, title: "Q1", prompt: "P1")
+        let archDim = AssessmentDimension.standardDimensions[0]
+        let archProfile = ArchetypeProfile.standardArchetypes.first(where: { $0.dominantDimensionId == archDim.id })!
+        let validQ = AssessmentQuestion(id: "q-1", dimensionId: archDim.id, type: .likertSlider, title: "Q1", prompt: "P1")
 
         // 1. Missing Catalog ID
-        let emptyIdCat = AssessmentCatalog(catalogId: "  ", version: "1.0", title: "T", subtitle: "S", description: "D", dimensions: AssessmentDimension.standardDimensions, questions: [validQ], archetypes: ArchetypeProfile.standardArchetypes)
+        let emptyIdCat = AssessmentCatalog(catalogId: "  ", version: "1.0", title: "T", subtitle: "S", description: "D", dimensions: [archDim], questions: [validQ], archetypes: [archProfile])
         XCTAssertThrowsError(try emptyIdCat.validateIntegrity()) {
             XCTAssertEqual($0 as? AssessmentCatalogError, .missingCatalogId)
             XCTAssertNotNil(($0 as? AssessmentCatalogError)?.errorDescription)
         }
 
         // 2. Empty Dimensions
-        let emptyDimsCat = AssessmentCatalog(catalogId: "c1", version: "1.0", title: "T", subtitle: "S", description: "D", dimensions: [], questions: [validQ], archetypes: ArchetypeProfile.standardArchetypes)
+        let emptyDimsCat = AssessmentCatalog(catalogId: "c1", version: "1.0", title: "T", subtitle: "S", description: "D", dimensions: [], questions: [validQ], archetypes: [archProfile])
         XCTAssertThrowsError(try emptyDimsCat.validateIntegrity()) {
             XCTAssertEqual($0 as? AssessmentCatalogError, .emptyDimensions)
         }
 
         // 3. Empty Questions
-        let emptyQuestionsCat = AssessmentCatalog(catalogId: "c1", version: "1.0", title: "T", subtitle: "S", description: "D", dimensions: AssessmentDimension.standardDimensions, questions: [], archetypes: ArchetypeProfile.standardArchetypes)
+        let emptyQuestionsCat = AssessmentCatalog(catalogId: "c1", version: "1.0", title: "T", subtitle: "S", description: "D", dimensions: [archDim], questions: [], archetypes: [archProfile])
         XCTAssertThrowsError(try emptyQuestionsCat.validateIntegrity()) {
             XCTAssertEqual($0 as? AssessmentCatalogError, .emptyQuestions)
         }
 
         // 4. Duplicate Dimensions
-        let dupDims = [AssessmentDimension.standardDimensions[0], AssessmentDimension.standardDimensions[0]]
-        let dupDimCat = AssessmentCatalog(catalogId: "c1", version: "1.0", title: "T", subtitle: "S", description: "D", dimensions: dupDims, questions: [validQ], archetypes: ArchetypeProfile.standardArchetypes)
+        let dupDimCat = AssessmentCatalog(catalogId: "c1", version: "1.0", title: "T", subtitle: "S", description: "D", dimensions: [archDim, archDim], questions: [validQ], archetypes: [archProfile])
         XCTAssertThrowsError(try dupDimCat.validateIntegrity()) {
             XCTAssertEqual($0 as? AssessmentCatalogError, .duplicateDimensionIds)
         }
 
         // 5. Question with unmapped dimension
         let unmappedQ = AssessmentQuestion(id: "q-unmapped", dimensionId: "unknown-dim", type: .likertSlider, title: "Q", prompt: "P")
-        let unmappedDimCat = AssessmentCatalog(catalogId: "c1", version: "1.0", title: "T", subtitle: "S", description: "D", dimensions: AssessmentDimension.standardDimensions, questions: [unmappedQ], archetypes: ArchetypeProfile.standardArchetypes)
+        let unmappedDimCat = AssessmentCatalog(catalogId: "c1", version: "1.0", title: "T", subtitle: "S", description: "D", dimensions: [archDim], questions: [unmappedQ], archetypes: [archProfile])
         XCTAssertThrowsError(try unmappedDimCat.validateIntegrity()) {
             XCTAssertEqual($0 as? AssessmentCatalogError, .unmappedDimension(questionId: "q-unmapped", dimensionId: "unknown-dim"))
         }
 
         // 6. Empty Archetypes
-        let emptyArchetypesCat = AssessmentCatalog(catalogId: "c1", version: "1.0", title: "T", subtitle: "S", description: "D", dimensions: AssessmentDimension.standardDimensions, questions: [validQ], archetypes: [])
+        let emptyArchetypesCat = AssessmentCatalog(catalogId: "c1", version: "1.0", title: "T", subtitle: "S", description: "D", dimensions: [archDim], questions: [validQ], archetypes: [])
         XCTAssertThrowsError(try emptyArchetypesCat.validateIntegrity()) {
             XCTAssertEqual($0 as? AssessmentCatalogError, .emptyArchetypes)
         }
 
         // 7. Duplicate Archetype IDs
-        let dupArchetype = ArchetypeProfile.standardArchetypes[0]
-        let dupArchCat = AssessmentCatalog(catalogId: "c1", version: "1.0", title: "T", subtitle: "S", description: "D", dimensions: AssessmentDimension.standardDimensions, questions: [validQ], archetypes: [dupArchetype, dupArchetype])
+        let dupArchCat = AssessmentCatalog(catalogId: "c1", version: "1.0", title: "T", subtitle: "S", description: "D", dimensions: [archDim], questions: [validQ], archetypes: [archProfile, archProfile])
         XCTAssertThrowsError(try dupArchCat.validateIntegrity()) {
-            XCTAssertEqual($0 as? AssessmentCatalogError, .duplicateArchetypeId(archetypeId: dupArchetype.id))
+            XCTAssertEqual($0 as? AssessmentCatalogError, .duplicateArchetypeId(archetypeId: archProfile.id))
+        }
+    }
+
+    func testCatalogRejectsDimensionWithoutQuestionsOrArchetype() {
+        let archDim = AssessmentDimension.standardDimensions[0]
+        let platDim = AssessmentDimension.standardDimensions[1]
+        let archProfile = ArchetypeProfile.standardArchetypes.first(where: { $0.dominantDimensionId == archDim.id })!
+        let platProfile = ArchetypeProfile.standardArchetypes.first(where: { $0.dominantDimensionId == platDim.id })!
+        let validQ = AssessmentQuestion(id: "q-1", dimensionId: archDim.id, type: .likertSlider, title: "Q1", prompt: "P1")
+
+        // Dimension 'platform' has no questions
+        let missingQCat = AssessmentCatalog(
+            catalogId: "c-missing-q", version: "1.0", title: "T", subtitle: "S", description: "D",
+            dimensions: [archDim, platDim],
+            questions: [validQ],
+            archetypes: [archProfile, platProfile]
+        )
+        XCTAssertThrowsError(try missingQCat.validateIntegrity()) { error in
+            XCTAssertEqual(error as? AssessmentCatalogError, .dimensionWithoutQuestions(dimensionId: platDim.id))
+            XCTAssertNotNil((error as? AssessmentCatalogError)?.errorDescription)
+        }
+
+        // Dimension 'platform' has questions but no archetype
+        let platQ = AssessmentQuestion(id: "q-2", dimensionId: platDim.id, type: .likertSlider, title: "Q2", prompt: "P2")
+        let missingArcCat = AssessmentCatalog(
+            catalogId: "c-missing-arc", version: "1.0", title: "T", subtitle: "S", description: "D",
+            dimensions: [archDim, platDim],
+            questions: [validQ, platQ],
+            archetypes: [archProfile] // Only has architecture archetype
+        )
+        XCTAssertThrowsError(try missingArcCat.validateIntegrity()) { error in
+            XCTAssertEqual(error as? AssessmentCatalogError, .dimensionWithoutArchetype(dimensionId: platDim.id))
+            XCTAssertNotNil((error as? AssessmentCatalogError)?.errorDescription)
         }
     }
 

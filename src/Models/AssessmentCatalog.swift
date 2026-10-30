@@ -84,6 +84,21 @@ public struct AssessmentCatalog: Identifiable, Codable, Sendable {
                 )
             }
         }
+
+        // Validate bidirectional coverage: every dimension must have questions and an archetype
+        let questionDimensionIds = Set(questions.map(\.dimensionId))
+        for dimension in dimensions {
+            guard questionDimensionIds.contains(dimension.id) else {
+                throw AssessmentCatalogError.dimensionWithoutQuestions(dimensionId: dimension.id)
+            }
+        }
+
+        let archetypeDimensionIds = Set(archetypes.map(\.dominantDimensionId))
+        for dimension in dimensions {
+            guard archetypeDimensionIds.contains(dimension.id) else {
+                throw AssessmentCatalogError.dimensionWithoutArchetype(dimensionId: dimension.id)
+            }
+        }
     }
 }
 
@@ -97,6 +112,8 @@ public enum AssessmentCatalogError: LocalizedError, Equatable {
     case emptyArchetypes
     case duplicateArchetypeId(archetypeId: String)
     case unmappedArchetypeDimension(archetypeId: String, dimensionId: String)
+    case dimensionWithoutQuestions(dimensionId: String)
+    case dimensionWithoutArchetype(dimensionId: String)
 
     public var errorDescription: String? {
         switch self {
@@ -118,6 +135,10 @@ public enum AssessmentCatalogError: LocalizedError, Equatable {
             return "Assessment catalog contains duplicate archetype identifier '\(aid)'."
         case .unmappedArchetypeDimension(let aid, let dim):
             return "Archetype '\(aid)' references undefined dominant dimension '\(dim)'."
+        case .dimensionWithoutQuestions(let dim):
+            return "Evaluation dimension '\(dim)' has no associated questions in catalog."
+        case .dimensionWithoutArchetype(let dim):
+            return "Evaluation dimension '\(dim)' has no corresponding diagnostic archetype."
         }
     }
 }

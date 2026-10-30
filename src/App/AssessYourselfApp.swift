@@ -5,7 +5,8 @@ import SwiftUI
 struct AssessYourselfApp: App {
     var body: some Scene {
         WindowGroup {
-            Text("AssessYourself App")
+            ComponentShowcaseView()
+                .appTheme(AppTheme.standard)
         }
     }
 }

@@ -392,6 +392,33 @@ final class EvaluationEngineTests: XCTestCase {
         }
     }
 
+    func testSingleChoiceRejectsMultipleSelections() {
+        var answers = makeCompleteAnswers()
+        if let idx = answers.firstIndex(where: { $0.questionType == .singleChoice }) {
+            let original = answers[idx]
+            let q = catalog.questions.first(where: { $0.id == original.questionId })!
+            let opt1 = q.options![0].id
+            let opt2 = q.options![1].id
+
+            // Attempting to select 2 options on a Single Choice question
+            answers[idx] = AssessmentAnswer(
+                questionId: original.questionId,
+                dimensionId: original.dimensionId,
+                questionType: original.questionType,
+                selectedOptionIds: [opt1, opt2]
+            )
+
+            XCTAssertThrowsError(try engine.evaluate(answers: answers, catalog: catalog, durationSeconds: 60.0)) { error in
+                guard case EvaluationEngineError.invalidPayload(let qid, let reason) = error else {
+                    XCTFail("Expected invalidPayload error, got: \(error)")
+                    return
+                }
+                XCTAssertEqual(qid, original.questionId)
+                XCTAssertTrue(reason.contains("Single choice requires exactly one"))
+            }
+        }
+    }
+
     func testEvaluationRejectsInvalidMultipleChoicePayload() {
         var answers = makeCompleteAnswers()
         if let idx = answers.firstIndex(where: { $0.questionType == .multipleChoice }) {
@@ -414,6 +441,32 @@ final class EvaluationEngineTests: XCTestCase {
         }
     }
 
+    func testMultipleChoiceRejectsDuplicateSelectedOptionIds() {
+        var answers = makeCompleteAnswers()
+        if let idx = answers.firstIndex(where: { $0.questionType == .multipleChoice }) {
+            let original = answers[idx]
+            let q = catalog.questions.first(where: { $0.id == original.questionId })!
+            let opt1 = q.options![0].id
+
+            // Attempting to submit duplicate selections: [opt1, opt1]
+            answers[idx] = AssessmentAnswer(
+                questionId: original.questionId,
+                dimensionId: original.dimensionId,
+                questionType: original.questionType,
+                selectedOptionIds: [opt1, opt1]
+            )
+
+            XCTAssertThrowsError(try engine.evaluate(answers: answers, catalog: catalog, durationSeconds: 60.0)) { error in
+                guard case EvaluationEngineError.invalidPayload(let qid, let reason) = error else {
+                    XCTFail("Expected invalidPayload error, got: \(error)")
+                    return
+                }
+                XCTAssertEqual(qid, original.questionId)
+                XCTAssertTrue(reason.contains("duplicate selected option"))
+            }
+        }
+    }
+
     func testEvaluationRejectsInvalidSliderPayload() {
         var answers = makeCompleteAnswers()
         if let idx = answers.firstIndex(where: { $0.questionType == .likertSlider }) {
@@ -432,6 +485,29 @@ final class EvaluationEngineTests: XCTestCase {
                     return
                 }
                 XCTAssertEqual(qid, original.questionId)
+            }
+        }
+    }
+
+    func testSliderRejectsValueViolatingStep() {
+        var answers = makeCompleteAnswers()
+        if let idx = answers.firstIndex(where: { $0.questionType == .likertSlider }) {
+            let original = answers[idx]
+            // Step is 1.0 (range 1.0 to 5.0). Passing 2.5 must violate step constraint.
+            answers[idx] = AssessmentAnswer(
+                questionId: original.questionId,
+                dimensionId: original.dimensionId,
+                questionType: original.questionType,
+                sliderValue: 2.5
+            )
+
+            XCTAssertThrowsError(try engine.evaluate(answers: answers, catalog: catalog, durationSeconds: 60.0)) { error in
+                guard case EvaluationEngineError.invalidPayload(let qid, let reason) = error else {
+                    XCTFail("Expected invalidPayload error, got: \(error)")
+                    return
+                }
+                XCTAssertEqual(qid, original.questionId)
+                XCTAssertTrue(reason.contains("does not conform to configured step"))
             }
         }
     }

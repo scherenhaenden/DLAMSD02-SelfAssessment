@@ -4,56 +4,60 @@ Native SwiftUI self-assessment application developed for **DLAMSD02 Apple Mobile
 
 ## Current Development Stage
 
-Version **0.2.2** (Build `20261030.092800`), Sprint 2.2: Comprehensive Hardening, Complete Assessment Contract, Invariant Defense & Code Coverage ($\ge 84\%$).
+Version **0.3.0** (Build `20261030.095000`), Sprint 3: Atomic UI Components, Domain Prerequisites, Showcase Screen & Native iOS App Target.
 
 ### Implemented
 
-- Domain Hardening & Verification:
-  - Completeness verification: `evaluate()` strictly requires all catalog questions to be answered, throwing `EvaluationEngineError.incompleteAssessment` on partial submissions.
-  - Comprehensive input payload validation: Rejects single choice without selection, multiple choice violating selection bounds, sliders missing or out of bounds, and short texts failing character length constraints.
-  - Defensive catalog validation: `evaluate()` validates catalog integrity first (`try catalog.validateIntegrity()`), preventing runtime crashes from malformed external catalogs.
-  - Defensive decoding: `AssessmentAnswer.init(from decoder:)` clamps deserialized scores to $[0.0, 100.0]$.
-  - Extended catalog invariants: Validates non-empty IDs/labels, positive slider steps, valid slider defaults, and valid multi-select bounds.
-  - Strict mathematical weak ordering: `AssessmentRecord.<` guarantees strict transitivity ($A < B \land B < C \implies A < C$).
-  - Deterministic archetype tie-breaking: Canonical catalog dimension order resolves ties deterministically.
-  - Resolved namespace collision: Renamed `RGBColor` to `AppRGBColor`.
-- Protocol-Oriented & Injectable Theme Architecture: Clean alternative to rigid static constants via `AppThemeProtocol` and `AppTheme` value type, supporting constructor injection and SwiftUI `@Environment(\.appTheme)`.
-- Mathematical WCAG 2.1 Contrast Audit (TDD): Exact relative luminance and contrast ratio formulas verified via automated XCTest suite (`ColorTokenTests`). All text tokens and 4 dimension accents achieve $\ge 4.5:1$ (AA) and up to $17.85:1$ (AAA) in Light and Dark Modes.
-- Ergonomic Layout & Multi-Device Tokens: 4pt/8pt grid spacing, continuous squircle radii (8pt, 14pt, 20pt), 44pt touch targets, 56pt primary button heights, and 640pt iPad container limit.
-- Comprehensive Wireframes: Detailed ASCII blueprints and flow specifications in `design/wireframes/WIREFRAMES.md` covering all 5 core screens.
-- Test Suite: **40 XCTest unit tests** passing with 100% success rate in 0.019s. **84.83% global line coverage** (`AssessmentCatalog`: 91.86%, `AssessmentQuestion`: 85.81%, `AssessmentRecord`: 82.22%, `CatalogLoader`: 88.52%, `EvaluationEngine`: 82.87%, `DesignTokens`: 90.62%).
+- **Domain Prerequisites Closed (Codex Audit Round 2/3):**
+  - Single Choice: Enforces strict semantic exclusivity (`selectedOptionIds.count == 1`).
+  - Multiple Choice: Detects and rejects duplicate option IDs (`Set(selectedIds).count == selectedIds.count`).
+  - Stepped Slider: Mathematical step conformity validation via floating-point modulus with epsilon tolerance.
+  - Bidirectional Catalog Validation: Guarantees that every declared dimension has corresponding questions and an archetype profile.
+- **Atomic SwiftUI Components:**
+  - `ChoiceOptionButton`: Radio selection with 56pt touch targets, dimension-accented borders, and VoiceOver state hints.
+  - `MultiSelectChipGrid`: Adaptive 2-column grid, dynamic selection bounds feedback (`min/max`), 44x44pt touch targets.
+  - `LikertSliderCard`: 1-to-5 discrete stepped slider with verbal anchors and `.accessibilityAdjustableAction`.
+  - `ShortTextPromptCard`: Inset `TextEditor` with placeholder, live character counter, and 3-stage validation borders.
+- **Component Showcase & App Target:**
+  - `ComponentShowcaseView`: Interactive screen composing all 4 components with reactive `@State` and injected theme.
+  - Native `AssessYourself.xcodeproj`: Configured iOS Application executable target (`com.scherenhaenden.AssessYourself`, iOS 17.0, iPhone & iPad `TARGETED_DEVICE_FAMILY = "1,2"`).
+  - Simulator Verification: Successfully built, deployed, and launched on booted iPhone 17 Simulator (PID 80849, screenshot: `docs/screenshots/sprint3_showcase_iphone17.png`).
+- **Test Suite & Code Coverage:**
+  - **49 XCTest unit tests** passing with 100% success rate across SwiftPM and Xcode iOS Simulator.
+  - **87.84% global line coverage** (`llvm-cov report`).
 
 ## Open and Build
 
-The core logic, models, and presentation components are packaged as a Swift Package (`AssessYourselfCore`).
+The project supports both standalone SwiftPM workflows and native Xcode Simulator builds.
 
-To build and execute unit tests from the terminal:
-
+### SwiftPM Tests & Coverage
 ```sh
 swift test
+swift test --enable-code-coverage
 ```
 
-To run tests with instrumented code coverage (`llvm-cov`):
-
+### Xcode Simulator Build
 ```sh
-swift test --enable-code-coverage
+xcodebuild -project AssessYourself.xcodeproj -scheme AssessYourself \
+  -destination "platform=iOS Simulator,name=iPhone 17" build
 ```
 
 ## Source Layout
 
 ```text
 Package.swift              SwiftPM definition for AssessYourselfCore and tests
-src/App/                   App entry point and application lifecycle
+AssessYourself.xcodeproj   Native Xcode project for iOS application & test bundle
+scripts/                   Tooling scripts (project generation)
+src/App/                   App entry point (AssessYourselfApp.swift)
 src/Models/                Domain entities (Dimension, Question, Answer, Record, Archetype)
 src/Services/              Catalog loader and evaluation engine protocols & implementations
 src/ViewModels/            Reactive state management and assessment coordinators
-src/Views/Components/      Atomic UI controls (Color tokens, DesignTheme, Choice, Slider)
-src/Views/Screens/         Primary screens (Intro, Flow, Result, History, CatalogManager)
+src/Views/Components/      Atomic UI controls (Choice, MultiSelect, Slider, ShortText, DesignTokens)
+src/Views/Screens/         Primary screens (ComponentShowcaseView, etc.)
 src/Resources/             Bundled assessment catalogs (JSON)
 src/Tests/                 XCTest unit and integration test suites
 design/                    Design system specifications, tokens, and wireframes
 docs/                      Sprint documentation and technical verification reports
-ui-tests/                  XCUITest acceptance suite for iPhone 17 & iPad 9th Gen
 ```
 
 ## Roadmap
@@ -64,7 +68,14 @@ ui-tests/                  XCUITest acceptance suite for iPhone 17 & iPad 9th Ge
 | **0.2.0** | Design system, WCAG 2.1 AA/AAA adaptive color tokens, wireframes | ✅ Completed |
 | **0.2.1** | Domain hardening, catalog invariants, transitive ordering, tie-breaking | ✅ Completed |
 | **0.2.2** | Completeness contract, payload validation, $\ge 84\%$ coverage, ADR matrices | ✅ Completed |
-| **0.3.0** | Modular atomic UI components (Choice, Chips, Slider, Text) | 🟡 Next |
+| **0.3.0** | Modular atomic UI components (Choice, Chips, Slider, Text), native iOS App target | ✅ Completed |
+| **0.4.0** | AssessmentViewModel, sequential navigation flow & question coordinator | 🟡 Next |
+| **0.5.0** | Interactive validation, transition feedback, decoupled haptics | ⚪ Planned |
+| **0.6.0** | Result analytics, competency dashboard, archetype categorization | ⚪ Planned |
+| **0.7.0** | Local persistence (`UserDefaultsHistoryStore`), history & progress trends | ⚪ Planned |
+| **0.8.0** | Multi-device layout (iPad 640pt container), VoiceOver accessibility | ⚪ Planned |
+| **0.9.0** | In-app authoring, sandbox storage, JSON/URL import with rollback | ⚪ Planned |
+| **1.0.0** | Final code freeze, $\ge 80\%$ llvm-cov, UI acceptance suite, academic report | ⚪ Planned |
 | **0.4.0** | Multidimensional evaluation engine & sequential screen flow | ⚪ Planned |
 | **0.5.0** | Interactive validation, transition feedback, decoupled haptics | ⚪ Planned |
 | **0.6.0** | Result analytics, competency dashboard, archetype categorization | ⚪ Planned |
