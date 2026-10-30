@@ -100,6 +100,7 @@ public struct AssessmentFlowView<VM: AssessmentViewModelProtocol>: View {
             ScrollView {
                 if let question = viewModel.currentQuestion {
                     AssessmentQuestionContainerView(viewModel: viewModel, question: question)
+                        .id(question.id)
                         .padding(theme.spacing.lg)
                 }
             }
@@ -182,7 +183,7 @@ public struct AssessmentFlowView<VM: AssessmentViewModelProtocol>: View {
                         Image(systemName: "checkmark.circle.fill")
                     }
                     .font(.headline)
-                    .foregroundColor(Color.white)
+                    .foregroundColor(viewModel.isCurrentAnswerValid ? Color.white : Color.white.opacity(0.4))
                     .frame(maxWidth: .infinity, minHeight: 44)
                     .background(
                         RoundedRectangle(cornerRadius: theme.cornerRadius.medium)
@@ -202,7 +203,7 @@ public struct AssessmentFlowView<VM: AssessmentViewModelProtocol>: View {
                         Image(systemName: "chevron.right")
                     }
                     .font(.headline)
-                    .foregroundColor(Color.white)
+                    .foregroundColor(viewModel.isCurrentAnswerValid ? Color.white : Color.white.opacity(0.4))
                     .frame(maxWidth: .infinity, minHeight: 44)
                     .background(
                         RoundedRectangle(cornerRadius: theme.cornerRadius.medium)

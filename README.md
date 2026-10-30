@@ -4,7 +4,7 @@ Native SwiftUI self-assessment application developed for **DLAMSD02 Apple Mobile
 
 ## Current Development Stage
 
-Version **0.4.0** (Build `20261030.130000`), Sprint 4: AssessmentViewModel, Sequential Navigation Flow & Question Coordinator.
+Version **0.4.1** (Build `20261030.154000`), Sprint 4.1: Assessment Flow Hardening, Validation Assertions & Multi-Paradigm XCUITest Suite.
 
 ### Implemented
 
@@ -18,12 +18,17 @@ Version **0.4.0** (Build `20261030.130000`), Sprint 4: AssessmentViewModel, Sequ
   - `AssessmentFlowView`: Full navigation screen with top progress bar (`ProgressView(value: viewModel.progress)`), question counter pill (`Frage N / 24`), dimension badge, and bottom sticky navigation toolbar.
   - Strict validation gating: "Zurück" disabled on question 1; "Weiter" and "Abschließen" strictly gated by `isCurrentAnswerValid`.
   - State persistence during traversal: Navigating back preserves previous user inputs without data loss.
+- **Sprint 4.1 Hardening & UX Synchronization (`v0.4.1`):**
+  - *Likert Slider Auto-Sync:* Default rating (`3.0`) is registered via `.onAppear`, ensuring immediate valid state and eliminating the need to drag the slider back and forth to unlock "Weiter".
+  - *Multiple Choice Boundary Cap:* `toggleMultipleChoice` strictly enforces `maxSelectCount` preventing overflow selections.
+  - *Dark Mode Button Contrast:* Disabled action buttons dim foreground text (`Color.white.opacity(0.4)`) avoiding misleading active appearances.
+  - *Unit Test Invariant Coverage:* `AssessmentViewModelTests` executes explicit `isCurrentAnswerValid` assertions across all 4 question paradigms on active catalog items.
 - **Root Application Navigation:**
   - `AssessYourselfApp`: Dual-tab entry point connecting `AssessmentFlowView` as primary assessment experience alongside `ComponentShowcaseView`.
 - **Test Suite & Code Coverage:**
   - **63 XCTest unit tests** passing with 100% success rate across SwiftPM.
-  - **4 XCUITest integration tests** passing with 100% success rate on iPhone 17 Simulator (`testSequentialAssessmentFlowProgressionAndValidation` + atomic component tests).
-  - **92.36% global line coverage** (`llvm-cov report`: 3,363 / 3,641 lines), with **$\ge 82.22\%$ on every individual source file**.
+  - **4 XCUITest integration tests** passing with 100% success rate on iPhone 17 Simulator (`testSequentialAssessmentFlowProgressionAndValidation` traversing Single Choice $\to$ Multiple Choice $\to$ Stepped Slider $\to$ Short Text $\to$ Dimension Transition).
+  - **92.53% global line coverage** (`llvm-cov report`: 3,404 / 3,679 lines), with **$\ge 82.22\%$ on every individual source file**.
 
 ## Open and Build
 
@@ -79,6 +84,7 @@ docs/                      Sprint documentation and technical verification repor
 | **0.3.2** | Verified XCUITest state assertions, slider delta, empty/typed text, closing Sprint 3 | ✅ Completed |
 | **0.3.3** | Placeholder visibility on iOS (`scrollContentBackground`), strict equality text assertions | ✅ Completed |
 | **0.4.0** | AssessmentViewModel, sequential navigation flow & question coordinator | ✅ Completed |
+| **0.4.1** | Flow hardening, boundary enforcement, slider auto-sync & full paradigm XCUITest | ✅ Completed |
 | **0.5.0** | Interactive validation, transition feedback, decoupled haptics | 🟡 Next |
 | **0.6.0** | Result analytics, competency dashboard, archetype categorization | ⚪ Planned |
 | **0.7.0** | Local persistence (`UserDefaultsHistoryStore`), history & progress trends | ⚪ Planned |

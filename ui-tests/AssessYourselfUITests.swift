@@ -33,7 +33,7 @@ final class AssessYourselfUITests: XCTestCase {
         app.launch()
         switchToAssessmentTabIfNeeded()
 
-        // 1. Initial State: Question 1 of 24
+        // 1. Initial State: Question 1 of 24 (Single Choice)
         let counterPill = app.staticTexts["flow.counterPill"]
         XCTAssertTrue(counterPill.waitForExistence(timeout: 10), "Counter pill must exist")
         XCTAssertEqual(counterPill.label, "Frage 1 / 24")
@@ -52,29 +52,92 @@ final class AssessYourselfUITests: XCTestCase {
         // Next button must be disabled until question is answered
         XCTAssertFalse(nextButton.isEnabled, "Next button must be disabled before answering")
 
-        // 2. Select option for Question 1
-        let optionButtons = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'choiceOption.'"))
-        XCTAssertGreaterThan(optionButtons.count, 0, "Question 1 choice options must be present")
-        let firstOption = optionButtons.element(boundBy: 0)
-        firstOption.tap()
+        // Select option for Question 1
+        let sc1Options = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'choiceOption.'"))
+        XCTAssertGreaterThan(sc1Options.count, 0, "Question 1 choice options must be present")
+        sc1Options.element(boundBy: 0).tap()
 
-        // 3. Advancing is now enabled
-        XCTAssertTrue(nextButton.isEnabled, "Next button must be enabled after answering")
+        XCTAssertTrue(nextButton.isEnabled, "Next button must be enabled after answering Q1")
         nextButton.tap()
 
-        // 4. State advances to Question 2 of 24
-        let question2Expectation = expectation(for: NSPredicate(format: "label == 'Frage 2 / 24'"), evaluatedWith: counterPill)
-        wait(for: [question2Expectation], timeout: 5)
+        // 2. Question 2 of 24 (Single Choice)
+        let q2Expectation = expectation(for: NSPredicate(format: "label == 'Frage 2 / 24'"), evaluatedWith: counterPill)
+        wait(for: [q2Expectation], timeout: 5)
         XCTAssertTrue(backButton.isEnabled, "Back button must be enabled on question 2")
 
-        // 5. Navigate back to Question 1
+        // Navigate back to Q1 and verify answer preservation
         backButton.tap()
-        let question1Expectation = expectation(for: NSPredicate(format: "label == 'Frage 1 / 24'"), evaluatedWith: counterPill)
-        wait(for: [question1Expectation], timeout: 5)
+        let q1BackExpectation = expectation(for: NSPredicate(format: "label == 'Frage 1 / 24'"), evaluatedWith: counterPill)
+        wait(for: [q1BackExpectation], timeout: 5)
+        XCTAssertTrue(nextButton.isEnabled, "Next button must remain enabled as Q1 answer was preserved")
+        XCTAssertFalse(backButton.isEnabled, "Back button disabled on Q1")
+        nextButton.tap()
 
-        // Previous answer is preserved, so Next is still enabled
-        XCTAssertTrue(nextButton.isEnabled, "Next button must remain enabled as answer was preserved")
-        XCTAssertFalse(backButton.isEnabled, "Back button is disabled again on question 1")
+        // Back on Question 2 -> Answer Q2
+        let q2ReturnExpectation = expectation(for: NSPredicate(format: "label == 'Frage 2 / 24'"), evaluatedWith: counterPill)
+        wait(for: [q2ReturnExpectation], timeout: 5)
+        let sc2Options = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'choiceOption.'"))
+        sc2Options.element(boundBy: 0).tap()
+        XCTAssertTrue(nextButton.isEnabled)
+        nextButton.tap()
+
+        // 3. Question 3 of 24 (Multiple Choice: arch-mc-01)
+        let q3Expectation = expectation(for: NSPredicate(format: "label == 'Frage 3 / 24'"), evaluatedWith: counterPill)
+        wait(for: [q3Expectation], timeout: 5)
+
+        let mcChips = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'multiChip.'"))
+        XCTAssertGreaterThanOrEqual(mcChips.count, 3, "Multiple choice chips must be visible")
+
+        // Initially no chips selected -> Next disabled
+        XCTAssertFalse(nextButton.isEnabled)
+
+        // Select 2 chips
+        mcChips.element(boundBy: 0).tap()
+        mcChips.element(boundBy: 1).tap()
+        XCTAssertTrue(nextButton.isEnabled, "Next must be enabled after selecting MC chips within bounds")
+        nextButton.tap()
+
+        // 4. Question 4 of 24 (Likert Slider: arch-lk-01)
+        let q4Expectation = expectation(for: NSPredicate(format: "label == 'Frage 4 / 24'"), evaluatedWith: counterPill)
+        wait(for: [q4Expectation], timeout: 5)
+
+        let slider = app.sliders["likertSlider"]
+        XCTAssertTrue(slider.waitForExistence(timeout: 5))
+        // Default 3.0 auto-synced via onAppear -> Next is enabled immediately without forced wiggling
+        XCTAssertTrue(nextButton.isEnabled, "Next must be valid with synced default slider score")
+
+        // Adjust slider to verify interaction
+        slider.adjust(toNormalizedSliderPosition: 0.75)
+        nextButton.tap()
+
+        // 5. Question 5 of 24 (Likert Slider: arch-lk-02)
+        let q5Expectation = expectation(for: NSPredicate(format: "label == 'Frage 5 / 24'"), evaluatedWith: counterPill)
+        wait(for: [q5Expectation], timeout: 5)
+        XCTAssertTrue(nextButton.isEnabled)
+        nextButton.tap()
+
+        // 6. Question 6 of 24 (Short Text: arch-tx-01)
+        let q6Expectation = expectation(for: NSPredicate(format: "label == 'Frage 6 / 24'"), evaluatedWith: counterPill)
+        wait(for: [q6Expectation], timeout: 5)
+
+        let editor = app.textViews["shortTextEditor"]
+        XCTAssertTrue(editor.waitForExistence(timeout: 5))
+        XCTAssertFalse(nextButton.isEnabled, "Next must be disabled before typing required short text")
+
+        editor.tap()
+        let sampleReflection = "Modulare Clean Architecture mit SPM und Swift."
+        for char in sampleReflection {
+            editor.typeText(String(char))
+            Thread.sleep(forTimeInterval: 0.03)
+        }
+
+        XCTAssertTrue(nextButton.isEnabled, "Next must be enabled once min characters are fulfilled")
+        nextButton.tap()
+
+        // 7. Question 7 of 24 (Dimension Transition: Swift & Apple Platform Engineering)
+        let q7Expectation = expectation(for: NSPredicate(format: "label == 'Frage 7 / 24'"), evaluatedWith: counterPill)
+        wait(for: [q7Expectation], timeout: 5)
+        XCTAssertEqual(dimensionBadge.label, "Swift & Apple Platform Engineering", "Dimension badge must transition smoothly")
     }
 
     // MARK: - Sprint 3 Atomic Component Verification Tests

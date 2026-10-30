@@ -124,6 +124,7 @@ public final class AssessmentViewModel: AssessmentViewModelProtocol {
             self.answers.removeAll()
             self.sessionStartTime = Date()
             self.state = .inProgress
+            ensureDefaultAnswerIfNeeded()
         } catch {
             self.state = .error(error.localizedDescription)
         }
@@ -141,7 +142,14 @@ public final class AssessmentViewModel: AssessmentViewModelProtocol {
         if let existingIndex = current.firstIndex(of: optionId) {
             current.remove(at: existingIndex)
         } else {
-            current.append(optionId)
+            if let question = catalog?.questions.first(where: { $0.id == questionId }),
+               let maxCount = question.maxSelectCount {
+                if current.count < maxCount {
+                    current.append(optionId)
+                }
+            } else {
+                current.append(optionId)
+            }
         }
 
         if current.isEmpty {
@@ -162,11 +170,21 @@ public final class AssessmentViewModel: AssessmentViewModelProtocol {
     public func advance() {
         guard canGoForward else { return }
         currentQuestionIndex += 1
+        ensureDefaultAnswerIfNeeded()
     }
 
     public func goBack() {
         guard canGoBack else { return }
         currentQuestionIndex -= 1
+        ensureDefaultAnswerIfNeeded()
+    }
+
+    private func ensureDefaultAnswerIfNeeded() {
+        guard let question = currentQuestion else { return }
+        if question.type == .likertSlider && answers[question.id] == nil {
+            let defaultVal = question.sliderDefault ?? question.sliderMin ?? 1.0
+            answers[question.id] = .steppedSlider(value: defaultVal)
+        }
     }
 
     public func submitAssessment() {

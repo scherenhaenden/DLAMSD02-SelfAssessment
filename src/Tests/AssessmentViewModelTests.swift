@@ -17,6 +17,30 @@ final class AssessmentViewModelTests: XCTestCase {
         super.tearDown()
     }
 
+    private func advanceToQuestion(vm: AssessmentViewModel, targetType: QuestionType) {
+        var guardCounter = 0
+        while let current = vm.currentQuestion, current.type != targetType && guardCounter < 30 {
+            guardCounter += 1
+            switch current.type {
+            case .singleChoice:
+                let optId = current.options?.first?.id ?? "sc"
+                vm.recordSingleChoice(questionId: current.id, selectedOptionId: optId)
+            case .multipleChoice:
+                let optId = current.options?.first?.id ?? "mc"
+                vm.toggleMultipleChoice(questionId: current.id, optionId: optId)
+            case .likertSlider:
+                vm.recordSliderValue(questionId: current.id, value: current.sliderDefault ?? 3.0)
+            case .shortText:
+                vm.recordShortText(questionId: current.id, text: "Gültiger Testtext mit mehr als 25 Zeichen.")
+            }
+            let prev = vm.currentQuestionIndex
+            vm.advance()
+            if vm.currentQuestionIndex == prev {
+                break
+            }
+        }
+    }
+
     func testInitialStateAndLoadCatalogSuccess() {
         let vm = AssessmentViewModel(catalogLoader: loader, evaluationEngine: engine)
         XCTAssertEqual(vm.state, .idle)
@@ -24,6 +48,7 @@ final class AssessmentViewModelTests: XCTestCase {
         XCTAssertEqual(vm.currentQuestionIndex, 0)
         XCTAssertEqual(vm.totalQuestions, 0)
         XCTAssertNil(vm.currentQuestion)
+        XCTAssertNil(vm.currentDimension)
         XCTAssertFalse(vm.canGoBack)
         XCTAssertFalse(vm.canGoForward)
 
@@ -48,7 +73,7 @@ final class AssessmentViewModelTests: XCTestCase {
             return
         }
 
-        // Initially no answer recorded
+        // Initially no answer recorded for single choice
         XCTAssertFalse(vm.isCurrentAnswerValid)
         XCTAssertFalse(vm.canGoForward)
 
@@ -79,10 +104,11 @@ final class AssessmentViewModelTests: XCTestCase {
         let vm = AssessmentViewModel(catalogLoader: loader, evaluationEngine: engine)
         vm.loadCatalog()
 
-        // Find a multiple choice question in catalog
-        guard let mcQuestion = vm.catalog?.questions.first(where: { $0.type == .multipleChoice }),
-              let options = mcQuestion.options, options.count >= 3 else {
-            XCTFail("Catalog must contain multiple choice question with >= 3 options")
+        // Advance to multiple choice question
+        advanceToQuestion(vm: vm, targetType: .multipleChoice)
+        guard let mcQuestion = vm.currentQuestion, mcQuestion.type == .multipleChoice,
+              let options = mcQuestion.options, options.count >= 4 else {
+            XCTFail("Must be at multiple choice question with >= 4 options")
             return
         }
 
@@ -91,31 +117,63 @@ final class AssessmentViewModelTests: XCTestCase {
         let maxCount = mcQuestion.maxSelectCount ?? 3
         XCTAssertGreaterThanOrEqual(maxCount, minCount)
 
-        // Toggle 1st option
+        // Initially no selection on this question
+        XCTAssertFalse(vm.isCurrentAnswerValid)
+        XCTAssertFalse(vm.canGoForward)
+
+        // Toggle 1st option -> within bounds [1...3] -> valid
         vm.toggleMultipleChoice(questionId: qId, optionId: options[0].id)
+        XCTAssertTrue(vm.isCurrentAnswerValid)
+        XCTAssertTrue(vm.canGoForward)
         if case .multipleChoice(let ids) = vm.answers[qId] {
             XCTAssertEqual(ids, [options[0].id])
         }
 
-        // Toggle 2nd option
+        // Toggle 2nd option -> within bounds -> valid
         vm.toggleMultipleChoice(questionId: qId, optionId: options[1].id)
+        XCTAssertTrue(vm.isCurrentAnswerValid)
         if case .multipleChoice(let ids) = vm.answers[qId] {
             XCTAssertEqual(ids.count, 2)
         }
 
-        // Toggle 1st option again (deselects)
-        vm.toggleMultipleChoice(questionId: qId, optionId: options[0].id)
+        // Toggle 3rd option -> reached maxSelectCount (3) -> valid
+        vm.toggleMultipleChoice(questionId: qId, optionId: options[2].id)
+        XCTAssertTrue(vm.isCurrentAnswerValid)
         if case .multipleChoice(let ids) = vm.answers[qId] {
-            XCTAssertEqual(ids, [options[1].id])
+            XCTAssertEqual(ids.count, 3)
         }
+
+        // Toggle 4th option -> reached maxSelectCount (4) -> valid
+        vm.toggleMultipleChoice(questionId: qId, optionId: options[3].id)
+        XCTAssertTrue(vm.isCurrentAnswerValid)
+        if case .multipleChoice(let ids) = vm.answers[qId] {
+            XCTAssertEqual(ids.count, 4)
+        }
+
+        // Attempt to toggle a 5th option -> blocked by maxSelectCount guard -> count remains 4
+        vm.toggleMultipleChoice(questionId: qId, optionId: "extra-option-5")
+        if case .multipleChoice(let ids) = vm.answers[qId] {
+            XCTAssertEqual(ids.count, 4)
+        }
+
+        // Deselect all options
+        vm.toggleMultipleChoice(questionId: qId, optionId: options[0].id)
+        vm.toggleMultipleChoice(questionId: qId, optionId: options[1].id)
+        vm.toggleMultipleChoice(questionId: qId, optionId: options[2].id)
+        vm.toggleMultipleChoice(questionId: qId, optionId: options[3].id)
+
+        // All deselected -> dictionary entry removed -> invalid
+        XCTAssertNil(vm.answers[qId])
+        XCTAssertFalse(vm.isCurrentAnswerValid)
     }
 
     func testSliderAnswerRecordingAndValidation() {
         let vm = AssessmentViewModel(catalogLoader: loader, evaluationEngine: engine)
         vm.loadCatalog()
 
-        guard let sliderQuestion = vm.catalog?.questions.first(where: { $0.type == .likertSlider }) else {
-            XCTFail("Catalog must contain stepped slider question")
+        advanceToQuestion(vm: vm, targetType: .likertSlider)
+        guard let sliderQuestion = vm.currentQuestion, sliderQuestion.type == .likertSlider else {
+            XCTFail("Must be at stepped slider question")
             return
         }
 
@@ -123,14 +181,33 @@ final class AssessmentViewModelTests: XCTestCase {
         let minVal = sliderQuestion.sliderMin ?? 1.0
         let maxVal = sliderQuestion.sliderMax ?? 5.0
         let step = sliderQuestion.sliderStep ?? 1.0
-        XCTAssertGreaterThan(maxVal, minVal)
 
-        // Record compliant slider value
-        let testVal = minVal + step
-        vm.recordSliderValue(questionId: qId, value: testVal)
+        // Stepped slider automatically registers default value upon navigating
+        XCTAssertTrue(vm.isCurrentAnswerValid)
+        XCTAssertEqual(vm.answers[qId], .steppedSlider(value: sliderQuestion.sliderDefault ?? 3.0))
+
+        // Below min -> invalid
+        vm.recordSliderValue(questionId: qId, value: minVal - 1.0)
+        XCTAssertFalse(vm.isCurrentAnswerValid)
+
+        // Above max -> invalid
+        vm.recordSliderValue(questionId: qId, value: maxVal + 1.0)
+        XCTAssertFalse(vm.isCurrentAnswerValid)
+
+        // Step violation -> invalid
+        if step > 0 {
+            vm.recordSliderValue(questionId: qId, value: minVal + step * 0.5)
+            XCTAssertFalse(vm.isCurrentAnswerValid)
+        }
+
+        // Compliant value -> valid
+        let validVal = minVal + step
+        vm.recordSliderValue(questionId: qId, value: validVal)
+        XCTAssertTrue(vm.isCurrentAnswerValid)
+        XCTAssertTrue(vm.canGoForward)
 
         if case .steppedSlider(let val) = vm.answers[qId] {
-            XCTAssertEqual(val, testVal)
+            XCTAssertEqual(val, validVal)
         } else {
             XCTFail("Recorded answer must match steppedSlider payload")
         }
@@ -140,17 +217,44 @@ final class AssessmentViewModelTests: XCTestCase {
         let vm = AssessmentViewModel(catalogLoader: loader, evaluationEngine: engine)
         vm.loadCatalog()
 
-        guard let textQuestion = vm.catalog?.questions.first(where: { $0.type == .shortText }) else {
-            XCTFail("Catalog must contain short text question")
+        advanceToQuestion(vm: vm, targetType: .shortText)
+        guard let textQuestion = vm.currentQuestion, textQuestion.type == .shortText else {
+            XCTFail("Must be at short text question")
             return
         }
 
         let qId = textQuestion.id
         let minChars = textQuestion.minCharacters ?? 15
-        let validText = String(repeating: "Testwort ", count: 5) // > 15 chars
+        let maxChars = textQuestion.maxCharacters ?? 350
+
+        // Initially no answer
+        XCTAssertFalse(vm.isCurrentAnswerValid)
+
+        // Empty text
+        vm.recordShortText(questionId: qId, text: "")
+        XCTAssertFalse(vm.isCurrentAnswerValid)
+
+        // Whitespace only
+        vm.recordShortText(questionId: qId, text: "          ")
+        XCTAssertFalse(vm.isCurrentAnswerValid)
+
+        // Too short (< minChars)
+        vm.recordShortText(questionId: qId, text: "Zu kurz")
+        XCTAssertFalse(vm.isCurrentAnswerValid)
+
+        // Exceeds max (> maxChars)
+        let tooLongText = String(repeating: "A", count: maxChars + 10)
+        vm.recordShortText(questionId: qId, text: tooLongText)
+        XCTAssertFalse(vm.isCurrentAnswerValid)
+
+        // Valid text
+        let validText = "Praxiseinsatz mit sauberer Architektur und TDD."
         XCTAssertGreaterThan(validText.count, minChars)
+        XCTAssertLessThanOrEqual(validText.count, maxChars)
 
         vm.recordShortText(questionId: qId, text: validText)
+        XCTAssertTrue(vm.isCurrentAnswerValid)
+        XCTAssertTrue(vm.canGoForward)
 
         if case .shortText(let text) = vm.answers[qId] {
             XCTAssertEqual(text, validText)
@@ -260,53 +364,47 @@ final class AssessmentViewModelTests: XCTestCase {
     }
 
     func testValidationEdgeCasesForDifferentPayloadTypes() {
-        let vm = AssessmentViewModel(catalogLoader: loader, evaluationEngine: engine)
-        vm.loadCatalog()
+        // 1. Single choice invalid option & type mismatches
+        let vmSC = AssessmentViewModel(catalogLoader: loader, evaluationEngine: engine)
+        vmSC.loadCatalog()
+        if let firstQ = vmSC.currentQuestion {
+            vmSC.recordSingleChoice(questionId: firstQ.id, selectedOptionId: "non-existent-option-xyz")
+            XCTAssertFalse(vmSC.isCurrentAnswerValid)
 
-        guard let firstQ = vm.currentQuestion else {
-            XCTFail("First question required")
-            return
+            vmSC.recordShortText(questionId: firstQ.id, text: "Some text on SC question")
+            XCTAssertFalse(vmSC.isCurrentAnswerValid)
+
+            vmSC.recordSliderValue(questionId: firstQ.id, value: 3.0)
+            XCTAssertFalse(vmSC.isCurrentAnswerValid)
         }
-
-        // 1. Invalid option for single choice
-        vm.recordSingleChoice(questionId: firstQ.id, selectedOptionId: "non-existent-option-xyz")
-        XCTAssertFalse(vm.isCurrentAnswerValid)
 
         // 2. Multiple choice edge cases
-        if let mcIndex = vm.catalog?.questions.firstIndex(where: { $0.type == .multipleChoice }) {
-            let mcQ = vm.catalog!.questions[mcIndex]
-            // Move to this question by setting answers up to it or testing payload directly
-            // Type mismatch test:
-            vm.recordShortText(questionId: mcQ.id, text: "Some text on MC question")
-            // Record direct invalid payloads in answers
-            vm.recordSingleChoice(questionId: mcQ.id, selectedOptionId: "invalid")
+        let vmMC = AssessmentViewModel(catalogLoader: loader, evaluationEngine: engine)
+        vmMC.loadCatalog()
+        advanceToQuestion(vm: vmMC, targetType: .multipleChoice)
+        if let mcQ = vmMC.currentQuestion {
+            // Type mismatch
+            vmMC.recordShortText(questionId: mcQ.id, text: "Short text payload")
+            XCTAssertFalse(vmMC.isCurrentAnswerValid)
+
+            vmMC.recordSliderValue(questionId: mcQ.id, value: 3.0)
+            XCTAssertFalse(vmMC.isCurrentAnswerValid)
+
+            // Unknown option ID
+            vmMC.toggleMultipleChoice(questionId: mcQ.id, optionId: "unknown-option-id-404")
+            XCTAssertFalse(vmMC.isCurrentAnswerValid)
         }
 
-        // 3. Slider bounds and step validation
-        if let sliderQ = vm.catalog?.questions.first(where: { $0.type == .likertSlider }) {
-            let minVal = sliderQ.sliderMin ?? 1.0
-            let maxVal = sliderQ.sliderMax ?? 5.0
-            // Value below min
-            vm.recordSliderValue(questionId: sliderQ.id, value: minVal - 1.0)
-            // Value above max
-            vm.recordSliderValue(questionId: sliderQ.id, value: maxVal + 1.0)
-            // Non-step multiple if step exists
-            if let step = sliderQ.sliderStep, step > 0 {
-                vm.recordSliderValue(questionId: sliderQ.id, value: minVal + step * 0.5)
-            }
-        }
+        // 3. Short text edge cases
+        let vmTX = AssessmentViewModel(catalogLoader: loader, evaluationEngine: engine)
+        vmTX.loadCatalog()
+        advanceToQuestion(vm: vmTX, targetType: .shortText)
+        if let textQ = vmTX.currentQuestion {
+            vmTX.recordSliderValue(questionId: textQ.id, value: 3.0)
+            XCTAssertFalse(vmTX.isCurrentAnswerValid)
 
-        // 4. Short text min/max validation
-        if let textQ = vm.catalog?.questions.first(where: { $0.type == .shortText }) {
-            let minChars = textQ.minCharacters ?? 15
-            let maxChars = textQ.maxCharacters ?? 350
-            XCTAssertGreaterThan(maxChars, minChars)
-            // Below min
-            vm.recordShortText(questionId: textQ.id, text: "Too short")
-            // Whitespace only
-            vm.recordShortText(questionId: textQ.id, text: "          ")
-            // Exceeds max
-            vm.recordShortText(questionId: textQ.id, text: String(repeating: "A", count: maxChars + 10))
+            vmTX.recordSingleChoice(questionId: textQ.id, selectedOptionId: "opt")
+            XCTAssertFalse(vmTX.isCurrentAnswerValid)
         }
     }
 
@@ -339,6 +437,41 @@ final class AssessmentViewModelTests: XCTestCase {
                 XCTAssertTrue(msg.contains("Assessment incomplete"))
             } else {
                 XCTFail("Should fail with incomplete assessment error")
+            }
+        }
+
+        // 4. Submit when Evaluation Engine throws error
+        struct ThrowingEngine: EvaluationEngineProtocol {
+            func evaluate(answers: [AssessmentAnswer], catalog: AssessmentCatalog, durationSeconds: Double) throws -> AssessmentRecord {
+                throw EvaluationEngineError.emptyAnswers
+            }
+            func scoreQuestion(question: AssessmentQuestion, selectedOptionIds: [String]?, sliderValue: Double?, textInput: String?) -> Double {
+                0.0
+            }
+        }
+
+        let throwingVM = AssessmentViewModel(catalogLoader: loader, evaluationEngine: ThrowingEngine())
+        throwingVM.loadCatalog()
+        if let questions = throwingVM.catalog?.questions {
+            for q in questions {
+                switch q.type {
+                case .singleChoice:
+                    let optId = q.options?.first?.id ?? "sc"
+                    throwingVM.recordSingleChoice(questionId: q.id, selectedOptionId: optId)
+                case .multipleChoice:
+                    let optId = q.options?.first?.id ?? "mc"
+                    throwingVM.toggleMultipleChoice(questionId: q.id, optionId: optId)
+                case .likertSlider:
+                    throwingVM.recordSliderValue(questionId: q.id, value: 3.0)
+                case .shortText:
+                    throwingVM.recordShortText(questionId: q.id, text: "Gültiger Testtext mit ausreichender Länge.")
+                }
+            }
+            throwingVM.submitAssessment()
+            if case .error(let msg) = throwingVM.state {
+                XCTAssertTrue(msg.contains("empty") || !msg.isEmpty)
+            } else {
+                XCTFail("Must transition to .error when evaluation engine throws")
             }
         }
     }

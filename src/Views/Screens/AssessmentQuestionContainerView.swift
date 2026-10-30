@@ -128,6 +128,13 @@ public struct AssessmentQuestionContainerView<VM: AssessmentViewModelProtocol>: 
                 viewModel.recordSliderValue(questionId: question.id, value: newValue)
             }
         )
+        .onAppear {
+            if case .steppedSlider = viewModel.answers[question.id] {
+                // Already recorded
+            } else {
+                viewModel.recordSliderValue(questionId: question.id, value: currentValue)
+            }
+        }
     }
 
     private var shortTextSection: some View {
