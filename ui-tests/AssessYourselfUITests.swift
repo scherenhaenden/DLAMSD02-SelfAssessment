@@ -13,8 +13,76 @@ final class AssessYourselfUITests: XCTestCase {
         app = nil
     }
 
+    private func switchToShowcaseTabIfNeeded() {
+        let showcaseTab = app.tabBars.buttons["Showcase"]
+        if showcaseTab.waitForExistence(timeout: 3) {
+            showcaseTab.tap()
+        }
+    }
+
+    private func switchToAssessmentTabIfNeeded() {
+        let assessmentTab = app.tabBars.buttons["Assessment"]
+        if assessmentTab.waitForExistence(timeout: 3) {
+            assessmentTab.tap()
+        }
+    }
+
+    // MARK: - Sprint 4: Sequential Assessment Flow Tests
+
+    func testSequentialAssessmentFlowProgressionAndValidation() throws {
+        app.launch()
+        switchToAssessmentTabIfNeeded()
+
+        // 1. Initial State: Question 1 of 24
+        let counterPill = app.staticTexts["flow.counterPill"]
+        XCTAssertTrue(counterPill.waitForExistence(timeout: 10), "Counter pill must exist")
+        XCTAssertEqual(counterPill.label, "Frage 1 / 24")
+
+        let dimensionBadge = app.staticTexts["flow.dimensionBadge"]
+        XCTAssertTrue(dimensionBadge.waitForExistence(timeout: 5))
+        XCTAssertEqual(dimensionBadge.label, "Software Architecture & System Design")
+
+        let backButton = app.buttons["flow.backButton"]
+        let nextButton = app.buttons["flow.nextButton"]
+        XCTAssertTrue(backButton.waitForExistence(timeout: 5))
+        XCTAssertTrue(nextButton.waitForExistence(timeout: 5))
+
+        // Back button must be disabled on first question
+        XCTAssertFalse(backButton.isEnabled, "Back button must be disabled on question 1")
+        // Next button must be disabled until question is answered
+        XCTAssertFalse(nextButton.isEnabled, "Next button must be disabled before answering")
+
+        // 2. Select option for Question 1
+        let optionButtons = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'choiceOption.'"))
+        XCTAssertGreaterThan(optionButtons.count, 0, "Question 1 choice options must be present")
+        let firstOption = optionButtons.element(boundBy: 0)
+        firstOption.tap()
+
+        // 3. Advancing is now enabled
+        XCTAssertTrue(nextButton.isEnabled, "Next button must be enabled after answering")
+        nextButton.tap()
+
+        // 4. State advances to Question 2 of 24
+        let question2Expectation = expectation(for: NSPredicate(format: "label == 'Frage 2 / 24'"), evaluatedWith: counterPill)
+        wait(for: [question2Expectation], timeout: 5)
+        XCTAssertTrue(backButton.isEnabled, "Back button must be enabled on question 2")
+
+        // 5. Navigate back to Question 1
+        backButton.tap()
+        let question1Expectation = expectation(for: NSPredicate(format: "label == 'Frage 1 / 24'"), evaluatedWith: counterPill)
+        wait(for: [question1Expectation], timeout: 5)
+
+        // Previous answer is preserved, so Next is still enabled
+        XCTAssertTrue(nextButton.isEnabled, "Next button must remain enabled as answer was preserved")
+        XCTAssertFalse(backButton.isEnabled, "Back button is disabled again on question 1")
+    }
+
+    // MARK: - Sprint 3 Atomic Component Verification Tests
+
     func testSingleChoiceMutualExclusionInteraction() throws {
         app.launch()
+        switchToShowcaseTabIfNeeded()
+
         let opt1 = app.buttons["choiceOption.sc-opt-1"]
         let opt2 = app.buttons["choiceOption.sc-opt-2"]
 
@@ -35,6 +103,8 @@ final class AssessYourselfUITests: XCTestCase {
 
     func testMultipleChoiceBoundsAndToggleInteraction() throws {
         app.launch()
+        switchToShowcaseTabIfNeeded()
+
         let chipSwiftUI = app.buttons["multiChip.mc-opt-1"]
         let chipSwiftPM = app.buttons["multiChip.mc-opt-2"]
         let chipXCTest = app.buttons["multiChip.mc-opt-3"]
@@ -84,6 +154,7 @@ final class AssessYourselfUITests: XCTestCase {
 
     func testLikertSliderAndShortTextInputInteraction() throws {
         app.launch()
+        switchToShowcaseTabIfNeeded()
 
         // 1. Likert Slider initial state verification
         let slider = app.sliders["likertSlider"]

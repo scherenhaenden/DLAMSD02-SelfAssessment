@@ -293,4 +293,120 @@ final class UIComponentTests: XCTestCase {
         let padSize = renderInHost(showcase, width: 810, height: 1080)
         XCTAssertGreaterThan(padSize.height, 0)
     }
+
+    // MARK: - AssessmentQuestionContainerView & AssessmentFlowView Tests
+
+    func testAssessmentQuestionContainerViewWithAllQuestionTypes() {
+        let vm = AssessmentViewModel()
+        vm.loadCatalog()
+
+        guard let catalog = vm.catalog else {
+            XCTFail("Catalog required")
+            return
+        }
+
+        // 1. Single Choice question rendering
+        if let scQ = catalog.questions.first(where: { $0.type == .singleChoice }) {
+            let container = AssessmentQuestionContainerView(viewModel: vm, question: scQ)
+            let size = renderInHost(container)
+            XCTAssertGreaterThan(size.height, 0)
+
+            // With recorded answer
+            let optId = scQ.options?.first?.id ?? "sc-1"
+            vm.recordSingleChoice(questionId: scQ.id, selectedOptionId: optId)
+            let answeredSize = renderInHost(container)
+            XCTAssertGreaterThan(answeredSize.height, 0)
+        }
+
+        // 2. Multiple Choice question rendering
+        if let mcQ = catalog.questions.first(where: { $0.type == .multipleChoice }) {
+            let container = AssessmentQuestionContainerView(viewModel: vm, question: mcQ)
+            let size = renderInHost(container)
+            XCTAssertGreaterThan(size.height, 0)
+
+            if let optId = mcQ.options?.first?.id {
+                vm.toggleMultipleChoice(questionId: mcQ.id, optionId: optId)
+            }
+            let answeredSize = renderInHost(container)
+            XCTAssertGreaterThan(answeredSize.height, 0)
+        }
+
+        // 3. Stepped Slider question rendering
+        if let sliderQ = catalog.questions.first(where: { $0.type == .likertSlider }) {
+            let container = AssessmentQuestionContainerView(viewModel: vm, question: sliderQ)
+            let size = renderInHost(container)
+            XCTAssertGreaterThan(size.height, 0)
+
+            vm.recordSliderValue(questionId: sliderQ.id, value: 3.0)
+            let answeredSize = renderInHost(container)
+            XCTAssertGreaterThan(answeredSize.height, 0)
+        }
+
+        // 4. Short Text question rendering
+        if let textQ = catalog.questions.first(where: { $0.type == .shortText }) {
+            let container = AssessmentQuestionContainerView(viewModel: vm, question: textQ)
+            let size = renderInHost(container)
+            XCTAssertGreaterThan(size.height, 0)
+
+            vm.recordShortText(questionId: textQ.id, text: "Ausführliche Reflexion über Softwarearchitektur und Codequalität.")
+            let answeredSize = renderInHost(container)
+            XCTAssertGreaterThan(answeredSize.height, 0)
+        }
+    }
+
+    func testAssessmentFlowViewExecutionAcrossAllSessionStates() {
+        let vm = AssessmentViewModel()
+
+        // 1. Idle state
+        let idleFlow = AssessmentFlowView(viewModel: vm)
+        let idleSize = renderInHost(idleFlow)
+        XCTAssertGreaterThan(idleSize.height, 0)
+
+        // 2. In progress state
+        vm.loadCatalog()
+        let inProgressFlow = AssessmentFlowView(viewModel: vm)
+        let progSize = renderInHost(inProgressFlow)
+        XCTAssertGreaterThan(progSize.height, 0)
+
+        // 3. Completed state
+        // Answer all questions quickly to reach completed state
+        if let questions = vm.catalog?.questions {
+            for q in questions {
+                switch q.type {
+                case .singleChoice:
+                    let optId = q.options?.first?.id ?? "sc"
+                    vm.recordSingleChoice(questionId: q.id, selectedOptionId: optId)
+                case .multipleChoice:
+                    let optId = q.options?.first?.id ?? "mc"
+                    vm.toggleMultipleChoice(questionId: q.id, optionId: optId)
+                case .likertSlider:
+                    vm.recordSliderValue(questionId: q.id, value: q.sliderDefault ?? 3.0)
+                case .shortText:
+                    vm.recordShortText(questionId: q.id, text: "Lang genug formulierte Antwort für die Vollständigkeit.")
+                }
+            }
+            vm.submitAssessment()
+            let completedFlow = AssessmentFlowView(viewModel: vm)
+            let completedSize = renderInHost(completedFlow)
+            XCTAssertGreaterThan(completedSize.height, 0)
+        }
+
+        // 4. Error state
+        struct MockErrorLoader: CatalogLoaderProtocol {
+            func loadBundledCatalog() throws -> AssessmentCatalog {
+                throw CatalogLoaderError.resourceNotFound(name: "test.json")
+            }
+            func loadCatalog(from fileURL: URL) throws -> AssessmentCatalog {
+                throw CatalogLoaderError.resourceNotFound(name: "test.json")
+            }
+            func decodeCatalog(from data: Data) throws -> AssessmentCatalog {
+                throw CatalogLoaderError.jsonDecodingFailed(underlying: "Err")
+            }
+        }
+        let errorVM = AssessmentViewModel(catalogLoader: MockErrorLoader())
+        errorVM.loadCatalog()
+        let errorFlow = AssessmentFlowView(viewModel: errorVM)
+        let errorSize = renderInHost(errorFlow)
+        XCTAssertGreaterThan(errorSize.height, 0)
+    }
 }

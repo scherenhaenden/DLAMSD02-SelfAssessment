@@ -63,6 +63,8 @@ public final class LocalCatalogService: CatalogLoaderProtocol {
     }
 }
 
+public typealias CatalogLoader = LocalCatalogService
+
 public enum CatalogLoaderError: LocalizedError, Equatable {
     case resourceNotFound(name: String)
     case fileReadError(url: URL, underlying: String)

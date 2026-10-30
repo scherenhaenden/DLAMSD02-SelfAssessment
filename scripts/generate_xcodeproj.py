@@ -23,7 +23,11 @@ def main():
         "src/Models/QuestionType.swift",
         "src/Models/AssessmentCatalog.swift",
         "src/Models/AssessmentRecord.swift",
+        "src/ViewModels/AssessmentViewModelProtocol.swift",
+        "src/ViewModels/AssessmentViewModel.swift",
         "src/Views/Screens/ComponentShowcaseView.swift",
+        "src/Views/Screens/AssessmentQuestionContainerView.swift",
+        "src/Views/Screens/AssessmentFlowView.swift",
         "src/Views/Components/Color+Adaptive.swift",
         "src/Views/Components/MultiSelectChipGrid.swift",
         "src/Views/Components/LikertSliderCard.swift",
@@ -43,6 +47,7 @@ def main():
         "src/Tests/ColorTokenTests.swift",
         "src/Tests/EvaluationEngineTests.swift",
         "src/Tests/UIComponentTests.swift",
+        "src/Tests/AssessmentViewModelTests.swift",
     ]
 
     ui_test_sources = [
@@ -57,6 +62,7 @@ def main():
     ui_tests_group_id = gen_id("GROUP_ui_tests")
     app_group_id = gen_id("GROUP_App")
     models_group_id = gen_id("GROUP_Models")
+    viewmodels_group_id = gen_id("GROUP_ViewModels")
     services_group_id = gen_id("GROUP_Services")
     views_group_id = gen_id("GROUP_Views")
     components_group_id = gen_id("GROUP_Components")
@@ -227,6 +233,7 @@ def main():
     pbx.append("\t\t\tchildren = (")
     pbx.append(f"\t\t\t\t{app_group_id} /* App */,")
     pbx.append(f"\t\t\t\t{models_group_id} /* Models */,")
+    pbx.append(f"\t\t\t\t{viewmodels_group_id} /* ViewModels */,")
     pbx.append(f"\t\t\t\t{services_group_id} /* Services */,")
     pbx.append(f"\t\t\t\t{views_group_id} /* Views */,")
     pbx.append(f"\t\t\t\t{resources_group_id} /* Resources */,")
@@ -253,6 +260,16 @@ def main():
         pbx.append(f"\t\t\t\t{filerefs['src/Models/' + f]} /* {f} */,")
     pbx.append("\t\t\t);")
     pbx.append("\t\t\tpath = Models;")
+    pbx.append("\t\t\tsourceTree = \"<group>\";")
+    pbx.append("\t\t};")
+
+    pbx.append(f"\t\t{viewmodels_group_id} /* ViewModels */ = {{")
+    pbx.append("\t\t\tisa = PBXGroup;")
+    pbx.append("\t\t\tchildren = (")
+    for f in ["AssessmentViewModelProtocol.swift", "AssessmentViewModel.swift"]:
+        pbx.append(f"\t\t\t\t{filerefs['src/ViewModels/' + f]} /* {f} */,")
+    pbx.append("\t\t\t);")
+    pbx.append("\t\t\tpath = ViewModels;")
     pbx.append("\t\t\tsourceTree = \"<group>\";")
     pbx.append("\t\t};")
 
@@ -289,7 +306,8 @@ def main():
     pbx.append(f"\t\t{screens_group_id} /* Screens */ = {{")
     pbx.append("\t\t\tisa = PBXGroup;")
     pbx.append("\t\t\tchildren = (")
-    pbx.append(f"\t\t\t\t{filerefs['src/Views/Screens/ComponentShowcaseView.swift']} /* ComponentShowcaseView.swift */,")
+    for f in ["ComponentShowcaseView.swift", "AssessmentQuestionContainerView.swift", "AssessmentFlowView.swift"]:
+        pbx.append(f"\t\t\t\t{filerefs['src/Views/Screens/' + f]} /* {f} */,")
     pbx.append("\t\t\t);")
     pbx.append("\t\t\tpath = Screens;")
     pbx.append("\t\t\tsourceTree = \"<group>\";")
@@ -307,7 +325,7 @@ def main():
     pbx.append(f"\t\t{tests_group_id} /* Tests */ = {{")
     pbx.append("\t\t\tisa = PBXGroup;")
     pbx.append("\t\t\tchildren = (")
-    for f in ["CatalogTests.swift", "ColorTokenTests.swift", "EvaluationEngineTests.swift", "UIComponentTests.swift"]:
+    for f in ["CatalogTests.swift", "ColorTokenTests.swift", "EvaluationEngineTests.swift", "UIComponentTests.swift", "AssessmentViewModelTests.swift"]:
         pbx.append(f"\t\t\t\t{filerefs['src/Tests/' + f]} /* {f} */,")
     pbx.append("\t\t\t);")
     pbx.append("\t\t\tpath = Tests;")
@@ -496,8 +514,8 @@ def main():
     pbx.append("/* End PBXTargetDependency section */")
 
     # Build Configuration Settings
-    build_version = "20261030.121500"
-    market_version = "0.3.3"
+    build_version = "20261030.130000"
+    market_version = "0.4.0"
 
     # XCBuildConfiguration
     pbx.append("\n/* Begin XCBuildConfiguration section */")

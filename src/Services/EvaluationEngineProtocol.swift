@@ -362,6 +362,8 @@ public final class AssessmentEvaluationEngine: EvaluationEngineProtocol {
     }
 }
 
+public typealias EvaluationEngine = AssessmentEvaluationEngine
+
 public enum EvaluationEngineError: LocalizedError, Equatable {
     case emptyAnswers
     case duplicateAnswer(questionId: String)
