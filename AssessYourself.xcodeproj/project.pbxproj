@@ -28,10 +28,18 @@
 		C926AC62627F9F44DA75B50D /* src/Tests/ColorTokenTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4168061FD3F8A4D947A3F03E /* ColorTokenTests.swift */; };
 		4254C1A53B39E80FF187349A /* src/Tests/EvaluationEngineTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63FF6209B98BA0D253CA8DAF /* EvaluationEngineTests.swift */; };
 		B2D268D387D55DBC5E7A64C5 /* src/Tests/UIComponentTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37D757E5F24C6448E71DCF46 /* UIComponentTests.swift */; };
+		655482FA3B2CCB96D880CA76 /* ui-tests/AssessYourselfUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E002823799183206956B1DB /* AssessYourselfUITests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
 		C2A8B670D1DF1E3FD21421A8 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 14D0D1FF0065C07600DC4C12 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = F4DD546131C375A344A7E909;
+			remoteInfo = AssessYourself;
+		};
+		3199874B9E85A8EA5BEC513F /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 14D0D1FF0065C07600DC4C12 /* Project object */;
 			proxyType = 1;
@@ -43,6 +51,7 @@
 /* Begin PBXFileReference section */
 		617BD66059155E6786560C7E /* AssessYourself.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AssessYourself.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		E0185E840056B195F4A7DE97 /* AssessYourselfTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AssessYourselfTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		1184EB60A72CBDD8C3977044 /* AssessYourselfUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AssessYourselfUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		82FD3451F1389693D8B746D6 /* AssessYourselfApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AssessYourselfApp.swift"; sourceTree = "<group>"; };
 		82116693C9227821AFF50369 /* ArchetypeProfile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ArchetypeProfile.swift"; sourceTree = "<group>"; };
 		F8E963F6BD25F0B8049E089D /* AssessmentDimension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AssessmentDimension.swift"; sourceTree = "<group>"; };
@@ -64,6 +73,7 @@
 		4168061FD3F8A4D947A3F03E /* ColorTokenTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ColorTokenTests.swift"; sourceTree = "<group>"; };
 		63FF6209B98BA0D253CA8DAF /* EvaluationEngineTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "EvaluationEngineTests.swift"; sourceTree = "<group>"; };
 		37D757E5F24C6448E71DCF46 /* UIComponentTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIComponentTests.swift"; sourceTree = "<group>"; };
+		0E002823799183206956B1DB /* AssessYourselfUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AssessYourselfUITests.swift"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -81,6 +91,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		8098B5536699255739E96D98 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -88,6 +105,7 @@
 			isa = PBXGroup;
 			children = (
 				099EE8789ACC486038568E8D /* src */,
+				C1B44D4C72C5C3A233E1D033 /* ui-tests */,
 				3EC9CDB3D3E20502C46D641E /* Products */,
 			);
 			sourceTree = "<group>";
@@ -97,8 +115,17 @@
 			children = (
 				617BD66059155E6786560C7E /* AssessYourself.app */,
 				E0185E840056B195F4A7DE97 /* AssessYourselfTests.xctest */,
+				1184EB60A72CBDD8C3977044 /* AssessYourselfUITests.xctest */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		C1B44D4C72C5C3A233E1D033 /* ui-tests */ = {
+			isa = PBXGroup;
+			children = (
+				0E002823799183206956B1DB /* AssessYourselfUITests.swift */,
+			);
+			path = "ui-tests";
 			sourceTree = "<group>";
 		};
 		099EE8789ACC486038568E8D /* src */ = {
@@ -231,6 +258,24 @@
 			productReference = E0185E840056B195F4A7DE97 /* AssessYourselfTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
+		DC305F21C0DBE3D26A46BC83 /* AssessYourselfUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = E4A00BE9A8D39082A727873D /* Build configuration list for PBXNativeTarget "AssessYourselfUITests" */;
+			buildPhases = (
+				498908D70987D6DAA3810F84 /* Sources */,
+				8098B5536699255739E96D98 /* Frameworks */,
+				E58A349EC53524DE8E6970E5 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				CFDC523ED639027FB7A00E0A /* PBXTargetDependency */,
+			);
+			name = AssessYourselfUITests;
+			productName = AssessYourselfUITests;
+			productReference = 1184EB60A72CBDD8C3977044 /* AssessYourselfUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -245,6 +290,10 @@
 						CreatedOnToolsVersion = 15.0;
 					};
 					24566D41975B35F0B498E3EC = {
+						CreatedOnToolsVersion = 15.0;
+						TestTargetID = F4DD546131C375A344A7E909;
+					};
+					DC305F21C0DBE3D26A46BC83 = {
 						CreatedOnToolsVersion = 15.0;
 						TestTargetID = F4DD546131C375A344A7E909;
 					};
@@ -265,6 +314,7 @@
 			targets = (
 				F4DD546131C375A344A7E909 /* AssessYourself */,
 				24566D41975B35F0B498E3EC /* AssessYourselfTests */,
+				DC305F21C0DBE3D26A46BC83 /* AssessYourselfUITests */,
 			);
 		};
 /* End PBXProject section */
@@ -279,6 +329,13 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		454B59D901947F1E1146D75A /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E58A349EC53524DE8E6970E5 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -322,6 +379,14 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		498908D70987D6DAA3810F84 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				655482FA3B2CCB96D880CA76 /* ui-tests/AssessYourselfUITests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -329,6 +394,11 @@
 			isa = PBXTargetDependency;
 			target = F4DD546131C375A344A7E909 /* AssessYourself */;
 			targetProxy = C2A8B670D1DF1E3FD21421A8 /* PBXContainerItemProxy */;
+		};
+		CFDC523ED639027FB7A00E0A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = F4DD546131C375A344A7E909 /* AssessYourself */;
+			targetProxy = 3199874B9E85A8EA5BEC513F /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -380,7 +450,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 20261030.101500;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -391,7 +461,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 0.3.0;
+				MARKETING_VERSION = 0.3.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.scherenhaenden.AssessYourself;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PRODUCT_MODULE_NAME = AssessYourselfCore;
@@ -404,7 +474,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 20261030.101500;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -415,7 +485,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 0.3.0;
+				MARKETING_VERSION = 0.3.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.scherenhaenden.AssessYourself;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PRODUCT_MODULE_NAME = AssessYourselfCore;
@@ -428,10 +498,10 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 20261030.101500;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				MARKETING_VERSION = 0.3.0;
+				MARKETING_VERSION = 0.3.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.scherenhaenden.AssessYourselfTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
@@ -445,16 +515,48 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 20261030.101500;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				MARKETING_VERSION = 0.3.0;
+				MARKETING_VERSION = 0.3.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.scherenhaenden.AssessYourselfTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/AssessYourself.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/AssessYourself";
 				BUNDLE_LOADER = "$(TEST_HOST)";
+			};
+			name = Release;
+		};
+		EE150895EB9F9651BF3B1C8E /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 20261030.101500;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 0.3.1;
+				PRODUCT_BUNDLE_IDENTIFIER = com.scherenhaenden.AssessYourselfUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = AssessYourself;
+			};
+			name = Debug;
+		};
+		858E766722DB182627041359 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 20261030.101500;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 0.3.1;
+				PRODUCT_BUNDLE_IDENTIFIER = com.scherenhaenden.AssessYourselfUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = AssessYourself;
 			};
 			name = Release;
 		};
@@ -484,6 +586,15 @@
 			buildConfigurations = (
 				ABF6531F21D9E38625D09400 /* Debug */,
 				5D4BE28FA752973FC2EA16B5 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		E4A00BE9A8D39082A727873D /* Build configuration list for PBXNativeTarget "AssessYourselfUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				EE150895EB9F9651BF3B1C8E /* Debug */,
+				858E766722DB182627041359 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;

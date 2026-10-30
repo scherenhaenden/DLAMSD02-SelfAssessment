@@ -45,11 +45,16 @@ def main():
         "src/Tests/UIComponentTests.swift",
     ]
 
-    # IDs
+    ui_test_sources = [
+        "ui-tests/AssessYourselfUITests.swift",
+    ]
+
+    # Target & Product IDs
     proj_id = gen_id("PROJECT_AssessYourself")
     main_group_id = gen_id("GROUP_Main")
     products_group_id = gen_id("GROUP_Products")
     src_group_id = gen_id("GROUP_src")
+    ui_tests_group_id = gen_id("GROUP_ui_tests")
     app_group_id = gen_id("GROUP_App")
     models_group_id = gen_id("GROUP_Models")
     services_group_id = gen_id("GROUP_Services")
@@ -63,9 +68,13 @@ def main():
     app_product_id = gen_id("PRODUCT_AssessYourself_App")
     test_target_id = gen_id("TARGET_AssessYourselfTests")
     test_product_id = gen_id("PRODUCT_AssessYourself_Test")
+    ui_test_target_id = gen_id("TARGET_AssessYourselfUITests")
+    ui_test_product_id = gen_id("PRODUCT_AssessYourself_UITest")
 
     target_dep_id = gen_id("DEP_AssessYourselfTests_AssessYourself")
     container_item_id = gen_id("CONTAINER_AssessYourself")
+    ui_target_dep_id = gen_id("DEP_AssessYourselfUITests_AssessYourself")
+    ui_container_item_id = gen_id("CONTAINER_AssessYourself_UI")
 
     app_sources_phase_id = gen_id("PHASE_App_Sources")
     app_resources_phase_id = gen_id("PHASE_App_Resources")
@@ -74,6 +83,10 @@ def main():
     test_sources_phase_id = gen_id("PHASE_Test_Sources")
     test_resources_phase_id = gen_id("PHASE_Test_Resources")
     test_frameworks_phase_id = gen_id("PHASE_Test_Frameworks")
+
+    ui_test_sources_phase_id = gen_id("PHASE_UITest_Sources")
+    ui_test_resources_phase_id = gen_id("PHASE_UITest_Resources")
+    ui_test_frameworks_phase_id = gen_id("PHASE_UITest_Frameworks")
 
     proj_cfg_list_id = gen_id("CFGLIST_Project")
     proj_debug_cfg_id = gen_id("CFG_Project_Debug")
@@ -87,17 +100,22 @@ def main():
     test_debug_cfg_id = gen_id("CFG_Test_Debug")
     test_release_cfg_id = gen_id("CFG_Test_Release")
 
+    ui_test_cfg_list_id = gen_id("CFGLIST_UITest")
+    ui_test_debug_cfg_id = gen_id("CFG_UITest_Debug")
+    ui_test_release_cfg_id = gen_id("CFG_UITest_Release")
+
     # Map files to fileref and buildfile
     filerefs = {}
     buildfiles = {}
 
-    all_files = app_sources + app_resources + test_sources
+    all_files = app_sources + app_resources + test_sources + ui_test_sources
     for path in all_files:
         fref = gen_id("FILEREF_" + path)
         bf_app = gen_id("BUILDFILE_APP_" + path)
         bf_test = gen_id("BUILDFILE_TEST_" + path)
+        bf_uitest = gen_id("BUILDFILE_UITEST_" + path)
         filerefs[path] = fref
-        buildfiles[path] = {"app": bf_app, "test": bf_test}
+        buildfiles[path] = {"app": bf_app, "test": bf_test, "uitest": bf_uitest}
 
     pbx = []
     pbx.append("// !$*UTF8*$!")
@@ -122,11 +140,22 @@ def main():
         bf = buildfiles[path]["test"]
         fref = filerefs[path]
         pbx.append(f"\t\t{bf} /* {path} in Sources */ = {{isa = PBXBuildFile; fileRef = {fref} /* {os.path.basename(path)} */; }};")
+    for path in ui_test_sources:
+        bf = buildfiles[path]["uitest"]
+        fref = filerefs[path]
+        pbx.append(f"\t\t{bf} /* {path} in Sources */ = {{isa = PBXBuildFile; fileRef = {fref} /* {os.path.basename(path)} */; }};")
     pbx.append("/* End PBXBuildFile section */")
 
     # PBXContainerItemProxy
     pbx.append("\n/* Begin PBXContainerItemProxy section */")
     pbx.append(f"\t\t{container_item_id} /* PBXContainerItemProxy */ = {{")
+    pbx.append(f"\t\t\tisa = PBXContainerItemProxy;")
+    pbx.append(f"\t\t\tcontainerPortal = {proj_id} /* Project object */;")
+    pbx.append(f"\t\t\tproxyType = 1;")
+    pbx.append(f"\t\t\tremoteGlobalIDString = {app_target_id};")
+    pbx.append(f"\t\t\tremoteInfo = AssessYourself;")
+    pbx.append(f"\t\t}};")
+    pbx.append(f"\t\t{ui_container_item_id} /* PBXContainerItemProxy */ = {{")
     pbx.append(f"\t\t\tisa = PBXContainerItemProxy;")
     pbx.append(f"\t\t\tcontainerPortal = {proj_id} /* Project object */;")
     pbx.append(f"\t\t\tproxyType = 1;")
@@ -139,6 +168,7 @@ def main():
     pbx.append("\n/* Begin PBXFileReference section */")
     pbx.append(f"\t\t{app_product_id} /* AssessYourself.app */ = {{isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AssessYourself.app; sourceTree = BUILT_PRODUCTS_DIR; }};")
     pbx.append(f"\t\t{test_product_id} /* AssessYourselfTests.xctest */ = {{isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AssessYourselfTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; }};")
+    pbx.append(f"\t\t{ui_test_product_id} /* AssessYourselfUITests.xctest */ = {{isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AssessYourselfUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; }};")
 
     for path in all_files:
         fref = filerefs[path]
@@ -149,20 +179,14 @@ def main():
 
     # PBXFrameworksBuildPhase
     pbx.append("\n/* Begin PBXFrameworksBuildPhase section */")
-    pbx.append(f"\t\t{app_frameworks_phase_id} /* Frameworks */ = {{")
-    pbx.append("\t\t\tisa = PBXFrameworksBuildPhase;")
-    pbx.append("\t\t\tbuildActionMask = 2147483647;")
-    pbx.append("\t\t\tfiles = (")
-    pbx.append("\t\t\t);")
-    pbx.append("\t\t\trunOnlyForDeploymentPostprocessing = 0;")
-    pbx.append("\t\t};")
-    pbx.append(f"\t\t{test_frameworks_phase_id} /* Frameworks */ = {{")
-    pbx.append("\t\t\tisa = PBXFrameworksBuildPhase;")
-    pbx.append("\t\t\tbuildActionMask = 2147483647;")
-    pbx.append("\t\t\tfiles = (")
-    pbx.append("\t\t\t);")
-    pbx.append("\t\t\trunOnlyForDeploymentPostprocessing = 0;")
-    pbx.append("\t\t};")
+    for phase_id in [app_frameworks_phase_id, test_frameworks_phase_id, ui_test_frameworks_phase_id]:
+        pbx.append(f"\t\t{phase_id} /* Frameworks */ = {{")
+        pbx.append("\t\t\tisa = PBXFrameworksBuildPhase;")
+        pbx.append("\t\t\tbuildActionMask = 2147483647;")
+        pbx.append("\t\t\tfiles = (")
+        pbx.append("\t\t\t);")
+        pbx.append("\t\t\trunOnlyForDeploymentPostprocessing = 0;")
+        pbx.append("\t\t};")
     pbx.append("/* End PBXFrameworksBuildPhase section */")
 
     # PBXGroup section
@@ -171,6 +195,7 @@ def main():
     pbx.append("\t\t\tisa = PBXGroup;")
     pbx.append("\t\t\tchildren = (")
     pbx.append(f"\t\t\t\t{src_group_id} /* src */,")
+    pbx.append(f"\t\t\t\t{ui_tests_group_id} /* ui-tests */,")
     pbx.append(f"\t\t\t\t{products_group_id} /* Products */,")
     pbx.append("\t\t\t);")
     pbx.append("\t\t\tsourceTree = \"<group>\";")
@@ -181,8 +206,19 @@ def main():
     pbx.append("\t\t\tchildren = (")
     pbx.append(f"\t\t\t\t{app_product_id} /* AssessYourself.app */,")
     pbx.append(f"\t\t\t\t{test_product_id} /* AssessYourselfTests.xctest */,")
+    pbx.append(f"\t\t\t\t{ui_test_product_id} /* AssessYourselfUITests.xctest */,")
     pbx.append("\t\t\t);")
     pbx.append("\t\t\tname = Products;")
+    pbx.append("\t\t\tsourceTree = \"<group>\";")
+    pbx.append("\t\t};")
+
+    pbx.append(f"\t\t{ui_tests_group_id} /* ui-tests */ = {{")
+    pbx.append("\t\t\tisa = PBXGroup;")
+    pbx.append("\t\t\tchildren = (")
+    for f in ui_test_sources:
+        pbx.append(f"\t\t\t\t{filerefs[f]} /* {os.path.basename(f)} */,")
+    pbx.append("\t\t\t);")
+    pbx.append("\t\t\tpath = \"ui-tests\";")
     pbx.append("\t\t\tsourceTree = \"<group>\";")
     pbx.append("\t\t};")
 
@@ -318,6 +354,25 @@ def main():
     pbx.append(f"\t\t\tproductReference = {test_product_id} /* AssessYourselfTests.xctest */;")
     pbx.append("\t\t\tproductType = \"com.apple.product-type.bundle.unit-test\";")
     pbx.append("\t\t};")
+
+    pbx.append(f"\t\t{ui_test_target_id} /* AssessYourselfUITests */ = {{")
+    pbx.append("\t\t\tisa = PBXNativeTarget;")
+    pbx.append(f"\t\t\tbuildConfigurationList = {ui_test_cfg_list_id} /* Build configuration list for PBXNativeTarget \"AssessYourselfUITests\" */;")
+    pbx.append("\t\t\tbuildPhases = (")
+    pbx.append(f"\t\t\t\t{ui_test_sources_phase_id} /* Sources */,")
+    pbx.append(f"\t\t\t\t{ui_test_frameworks_phase_id} /* Frameworks */,")
+    pbx.append(f"\t\t\t\t{ui_test_resources_phase_id} /* Resources */,")
+    pbx.append("\t\t\t);")
+    pbx.append("\t\t\tbuildRules = (")
+    pbx.append("\t\t\t);")
+    pbx.append("\t\t\tdependencies = (")
+    pbx.append(f"\t\t\t\t{ui_target_dep_id} /* PBXTargetDependency */,")
+    pbx.append("\t\t\t);")
+    pbx.append("\t\t\tname = AssessYourselfUITests;")
+    pbx.append("\t\t\tproductName = AssessYourselfUITests;")
+    pbx.append(f"\t\t\tproductReference = {ui_test_product_id} /* AssessYourselfUITests.xctest */;")
+    pbx.append("\t\t\tproductType = \"com.apple.product-type.bundle.ui-testing\";")
+    pbx.append("\t\t};")
     pbx.append("/* End PBXNativeTarget section */")
 
     # PBXProject section
@@ -333,6 +388,10 @@ def main():
     pbx.append("\t\t\t\t\t\tCreatedOnToolsVersion = 15.0;")
     pbx.append("\t\t\t\t\t};")
     pbx.append(f"\t\t\t\t\t{test_target_id} = {{")
+    pbx.append("\t\t\t\t\t\tCreatedOnToolsVersion = 15.0;")
+    pbx.append(f"\t\t\t\t\t\tTestTargetID = {app_target_id};")
+    pbx.append("\t\t\t\t\t};")
+    pbx.append(f"\t\t\t\t\t{ui_test_target_id} = {{")
     pbx.append("\t\t\t\t\t\tCreatedOnToolsVersion = 15.0;")
     pbx.append(f"\t\t\t\t\t\tTestTargetID = {app_target_id};")
     pbx.append("\t\t\t\t\t};")
@@ -353,6 +412,7 @@ def main():
     pbx.append("\t\t\ttargets = (")
     pbx.append(f"\t\t\t\t{app_target_id} /* AssessYourself */,")
     pbx.append(f"\t\t\t\t{test_target_id} /* AssessYourselfTests */,")
+    pbx.append(f"\t\t\t\t{ui_test_target_id} /* AssessYourselfUITests */,")
     pbx.append("\t\t\t);")
     pbx.append("\t\t};")
     pbx.append("/* End PBXProject section */")
@@ -370,6 +430,13 @@ def main():
     pbx.append("\t\t\trunOnlyForDeploymentPostprocessing = 0;")
     pbx.append("\t\t};")
     pbx.append(f"\t\t{test_resources_phase_id} /* Resources */ = {{")
+    pbx.append("\t\t\tisa = PBXResourcesBuildPhase;")
+    pbx.append("\t\t\tbuildActionMask = 2147483647;")
+    pbx.append("\t\t\tfiles = (")
+    pbx.append("\t\t\t);")
+    pbx.append("\t\t\trunOnlyForDeploymentPostprocessing = 0;")
+    pbx.append("\t\t};")
+    pbx.append(f"\t\t{ui_test_resources_phase_id} /* Resources */ = {{")
     pbx.append("\t\t\tisa = PBXResourcesBuildPhase;")
     pbx.append("\t\t\tbuildActionMask = 2147483647;")
     pbx.append("\t\t\tfiles = (")
@@ -401,6 +468,17 @@ def main():
     pbx.append("\t\t\t);")
     pbx.append("\t\t\trunOnlyForDeploymentPostprocessing = 0;")
     pbx.append("\t\t};")
+
+    pbx.append(f"\t\t{ui_test_sources_phase_id} /* Sources */ = {{")
+    pbx.append("\t\t\tisa = PBXSourcesBuildPhase;")
+    pbx.append("\t\t\tbuildActionMask = 2147483647;")
+    pbx.append("\t\t\tfiles = (")
+    for path in ui_test_sources:
+        bf = buildfiles[path]["uitest"]
+        pbx.append(f"\t\t\t\t{bf} /* {path} in Sources */,")
+    pbx.append("\t\t\t);")
+    pbx.append("\t\t\trunOnlyForDeploymentPostprocessing = 0;")
+    pbx.append("\t\t};")
     pbx.append("/* End PBXSourcesBuildPhase section */")
 
     # PBXTargetDependency
@@ -410,7 +488,16 @@ def main():
     pbx.append(f"\t\t\ttarget = {app_target_id} /* AssessYourself */;")
     pbx.append(f"\t\t\ttargetProxy = {container_item_id} /* PBXContainerItemProxy */;")
     pbx.append("\t\t};")
+    pbx.append(f"\t\t{ui_target_dep_id} /* PBXTargetDependency */ = {{")
+    pbx.append("\t\t\tisa = PBXTargetDependency;")
+    pbx.append(f"\t\t\ttarget = {app_target_id} /* AssessYourself */;")
+    pbx.append(f"\t\t\ttargetProxy = {ui_container_item_id} /* PBXContainerItemProxy */;")
+    pbx.append("\t\t};")
     pbx.append("/* End PBXTargetDependency section */")
+
+    # Build Configuration Settings
+    build_version = "20261030.101500"
+    market_version = "0.3.1"
 
     # XCBuildConfiguration
     pbx.append("\n/* Begin XCBuildConfiguration section */")
@@ -466,7 +553,7 @@ def main():
     pbx.append("\t\t\tisa = XCBuildConfiguration;")
     pbx.append("\t\t\tbuildSettings = {")
     pbx.append("\t\t\t\tCODE_SIGN_STYLE = Automatic;")
-    pbx.append("\t\t\t\tCURRENT_PROJECT_VERSION = 1;")
+    pbx.append(f"\t\t\t\tCURRENT_PROJECT_VERSION = {build_version};")
     pbx.append("\t\t\t\tENABLE_PREVIEWS = YES;")
     pbx.append("\t\t\t\tGENERATE_INFOPLIST_FILE = YES;")
     pbx.append("\t\t\t\tINFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;")
@@ -477,7 +564,7 @@ def main():
     pbx.append("\t\t\t\t\t\"$(inherited)\",")
     pbx.append("\t\t\t\t\t\"@executable_path/Frameworks\",")
     pbx.append("\t\t\t\t);")
-    pbx.append("\t\t\t\tMARKETING_VERSION = 0.3.0;")
+    pbx.append(f"\t\t\t\tMARKETING_VERSION = {market_version};")
     pbx.append("\t\t\t\tPRODUCT_BUNDLE_IDENTIFIER = com.scherenhaenden.AssessYourself;")
     pbx.append("\t\t\t\tPRODUCT_NAME = \"$(TARGET_NAME)\";")
     pbx.append("\t\t\t\tPRODUCT_MODULE_NAME = AssessYourselfCore;")
@@ -492,7 +579,7 @@ def main():
     pbx.append("\t\t\tisa = XCBuildConfiguration;")
     pbx.append("\t\t\tbuildSettings = {")
     pbx.append("\t\t\t\tCODE_SIGN_STYLE = Automatic;")
-    pbx.append("\t\t\t\tCURRENT_PROJECT_VERSION = 1;")
+    pbx.append(f"\t\t\t\tCURRENT_PROJECT_VERSION = {build_version};")
     pbx.append("\t\t\t\tENABLE_PREVIEWS = YES;")
     pbx.append("\t\t\t\tGENERATE_INFOPLIST_FILE = YES;")
     pbx.append("\t\t\t\tINFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;")
@@ -503,7 +590,7 @@ def main():
     pbx.append("\t\t\t\t\t\"$(inherited)\",")
     pbx.append("\t\t\t\t\t\"@executable_path/Frameworks\",")
     pbx.append("\t\t\t\t);")
-    pbx.append("\t\t\t\tMARKETING_VERSION = 0.3.0;")
+    pbx.append(f"\t\t\t\tMARKETING_VERSION = {market_version};")
     pbx.append("\t\t\t\tPRODUCT_BUNDLE_IDENTIFIER = com.scherenhaenden.AssessYourself;")
     pbx.append("\t\t\t\tPRODUCT_NAME = \"$(TARGET_NAME)\";")
     pbx.append("\t\t\t\tPRODUCT_MODULE_NAME = AssessYourselfCore;")
@@ -518,10 +605,10 @@ def main():
     pbx.append("\t\t\tisa = XCBuildConfiguration;")
     pbx.append("\t\t\tbuildSettings = {")
     pbx.append("\t\t\t\tCODE_SIGN_STYLE = Automatic;")
-    pbx.append("\t\t\t\tCURRENT_PROJECT_VERSION = 1;")
+    pbx.append(f"\t\t\t\tCURRENT_PROJECT_VERSION = {build_version};")
     pbx.append("\t\t\t\tGENERATE_INFOPLIST_FILE = YES;")
     pbx.append("\t\t\t\tIPHONEOS_DEPLOYMENT_TARGET = 17.0;")
-    pbx.append("\t\t\t\tMARKETING_VERSION = 0.3.0;")
+    pbx.append(f"\t\t\t\tMARKETING_VERSION = {market_version};")
     pbx.append("\t\t\t\tPRODUCT_BUNDLE_IDENTIFIER = com.scherenhaenden.AssessYourselfTests;")
     pbx.append("\t\t\t\tPRODUCT_NAME = \"$(TARGET_NAME)\";")
     pbx.append("\t\t\t\tSWIFT_VERSION = 5.0;")
@@ -537,16 +624,52 @@ def main():
     pbx.append("\t\t\tisa = XCBuildConfiguration;")
     pbx.append("\t\t\tbuildSettings = {")
     pbx.append("\t\t\t\tCODE_SIGN_STYLE = Automatic;")
-    pbx.append("\t\t\t\tCURRENT_PROJECT_VERSION = 1;")
+    pbx.append(f"\t\t\t\tCURRENT_PROJECT_VERSION = {build_version};")
     pbx.append("\t\t\t\tGENERATE_INFOPLIST_FILE = YES;")
     pbx.append("\t\t\t\tIPHONEOS_DEPLOYMENT_TARGET = 17.0;")
-    pbx.append("\t\t\t\tMARKETING_VERSION = 0.3.0;")
+    pbx.append(f"\t\t\t\tMARKETING_VERSION = {market_version};")
     pbx.append("\t\t\t\tPRODUCT_BUNDLE_IDENTIFIER = com.scherenhaenden.AssessYourselfTests;")
     pbx.append("\t\t\t\tPRODUCT_NAME = \"$(TARGET_NAME)\";")
     pbx.append("\t\t\t\tSWIFT_VERSION = 5.0;")
     pbx.append("\t\t\t\tTARGETED_DEVICE_FAMILY = \"1,2\";")
     pbx.append("\t\t\t\tTEST_HOST = \"$(BUILT_PRODUCTS_DIR)/AssessYourself.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/AssessYourself\";")
     pbx.append("\t\t\t\tBUNDLE_LOADER = \"$(TEST_HOST)\";")
+    pbx.append("\t\t\t};")
+    pbx.append("\t\t\tname = Release;")
+    pbx.append("\t\t};")
+
+    # UITest Debug
+    pbx.append(f"\t\t{ui_test_debug_cfg_id} /* Debug */ = {{")
+    pbx.append("\t\t\tisa = XCBuildConfiguration;")
+    pbx.append("\t\t\tbuildSettings = {")
+    pbx.append("\t\t\t\tCODE_SIGN_STYLE = Automatic;")
+    pbx.append(f"\t\t\t\tCURRENT_PROJECT_VERSION = {build_version};")
+    pbx.append("\t\t\t\tGENERATE_INFOPLIST_FILE = YES;")
+    pbx.append("\t\t\t\tIPHONEOS_DEPLOYMENT_TARGET = 17.0;")
+    pbx.append(f"\t\t\t\tMARKETING_VERSION = {market_version};")
+    pbx.append("\t\t\t\tPRODUCT_BUNDLE_IDENTIFIER = com.scherenhaenden.AssessYourselfUITests;")
+    pbx.append("\t\t\t\tPRODUCT_NAME = \"$(TARGET_NAME)\";")
+    pbx.append("\t\t\t\tSWIFT_VERSION = 5.0;")
+    pbx.append("\t\t\t\tTARGETED_DEVICE_FAMILY = \"1,2\";")
+    pbx.append("\t\t\t\tTEST_TARGET_NAME = AssessYourself;")
+    pbx.append("\t\t\t};")
+    pbx.append("\t\t\tname = Debug;")
+    pbx.append("\t\t};")
+
+    # UITest Release
+    pbx.append(f"\t\t{ui_test_release_cfg_id} /* Release */ = {{")
+    pbx.append("\t\t\tisa = XCBuildConfiguration;")
+    pbx.append("\t\t\tbuildSettings = {")
+    pbx.append("\t\t\t\tCODE_SIGN_STYLE = Automatic;")
+    pbx.append(f"\t\t\t\tCURRENT_PROJECT_VERSION = {build_version};")
+    pbx.append("\t\t\t\tGENERATE_INFOPLIST_FILE = YES;")
+    pbx.append("\t\t\t\tIPHONEOS_DEPLOYMENT_TARGET = 17.0;")
+    pbx.append(f"\t\t\t\tMARKETING_VERSION = {market_version};")
+    pbx.append("\t\t\t\tPRODUCT_BUNDLE_IDENTIFIER = com.scherenhaenden.AssessYourselfUITests;")
+    pbx.append("\t\t\t\tPRODUCT_NAME = \"$(TARGET_NAME)\";")
+    pbx.append("\t\t\t\tSWIFT_VERSION = 5.0;")
+    pbx.append("\t\t\t\tTARGETED_DEVICE_FAMILY = \"1,2\";")
+    pbx.append("\t\t\t\tTEST_TARGET_NAME = AssessYourself;")
     pbx.append("\t\t\t};")
     pbx.append("\t\t\tname = Release;")
     pbx.append("\t\t};")
@@ -583,6 +706,16 @@ def main():
     pbx.append("\t\t\tdefaultConfigurationIsVisible = 0;")
     pbx.append("\t\t\tdefaultConfigurationName = Debug;")
     pbx.append("\t\t};")
+
+    pbx.append(f"\t\t{ui_test_cfg_list_id} /* Build configuration list for PBXNativeTarget \"AssessYourselfUITests\" */ = {{")
+    pbx.append("\t\t\tisa = XCConfigurationList;")
+    pbx.append("\t\t\tbuildConfigurations = (")
+    pbx.append(f"\t\t\t\t{ui_test_debug_cfg_id} /* Debug */,")
+    pbx.append(f"\t\t\t\t{ui_test_release_cfg_id} /* Release */,")
+    pbx.append("\t\t\t);")
+    pbx.append("\t\t\tdefaultConfigurationIsVisible = 0;")
+    pbx.append("\t\t\tdefaultConfigurationName = Debug;")
+    pbx.append("\t\t};")
     pbx.append("/* End XCConfigurationList section */")
 
     pbx.append("\t};")
@@ -595,7 +728,7 @@ def main():
 
     print(f"Generated {pbx_path}")
 
-    # Generate AssessYourself.xcscheme
+    # Generate AssessYourself.xcscheme with both Unit and UI tests
     scheme = f"""<?xml version="1.0" encoding="UTF-8"?>
 <Scheme
    LastUpgradeVersion = "1500"
@@ -632,6 +765,20 @@ def main():
                ReferencedContainer = "container:AssessYourself.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "NO"
+            buildForProfiling = "NO"
+            buildForArchiving = "NO"
+            buildForAnalyzing = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "{ui_test_target_id}"
+               BuildableName = "AssessYourselfUITests.xctest"
+               BlueprintName = "AssessYourselfUITests"
+               ReferencedContainer = "container:AssessYourself.xcodeproj">
+            </BuildableReference>
+         </BuildActionEntry>
       </BuildActionEntries>
    </BuildAction>
    <TestAction
@@ -656,6 +803,16 @@ def main():
                BlueprintIdentifier = "{test_target_id}"
                BuildableName = "AssessYourselfTests.xctest"
                BlueprintName = "AssessYourselfTests"
+               ReferencedContainer = "container:AssessYourself.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
+         <TestableReference
+            skipped = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "{ui_test_target_id}"
+               BuildableName = "AssessYourselfUITests.xctest"
+               BlueprintName = "AssessYourselfUITests"
                ReferencedContainer = "container:AssessYourself.xcodeproj">
             </BuildableReference>
          </TestableReference>

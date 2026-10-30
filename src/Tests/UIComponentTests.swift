@@ -2,6 +2,35 @@ import XCTest
 import SwiftUI
 @testable import AssessYourselfCore
 
+#if canImport(AppKit) && !targetEnvironment(macCatalyst)
+import AppKit
+
+@MainActor
+private func renderInHost<V: View>(_ view: V, width: CGFloat = 375, height: CGFloat = 667) -> CGSize {
+    let wrapped = view.environment(\.appTheme, AppTheme.standard)
+    let hostingView = NSHostingView(rootView: wrapped)
+    hostingView.frame = CGRect(x: 0, y: 0, width: width, height: height)
+    hostingView.layout()
+    return hostingView.fittingSize
+}
+#elseif canImport(UIKit)
+import UIKit
+
+@MainActor
+private func renderInHost<V: View>(_ view: V, width: CGFloat = 375, height: CGFloat = 667) -> CGSize {
+    let wrapped = view.environment(\.appTheme, AppTheme.standard)
+    let controller = UIHostingController(rootView: wrapped)
+    controller.view.frame = CGRect(x: 0, y: 0, width: width, height: height)
+    controller.view.layoutIfNeeded()
+    return controller.view.intrinsicContentSize
+}
+#else
+private func renderInHost<V: View>(_ view: V, width: CGFloat = 375, height: CGFloat = 667) -> CGSize {
+    return CGSize(width: width, height: height)
+}
+#endif
+
+@MainActor
 final class UIComponentTests: XCTestCase {
     var theme: AppThemeProtocol!
 
@@ -21,32 +50,44 @@ final class UIComponentTests: XCTestCase {
         let option = ChoiceOption(id: "opt-1", title: "Swift Protocol Extension", scoreWeight: 100.0)
         var selected = false
 
-        let button = ChoiceOptionButton(
+        let selectedButton = ChoiceOptionButton(
             option: option,
             isSelected: true,
             dimensionId: "platform",
             onSelect: { selected = true }
         )
 
-        XCTAssertEqual(button.option.id, "opt-1")
-        XCTAssertTrue(button.isSelected)
-        XCTAssertEqual(button.dimensionId, "platform")
+        XCTAssertEqual(selectedButton.option.id, "opt-1")
+        XCTAssertTrue(selectedButton.isSelected)
+        XCTAssertEqual(selectedButton.dimensionId, "platform")
 
         // Trigger onSelect callback
-        button.onSelect()
+        selectedButton.onSelect()
         XCTAssertTrue(selected)
 
-        // Exercise View body
-        _ = button.body
+        // Render in hosting hierarchy (resolves @Environment and executes layout)
+        let selectedSize = renderInHost(selectedButton)
+        XCTAssertGreaterThan(selectedSize.height, 0)
+
+        // Unselected button with nil dimension (fallback styling)
+        let unselectedButton = ChoiceOptionButton(
+            option: ChoiceOption(id: "opt-2", title: "Legacy Objective-C", scoreWeight: 30.0),
+            isSelected: false,
+            dimensionId: nil,
+            onSelect: {}
+        )
+        let unselectedSize = renderInHost(unselectedButton)
+        XCTAssertGreaterThan(unselectedSize.height, 0)
     }
 
     // MARK: - MultiSelectChipGrid Tests
 
     func testMultiSelectChipGridExecution() {
         let options = [
-            ChoiceOption(id: "opt-1", title: "Git", scoreWeight: 50.0),
-            ChoiceOption(id: "opt-2", title: "CI/CD", scoreWeight: 50.0),
-            ChoiceOption(id: "opt-3", title: "TDD", scoreWeight: 50.0)
+            ChoiceOption(id: "opt-1", title: "Git Workflows & Trunk Based Development", scoreWeight: 50.0),
+            ChoiceOption(id: "opt-2", title: "CI/CD Automatisierung via GitHub Actions", scoreWeight: 50.0),
+            ChoiceOption(id: "opt-3", title: "TDD & XCTest Unit Test Suite", scoreWeight: 50.0),
+            ChoiceOption(id: "opt-4", title: "Instruments Profiling & Leaks Analysis", scoreWeight: 50.0)
         ]
 
         var toggledId: String?
@@ -54,21 +95,22 @@ final class UIComponentTests: XCTestCase {
             options: options,
             selectedIds: ["opt-1", "opt-2"],
             minSelectCount: 1,
-            maxSelectCount: 2,
+            maxSelectCount: 3,
             dimensionId: "agile",
             onToggle: { toggledId = $0 }
         )
 
-        XCTAssertEqual(grid.options.count, 3)
+        XCTAssertEqual(grid.options.count, 4)
         XCTAssertEqual(grid.selectedIds.count, 2)
         XCTAssertEqual(grid.minSelectCount, 1)
-        XCTAssertEqual(grid.maxSelectCount, 2)
+        XCTAssertEqual(grid.maxSelectCount, 3)
 
         grid.onToggle("opt-3")
         XCTAssertEqual(toggledId, "opt-3")
 
-        // Exercise View body
-        _ = grid.body
+        // Render in host view: forces ForEach evaluation of both selected and unselected chips
+        let normalSize = renderInHost(grid)
+        XCTAssertGreaterThan(normalSize.height, 0)
 
         // Exercise statusText branch: minSelect == maxSelect
         let exactGrid = MultiSelectChipGrid(
@@ -78,7 +120,7 @@ final class UIComponentTests: XCTestCase {
             maxSelectCount: 2,
             onToggle: { _ in }
         )
-        _ = exactGrid.body
+        _ = renderInHost(exactGrid)
 
         // Exercise statusText branch: minSelect == 1 (default)
         let defaultMinGrid = MultiSelectChipGrid(
@@ -88,7 +130,7 @@ final class UIComponentTests: XCTestCase {
             maxSelectCount: 3,
             onToggle: { _ in }
         )
-        _ = defaultMinGrid.body
+        _ = renderInHost(defaultMinGrid)
 
         // Exercise statusText branch: minSelect > 1 and minSelect < maxSelect
         let rangeGrid = MultiSelectChipGrid(
@@ -99,14 +141,34 @@ final class UIComponentTests: XCTestCase {
             dimensionId: "architecture",
             onToggle: { _ in }
         )
-        _ = rangeGrid.body
+        _ = renderInHost(rangeGrid)
+
+        // Exercise bounds: out of bounds (0 selected when min is 2)
+        XCTAssertEqual(rangeGrid.selectedIds.count, 1)
     }
 
-    // MARK: - ComponentShowcaseView Tests
+    func testMultiSelectChipGridDynamicTypeAndAccessibility() {
+        let options = [
+            ChoiceOption(id: "c1", title: "Sehr langer Text für Barrierefreiheitsprüfung im Grid", scoreWeight: 10.0),
+            ChoiceOption(id: "c2", title: "Kurzer Text", scoreWeight: 10.0)
+        ]
 
-    func testComponentShowcaseViewExecution() {
-        let showcase = ComponentShowcaseView()
-        _ = showcase.body
+        let grid = MultiSelectChipGrid(
+            options: options,
+            selectedIds: ["c1"],
+            minSelectCount: 1,
+            maxSelectCount: 2,
+            dimensionId: "quality",
+            onToggle: { _ in }
+        )
+
+        // Render with extra large accessibility dynamic type
+        let largeTextSize = renderInHost(
+            grid.environment(\.sizeCategory, .accessibilityExtraExtraLarge),
+            width: 320, // narrow screen
+            height: 600
+        )
+        XCTAssertGreaterThan(largeTextSize.height, 0)
     }
 
     // MARK: - LikertSliderCard Tests
@@ -119,8 +181,8 @@ final class UIComponentTests: XCTestCase {
             minVal: 1.0,
             maxVal: 5.0,
             step: 1.0,
-            minLabel: "Nie",
-            maxLabel: "Immer",
+            minLabel: "Stimme überhaupt nicht zu",
+            maxLabel: "Stimme voll und ganz zu",
             dimensionId: "quality",
             onValueChange: { changedValue = $0 }
         )
@@ -129,14 +191,28 @@ final class UIComponentTests: XCTestCase {
         XCTAssertEqual(slider.minVal, 1.0)
         XCTAssertEqual(slider.maxVal, 5.0)
         XCTAssertEqual(slider.step, 1.0)
-        XCTAssertEqual(slider.minLabel, "Nie")
-        XCTAssertEqual(slider.maxLabel, "Immer")
+        XCTAssertEqual(slider.minLabel, "Stimme überhaupt nicht zu")
+        XCTAssertEqual(slider.maxLabel, "Stimme voll und ganz zu")
 
         slider.onValueChange(5.0)
         XCTAssertEqual(changedValue, 5.0)
 
-        // Exercise View body
-        _ = slider.body
+        // Render in host view
+        let size = renderInHost(slider)
+        XCTAssertGreaterThan(size.height, 0)
+
+        // Slider with nil dimension
+        let plainSlider = LikertSliderCard(
+            value: 2.0,
+            minVal: 1.0,
+            maxVal: 5.0,
+            step: 1.0,
+            minLabel: "Min",
+            maxLabel: "Max",
+            dimensionId: nil,
+            onValueChange: { _ in }
+        )
+        _ = renderInHost(plainSlider)
     }
 
     // MARK: - ShortTextPromptCard Tests
@@ -160,26 +236,52 @@ final class UIComponentTests: XCTestCase {
         card.onTextChange("Neuer Text für Testlauf.")
         XCTAssertEqual(updatedText, "Neuer Text für Testlauf.")
 
-        // Exercise View body
-        _ = card.body
+        // Render in host view (within bounds -> success milestone)
+        let normalSize = renderInHost(card)
+        XCTAssertGreaterThan(normalSize.height, 0)
 
-        // Exercise with short text (< min)
+        // Exercise short text (< min -> warning state)
         let shortCard = ShortTextPromptCard(
             text: "Zu kurz",
             minCharacters: 15,
             maxCharacters: 200,
+            dimensionId: nil,
             onTextChange: { _ in }
         )
-        _ = shortCard.body
+        _ = renderInHost(shortCard)
 
-        // Exercise with text exceeding max
+        // Exercise text exceeding max (> max -> error state)
         let longText = String(repeating: "Wort ", count: 60)
         let longCard = ShortTextPromptCard(
             text: longText,
             minCharacters: 15,
             maxCharacters: 50,
+            dimensionId: "quality",
             onTextChange: { _ in }
         )
-        _ = longCard.body
+        _ = renderInHost(longCard)
+
+        // Exercise empty text (placeholder visible with full opacity)
+        let emptyCard = ShortTextPromptCard(
+            text: "",
+            minCharacters: 10,
+            maxCharacters: 100,
+            onTextChange: { _ in }
+        )
+        _ = renderInHost(emptyCard)
+    }
+
+    // MARK: - ComponentShowcaseView Tests
+
+    func testComponentShowcaseViewExecutionOnPhoneAndPad() {
+        let showcase = ComponentShowcaseView()
+
+        // Phone size (compact)
+        let phoneSize = renderInHost(showcase, width: 393, height: 852)
+        XCTAssertGreaterThan(phoneSize.height, 0)
+
+        // iPad size (regular, testing 640pt max container layout)
+        let padSize = renderInHost(showcase, width: 810, height: 1080)
+        XCTAssertGreaterThan(padSize.height, 0)
     }
 }

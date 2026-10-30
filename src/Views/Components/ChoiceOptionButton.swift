@@ -66,6 +66,7 @@ public struct ChoiceOptionButton: View {
             )
         }
         .buttonStyle(.plain)
+        .accessibilityIdentifier("choiceOption.\(option.id)")
         .accessibilityElement(children: .combine)
         .accessibilityLabel(option.title)
         .accessibilityAddTraits(isSelected ? [.isButton, .isSelected] : [.isButton])

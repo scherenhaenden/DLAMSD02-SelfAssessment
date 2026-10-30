@@ -43,11 +43,10 @@ public struct MultiSelectChipGrid: View {
             .accessibilityElement(children: .combine)
             .accessibilityLabel("Selection status: \(selectedIds.count) of maximum \(maxSelectCount) selected. Required minimum: \(minSelectCount).")
 
-            // Grid of selectable chips
+            // Grid of selectable chips (adaptive columns with unbounded dynamic text scaling)
             LazyVGrid(
                 columns: [
-                    GridItem(.flexible(minimum: 140), spacing: theme.spacing.sm),
-                    GridItem(.flexible(minimum: 140), spacing: theme.spacing.sm)
+                    GridItem(.adaptive(minimum: 140), spacing: theme.spacing.sm)
                 ],
                 spacing: theme.spacing.sm
             ) {
@@ -65,13 +64,13 @@ public struct MultiSelectChipGrid: View {
                                 .font(.subheadline)
                                 .foregroundColor(theme.colors.textPrimary.color)
                                 .multilineTextAlignment(.leading)
-                                .lineLimit(2)
+                                .fixedSize(horizontal: false, vertical: true)
 
                             Spacer(minLength: 0)
                         }
                         .padding(.horizontal, theme.spacing.md)
                         .padding(.vertical, theme.spacing.sm)
-                        .frame(minHeight: theme.layout.minTouchTargetSize)
+                        .frame(minHeight: max(48, theme.layout.minTouchTargetSize))
                         .background(
                             RoundedRectangle(cornerRadius: theme.cornerRadius.small, style: .continuous)
                                 .fill(isSelected ? accentColor.opacity(0.12) : theme.colors.surfaceCard.color)
@@ -85,7 +84,10 @@ public struct MultiSelectChipGrid: View {
                         )
                     }
                     .buttonStyle(.plain)
+                    .accessibilityIdentifier("multiChip.\(option.id)")
+                    .accessibilityElement(children: .combine)
                     .accessibilityLabel(option.title)
+                    .accessibilityValue(isSelected ? "Ausgewählt" : "Nicht ausgewählt")
                     .accessibilityAddTraits(isSelected ? [.isButton, .isSelected] : [.isButton])
                     .accessibilityHint(isSelected ? "Selected. Double tap to deselect." : "Not selected. Double tap to select.")
                 }

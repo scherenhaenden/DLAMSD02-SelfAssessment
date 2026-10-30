@@ -166,6 +166,21 @@ final class ColorTokenTests: XCTestCase {
         // Exercise dynamic SwiftUI color property
         _ = token.color
 
+        // Exercise explicit appearance mode resolution
+        let lightRGB = token.resolvedRGB(isDarkMode: false)
+        let darkRGB = token.resolvedRGB(isDarkMode: true)
+        XCTAssertEqual(lightRGB, token.lightRGB)
+        XCTAssertEqual(darkRGB, token.darkRGB)
+
+        #if canImport(AppKit)
+        if let aqua = NSAppearance(named: .aqua), let darkAqua = NSAppearance(named: .darkAqua) {
+            let lightNS = token.resolvedNSColor(for: aqua)
+            let darkNS = token.resolvedNSColor(for: darkAqua)
+            XCTAssertNotNil(lightNS)
+            XCTAssertNotNil(darkNS)
+        }
+        #endif
+
         // Exercise fallback dimension lookup
         let fallbackToken = theme.colorToken(forDimension: "unknown-dimension-id")
         XCTAssertEqual(fallbackToken, theme.colors.textSecondary)
@@ -174,5 +189,20 @@ final class ColorTokenTests: XCTestCase {
         XCTAssertEqual(token, theme.colors.textPrimary)
         XCTAssertNotEqual(token, theme.colors.textSecondary)
         XCTAssertEqual(token.hashValue, theme.colors.textPrimary.hashValue)
+    }
+
+    func testPlaceholderTextContrastMeetsWCAGAA() {
+        let textSecondary = theme.colors.textSecondary
+        let lightSurfaceL = relativeLuminance(rgb: theme.colors.surfaceCard.lightRGB)
+        let darkSurfaceL = relativeLuminance(rgb: theme.colors.surfaceCard.darkRGB)
+
+        let lightL = relativeLuminance(rgb: textSecondary.lightRGB)
+        let darkL = relativeLuminance(rgb: textSecondary.darkRGB)
+
+        let lightRatio = contrastRatio(l1: lightL, l2: lightSurfaceL)
+        let darkRatio = contrastRatio(l1: darkL, l2: darkSurfaceL)
+
+        XCTAssertGreaterThanOrEqual(lightRatio, 4.5, "Placeholder text in Light Mode must achieve >= 4.5:1 (actual: \(lightRatio))")
+        XCTAssertGreaterThanOrEqual(darkRatio, 4.5, "Placeholder text in Dark Mode must achieve >= 4.5:1 (actual: \(darkRatio))")
     }
 }

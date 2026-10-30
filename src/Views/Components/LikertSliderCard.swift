@@ -67,6 +67,7 @@ public struct LikertSliderCard: View {
                 step: step
             )
             .tint(accentColor)
+            .accessibilityIdentifier("likertSlider")
             .accessibilityLabel("Einschätzung auf einer Skala von \(Int(minVal)) bis \(Int(maxVal))")
             .accessibilityValue("\(formattedScore): \(verbalAnchor)")
             .accessibilityAdjustableAction { direction in

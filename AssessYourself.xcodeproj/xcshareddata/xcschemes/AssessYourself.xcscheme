@@ -34,6 +34,20 @@
                ReferencedContainer = "container:AssessYourself.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "NO"
+            buildForProfiling = "NO"
+            buildForArchiving = "NO"
+            buildForAnalyzing = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "DC305F21C0DBE3D26A46BC83"
+               BuildableName = "AssessYourselfUITests.xctest"
+               BlueprintName = "AssessYourselfUITests"
+               ReferencedContainer = "container:AssessYourself.xcodeproj">
+            </BuildableReference>
+         </BuildActionEntry>
       </BuildActionEntries>
    </BuildAction>
    <TestAction
@@ -58,6 +72,16 @@
                BlueprintIdentifier = "24566D41975B35F0B498E3EC"
                BuildableName = "AssessYourselfTests.xctest"
                BlueprintName = "AssessYourselfTests"
+               ReferencedContainer = "container:AssessYourself.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
+         <TestableReference
+            skipped = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "DC305F21C0DBE3D26A46BC83"
+               BuildableName = "AssessYourselfUITests.xctest"
+               BlueprintName = "AssessYourselfUITests"
                ReferencedContainer = "container:AssessYourself.xcodeproj">
             </BuildableReference>
          </TestableReference>

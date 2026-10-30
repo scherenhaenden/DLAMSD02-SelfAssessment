@@ -34,10 +34,11 @@ public struct ShortTextPromptCard: View {
                 if text.isEmpty {
                     Text(placeholder)
                         .font(.body)
-                        .foregroundColor(theme.colors.textSecondary.color.opacity(0.6))
+                        .foregroundColor(theme.colors.textSecondary.color)
                         .padding(.horizontal, 4)
                         .padding(.vertical, 8)
                         .allowsHitTesting(false)
+                        .accessibilityHidden(true)
                 }
 
                 #if os(macOS)
@@ -48,6 +49,9 @@ public struct ShortTextPromptCard: View {
                 .font(.body)
                 .frame(minHeight: 110)
                 .scrollContentBackground(.hidden)
+                .accessibilityIdentifier("shortTextEditor")
+                .accessibilityLabel(placeholder)
+                .accessibilityHint("Eingabefeld für deinen Reflexionstext.")
                 #else
                 TextEditor(text: Binding(
                     get: { text },
@@ -55,6 +59,9 @@ public struct ShortTextPromptCard: View {
                 ))
                 .font(.body)
                 .frame(minHeight: 110)
+                .accessibilityIdentifier("shortTextEditor")
+                .accessibilityLabel(placeholder)
+                .accessibilityHint("Eingabefeld für deinen Reflexionstext.")
                 #endif
             }
             .padding(theme.spacing.sm)
@@ -87,7 +94,8 @@ public struct ShortTextPromptCard: View {
                     .foregroundColor(counterColor)
             }
             .accessibilityElement(children: .combine)
-            .accessibilityLabel("Text reflection: \(trimmedCount) characters of maximum \(maxCharacters). \(statusMessage)")
+            .accessibilityLabel("Reflexionsstatus: \(trimmedCount) von maximal \(maxCharacters) Zeichen. \(statusMessage)")
+            .accessibilityValue("\(trimmedCount) Zeichen")
         }
     }
 

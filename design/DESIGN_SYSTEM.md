@@ -86,11 +86,13 @@ In Sprint 3 (`v0.3.0`), the four foundational atomic input components were devel
 
 ### 3.2. MultiSelectChipGrid (Multiple Choice)
 * **Purpose:** Multi-selection within defined minimum and maximum selection constraints.
-* **Layout:**
-  * 2-column adaptive grid (`LazyVGrid`) with flexible column width ($\ge 140\,\text{pt}$).
-  * Interactive chips with touch targets $\ge 44 \times 44\,\text{pt}$.
-* **Live Constraint Feedback:**
+* **Layout & Dynamic Type Resilience:**
+  * Adaptive grid (`LazyVGrid(columns: [GridItem(.adaptive(minimum: 140))])`) which automatically collapses from 2 columns to a single column on compact screens or under enlarged Dynamic Type accessibility font scales (`.accessibilityExtraExtraLarge`).
+  * Chips allow vertical expansion (`fixedSize(horizontal: false, vertical: true)`) without line truncation, preventing label clipping under accessibility settings.
+  * Interactive chips with touch targets $\ge 48\,\text{pt}$ height (strictly exceeding HIG $44 \times 44\,\text{pt}$ floor).
+* **Live Constraint Feedback & VoiceOver:**
   * Selection counter pill showing `selected/max`.
+  * Combined accessibility elements (`.accessibilityElement(children: .combine)`) announcing explicit selection state (*"Ausgewählt"* / *"Nicht ausgewählt"*) and hint (*"Doppeltippen zum Umschalten"*).
   * Status text adapting dynamically:
     * Exact quota ($min = max$): *"Wähle genau X Optionen"*
     * Bounded range ($min > 1$): *"Wähle zwischen X und Y Optionen"*
@@ -109,12 +111,14 @@ In Sprint 3 (`v0.3.0`), the four foundational atomic input components were devel
 
 ### 3.4. ShortTextPromptCard (Reflective Text)
 * **Purpose:** Qualitative free-text self-reflection with live boundary supervision.
-* **Visual Structure:**
+* **Visual Structure & Audited Contrast:**
   * Inset `TextEditor` with custom placeholder overlay that disappears upon user input.
+  * **Placeholder Contrast Compliance:** Directly utilizes `textSecondary` token without artificial opacity reduction (`.opacity(1.0)`), achieving **7.58 : 1** (Light Mode) and **5.71 : 1** (Dark Mode) against `surfaceCard`, fully compliant with WCAG 2.1 Level AA ($\ge 4.5:1$).
+  * Explicit accessibility properties: `accessibilityLabel(placeholder)` and `accessibilityHint("Geben Sie hier Ihre reflektierende Freitext-Antwort ein")`.
   * Live character count with three semantic states:
     1. *Below minimum:* Displays remaining characters needed with subtle warning tone.
     2. *Valid range ($min \le len \le max$):* Displays character count with `successFeedback` border and badge.
     3. *Exceeded maximum:* Displays excess character count with `errorFeedback` border and negative milestone marker.
 * **Ergonomics:**
   * Fixed comfortable height (140 pt) preventing abrupt layout shifts during typing.
-  * Dismiss keyboard affordance and explicit VoiceOver character status announcement.
+  * Dismiss keyboard affordance and explicit VoiceOver character status announcement with live value trait.

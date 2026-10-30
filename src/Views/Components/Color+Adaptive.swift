@@ -41,44 +41,38 @@ public struct AdaptiveColorToken: Sendable, Hashable {
         self.darkRGB = darkRGB
     }
 
+    /// Returns the resolved normalized RGB for the requested appearance mode.
+    public func resolvedRGB(isDarkMode: Bool) -> AppRGBColor {
+        isDarkMode ? darkRGB : lightRGB
+    }
+
+    #if canImport(AppKit)
+    /// Resolves the adaptive color for an explicit AppKit appearance (used for macOS rendering and headless testing).
+    public func resolvedNSColor(for appearance: NSAppearance) -> NSColor {
+        let isDark = appearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
+        let rgb = resolvedRGB(isDarkMode: isDark)
+        return NSColor(srgbRed: rgb.r, green: rgb.g, blue: rgb.b, alpha: 1.0)
+    }
+    #endif
+
+    #if canImport(UIKit)
+    /// Resolves the adaptive color for an explicit UIKit trait collection (used for iOS rendering and testing).
+    public func resolvedUIColor(for traitCollection: UITraitCollection) -> UIColor {
+        let isDark = traitCollection.userInterfaceStyle == .dark
+        let rgb = resolvedRGB(isDarkMode: isDark)
+        return UIColor(red: rgb.r, green: rgb.g, blue: rgb.b, alpha: 1.0)
+    }
+    #endif
+
     /// Dynamic SwiftUI Color adapting automatically to Light/Dark Mode.
     public var color: Color {
         #if canImport(UIKit)
         return Color(uiColor: UIColor { traitCollection in
-            switch traitCollection.userInterfaceStyle {
-            case .dark:
-                return UIColor(
-                    red: darkRGB.r,
-                    green: darkRGB.g,
-                    blue: darkRGB.b,
-                    alpha: 1.0
-                )
-            default:
-                return UIColor(
-                    red: lightRGB.r,
-                    green: lightRGB.g,
-                    blue: lightRGB.b,
-                    alpha: 1.0
-                )
-            }
+            self.resolvedUIColor(for: traitCollection)
         })
         #elseif canImport(AppKit)
         return Color(nsColor: NSColor(name: nil) { appearance in
-            if appearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua {
-                return NSColor(
-                    srgbRed: darkRGB.r,
-                    green: darkRGB.g,
-                    blue: darkRGB.b,
-                    alpha: 1.0
-                )
-            } else {
-                return NSColor(
-                    srgbRed: lightRGB.r,
-                    green: lightRGB.g,
-                    blue: lightRGB.b,
-                    alpha: 1.0
-                )
-            }
+            self.resolvedNSColor(for: appearance)
         })
         #else
         return lightRGB.swiftUIColor

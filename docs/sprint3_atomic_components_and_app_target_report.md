@@ -162,6 +162,8 @@ TOTAL                                          500     143  71.40%    2212     2
 Gemäß dem DoD-Transparenzprinzip wird Sprint 3 als Meilenstein für **atomare UI-Komponenten und App-Target-Fähigkeit** abgeschlossen. Folgende übergeordnete Ablaufstrukturen bilden den Backlog für Sprint 4:
 
 1. **`AssessmentViewModel`:** Verwaltung des Session-Zustands, linearer Fragenfortschritt und Speicherung der Benutzerantworten.
-2. **Sequential Navigation Flow:** Sequenzielle Vor-/Zurück-Navigation durch die 12 Fragen des Katalogs mit Fortschrittsanzeige (`ProgressView`).
-3. **Ergebnis-Bildschirm (`ResultView`):** Visuelle Darstellung der Radar-/Dimensionsergebnisse und des errechneten Ingenieur-Archetyps.
-4. **Lokale Persistenz (`UserDefaultsScoreStore`):** Historisierung abgeschlossener Assessments.
+2. **Sequential Navigation Flow:** Sequenzielle Vor-/Zurück-Navigation durch die 24 Fragen des Katalogs (6 Fragen je Dimension across 4 Dimensionen) mit Fortschrittsanzeige (`ProgressView`).
+3. **Ausblick auf Folgesprints:** Ergebnis-Präsentation (`ResultView` in Sprint 6) und lokale Historisierung (`UserDefaultsScoreStore` in Sprint 7).
+
+> **Hinweis zu Audit-Anpassungen (Sprint 3.1 / `v0.3.1`):**  
+> Die im Rahmen des externen Codex-Audits identifizierten Detailaspekte (Interaktionstests via nativem XCUITest, Barrierefreiheit/Kontrast der TextEditor-Placeholder, dynamische Spalten im Chip-Grid für Dynamic Type und Erhöhung der Testabdeckung auf >80% pro Datei) wurden im nachfolgenden Härtungssprint **Sprint 3.1 (`v0.3.1`)** vollständig adressiert und in [`docs/sprint3_1_audit_and_hardening_report.md`](file:///Users/edwardflores/Projects/Development/DLAMSD02-SelfAssessment/docs/sprint3_1_audit_and_hardening_report.md) nachgewiesen.
