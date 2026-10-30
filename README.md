@@ -4,10 +4,14 @@ Native SwiftUI self-assessment application developed for **DLAMSD02 Apple Mobile
 
 ## Current Development Stage
 
-Version **0.1.0** (Build `20261029.210300`), Sprint 1: Domain Core, Catalog Loader & Psychometric Scoring Engine.
+Version **0.2.0** (Build `20261030.084500`), Sprint 2: Design System, WCAG 2.1 AA/AAA Contrast Audit, Injectable Theme Protocol & Wireframes.
 
 ### Implemented
 
+- Protocol-Oriented & Injectable Theme Architecture: Clean alternative to rigid static constants via `AppThemeProtocol` and `AppTheme` value type, supporting constructor injection and SwiftUI `@Environment(\.appTheme)`.
+- Mathematical WCAG 2.1 Contrast Audit (TDD): Relative luminance and contrast ratio formulas verified via automated XCTest suite (`ColorTokenTests`). All text tokens and 4 dimension accents achieve $\ge 4.5:1$ (AA) and up to $15.6:1$ (AAA) in Light and Dark Modes.
+- Ergonomic Layout & Multi-Device Tokens: 4pt/8pt grid spacing, continuous squircle radii (8pt, 14pt, 20pt), 44pt touch targets, 56pt primary button heights, and 640pt iPad container limit.
+- Comprehensive Wireframes: Detailed ASCII blueprints and flow specifications in `design/wireframes/WIREFRAMES.md` covering all 5 core screens.
 - Domain Layer (DDD): `AssessmentDimension`, `QuestionType`, `ChoiceOption`, `AssessmentQuestion`, `ArchetypeProfile`, `AssessmentAnswer`, and `AssessmentRecord`.
 - Polymorphic Interaction Support: Domain models for Single Choice, Multiple Choice (Chips), Likert Slider (1–5 continuous/discrete), and Short Text entry with minimum length constraints.
 - Strict Invariant Validation: `validateInvariants()` ensures non-empty IDs, valid dimension associations, non-empty prompts, minimum 2 options for choice questions, valid slider ranges, and positive text bounds.
@@ -18,8 +22,8 @@ Version **0.1.0** (Build `20261029.210300`), Sprint 1: Domain Core, Catalog Load
   - Linear normalization for Likert sliders ($[min, max] \to [0, 100]$).
   - Additive weights for single and multiple choice selections.
   - Heuristic keyword analysis and length scoring for short-text technical reflections.
-  - Dimension-level weighted aggregation and dominant archetype synthesis (`system-architect`, `platform-craftsperson`, `quality-champion`, `agile-orchestrator`).
-- Test Suite: 12 XCTest unit tests passing with 100% success rate in 0.008s. Instrumented line coverage on core scoring engine: 82.12%.
+  - Dimension-level weighted aggregation and dominant archetype synthesis.
+- Test Suite: 18 XCTest unit tests passing with 100% success rate in 0.008s. `DesignTokens.swift` coverage: 89.06%.
 
 ## Open and Build
 
@@ -45,7 +49,7 @@ src/App/                   App entry point and application lifecycle
 src/Models/                Domain entities (Dimension, Question, Answer, Record, Archetype)
 src/Services/              Catalog loader and evaluation engine protocols & implementations
 src/ViewModels/            Reactive state management and assessment coordinators
-src/Views/Components/      Atomic UI controls (Choice, Slider, Chips, Text, Color tokens)
+src/Views/Components/      Atomic UI controls (Color tokens, DesignTheme, Choice, Slider)
 src/Views/Screens/         Primary screens (Intro, Flow, Result, History, CatalogManager)
 src/Resources/             Bundled assessment catalogs (JSON)
 src/Tests/                 XCTest unit and integration test suites
@@ -59,8 +63,8 @@ ui-tests/                  XCUITest acceptance suite for iPhone 17 & iPad 9th Ge
 | Milestone | Scope & Deliverables | Status |
 | :---: | :--- | :---: |
 | **0.1.0** | Domain core, Codable models, bundled catalog, scoring engine | ✅ Completed |
-| **0.2.0** | Design system, WCAG 2.1 AA/AAA adaptive color tokens, wireframes | 🟡 Next |
-| **0.3.0** | Modular atomic UI components (Choice, Chips, Slider, Text) | ⚪ Planned |
+| **0.2.0** | Design system, WCAG 2.1 AA/AAA adaptive color tokens, wireframes | ✅ Completed |
+| **0.3.0** | Modular atomic UI components (Choice, Chips, Slider, Text) | 🟡 Next |
 | **0.4.0** | Multidimensional evaluation engine & sequential screen flow | ⚪ Planned |
 | **0.5.0** | Interactive validation, transition feedback, decoupled haptics | ⚪ Planned |
 | **0.6.0** | Result analytics, competency dashboard, archetype categorization | ⚪ Planned |
