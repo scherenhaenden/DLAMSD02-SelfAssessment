@@ -4,17 +4,18 @@ Native SwiftUI self-assessment application developed for **DLAMSD02 Apple Mobile
 
 ## Current Development Stage
 
-Version **0.3.2** (Build `20261030.111500`), Sprint 3.2: Formal Acceptance Testing, Verified State Assertions & Closing Milestone.
+Version **0.3.3** (Build `20261030.121500`), Sprint 3.3: Final Closure Milestone, Verified Placeholder Rendering & Strict Text Lifecycle.
 
 ### Implemented
 
-- **Verified XCUITest Acceptance Suite (Codex Audit Round 4 Resolved):**
+- **Verified XCUITest Acceptance Suite (Codex Audit Round 5 Resolved):**
   - Live simulator execution of 3 UI integration tests (`AssessYourselfUITests`) with explicit state and counter assertions after every single tap.
   - Stepped slider: Verifies initial `4 / 5` ("Eher hoch") and dynamic transition to `1 / 5` ("Sehr niedrig") after dragging to 0.0.
-  - Short text reflection: Verifies initial empty state with placeholder and warning milestone, followed by typing, editor text assertion, and live counter updates.
+  - Short text reflection: Verifies visible placeholder in empty initial state (`shortTextPlaceholder`), exact typed text equality (`Praxiseinsatz mit SwiftUI.`), placeholder disappearance upon typing, exact counter (`26 von maximal 250 Zeichen`), and unconditional transition to `Mindestumfang erfüllt`.
   - Zero compiler warnings in XCUITest target (`chipSwiftPM` fully integrated into bidirectional toggle assertions).
 - **Barrierefreiheit & Kontrast-Härtung (WCAG AA):**
   - `ShortTextPromptCard`: Inset placeholder uses unattenuated `textSecondary` token, achieving **7.58 : 1** (Light) and **5.71 : 1** (Dark) contrast against card surface.
+  - `scrollContentBackground(.hidden)` enabled across all platforms, ensuring placeholder visibility on iOS/iPadOS behind transparent `TextEditor`.
   - VoiceOver accessibility attributes added to `TextEditor` (`accessibilityLabel`, `accessibilityHint`, live character counter values).
   - `MultiSelectChipGrid`: Dynamic-Type resilient adaptive layout (`GridItem(.adaptive(minimum: 140))`) with multi-line expansion without clipping. Touch targets $\ge 48\,\text{pt}$ height.
 - **Atomic SwiftUI Components:**
@@ -83,6 +84,7 @@ docs/                      Sprint documentation and technical verification repor
 | **0.3.0** | Modular atomic UI components (Choice, Chips, Slider, Text), native iOS App target | ✅ Completed |
 | **0.3.1** | UI interaction tests (XCUITest), a11y & contrast hardening, $\ge 80\%$ coverage per file | ✅ Completed |
 | **0.3.2** | Verified XCUITest state assertions, slider delta, empty/typed text, closing Sprint 3 | ✅ Completed |
+| **0.3.3** | Placeholder visibility on iOS (`scrollContentBackground`), strict equality text assertions | ✅ Completed |
 | **0.4.0** | AssessmentViewModel, sequential navigation flow & question coordinator | 🟡 Next |
 | **0.5.0** | Interactive validation, transition feedback, decoupled haptics | ⚪ Planned |
 | **0.6.0** | Result analytics, competency dashboard, archetype categorization | ⚪ Planned |

@@ -38,10 +38,9 @@ public struct ShortTextPromptCard: View {
                         .padding(.horizontal, 4)
                         .padding(.vertical, 8)
                         .allowsHitTesting(false)
-                        .accessibilityHidden(true)
+                        .accessibilityIdentifier("shortTextPlaceholder")
                 }
 
-                #if os(macOS)
                 TextEditor(text: Binding(
                     get: { text },
                     set: { onTextChange($0) }
@@ -49,22 +48,14 @@ public struct ShortTextPromptCard: View {
                 .font(.body)
                 .frame(minHeight: 110)
                 .scrollContentBackground(.hidden)
-                .accessibilityIdentifier("shortTextEditor")
-                .accessibilityLabel(placeholder)
-                .accessibilityValue(text)
-                .accessibilityHint("Eingabefeld für deinen Reflexionstext.")
-                #else
-                TextEditor(text: Binding(
-                    get: { text },
-                    set: { onTextChange($0) }
-                ))
-                .font(.body)
-                .frame(minHeight: 110)
-                .accessibilityIdentifier("shortTextEditor")
-                .accessibilityLabel(placeholder)
-                .accessibilityValue(text)
-                .accessibilityHint("Eingabefeld für deinen Reflexionstext.")
+                .autocorrectionDisabled()
+                #if os(iOS)
+                .textInputAutocapitalization(.never)
                 #endif
+                .accessibilityIdentifier("shortTextEditor")
+                .accessibilityLabel(placeholder)
+                .accessibilityValue(text)
+                .accessibilityHint("Eingabefeld für deinen Reflexionstext.")
             }
             .padding(theme.spacing.sm)
             .background(

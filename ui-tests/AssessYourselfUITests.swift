@@ -105,9 +105,11 @@ final class AssessYourselfUITests: XCTestCase {
         // 2. Short Text Editor initial empty state verification
         let editor = app.textViews["shortTextEditor"]
         let status = app.staticTexts["shortTextStatus"]
+        let placeholder = app.staticTexts["shortTextPlaceholder"]
 
         XCTAssertTrue(editor.waitForExistence(timeout: 10))
         XCTAssertTrue(status.waitForExistence(timeout: 5))
+        XCTAssertTrue(placeholder.waitForExistence(timeout: 5), "Placeholder must be visible in empty initial state")
 
         // Verify initial empty state character status and warning milestone
         XCTAssertTrue(status.label.contains("0 von maximal 250 Zeichen"), "Initial character count must be 0")
@@ -117,22 +119,25 @@ final class AssessYourselfUITests: XCTestCase {
         editor.tap()
         let keyboard = app.keyboards.firstMatch
         _ = keyboard.waitForExistence(timeout: 3)
-        editor.typeText("Praxiseinsatz mit SwiftUI.")
 
-        // Verify that typed text is present in the editor
+        let expectedInput = "Praxiseinsatz mit SwiftUI."
+        for char in expectedInput {
+            editor.typeText(String(char))
+            Thread.sleep(forTimeInterval: 0.05)
+        }
+
+        // Verify that typed text is present and matches the expected input exactly
         let editorText = (editor.value as? String ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
-        XCTAssertGreaterThan(editorText.count, 0, "Editor must contain typed text")
+        XCTAssertEqual(editorText, expectedInput, "Editor must contain exact typed text")
 
-        // Verify that status bar reflects the typed count and accessibility attributes
+        // Verify that placeholder has disappeared now that text is present
+        XCTAssertFalse(placeholder.exists, "Placeholder must disappear when text is typed")
+
+        // Verify that status bar unconditionally reflects the 26 characters and milestone is achieved
         let updatedStatus = app.staticTexts["shortTextStatus"]
         XCTAssertTrue(updatedStatus.waitForExistence(timeout: 5))
-        XCTAssertTrue(updatedStatus.label.contains("\(editorText.count) von maximal 250 Zeichen"), "Status must report exact count")
-        XCTAssertEqual(updatedStatus.value as? String, "\(editorText.count) Zeichen", "Accessibility value must announce exact character count")
-
-        if editorText.count >= 15 {
-            XCTAssertTrue(updatedStatus.label.contains("Mindestumfang erfüllt"), "Milestone must indicate requirement met when >= 15 characters")
-        } else {
-            XCTAssertTrue(updatedStatus.label.contains("bis zum Mindestumfang"), "Milestone must indicate remaining characters when < 15")
-        }
+        XCTAssertTrue(updatedStatus.label.contains("\(expectedInput.count) von maximal 250 Zeichen"), "Status must report exact count")
+        XCTAssertTrue(updatedStatus.label.contains("Mindestumfang erfüllt"), "Milestone must indicate requirement met unconditionally")
+        XCTAssertEqual(updatedStatus.value as? String, "\(expectedInput.count) Zeichen", "Accessibility value must announce exact character count")
     }
 }
