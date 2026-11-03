@@ -37,43 +37,97 @@ public struct AssessmentFlowView<VM: AssessmentViewModelProtocol>: View {
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif
-            .onAppear {
-                if viewModel.state == .idle {
-                    viewModel.loadCatalog()
-                }
-            }
         }
     }
 
     // MARK: - Subviews
 
     private var idleView: some View {
-        VStack(spacing: theme.spacing.md) {
-            Text("Willkommen zum DevProfile Self-Assessment")
-                .font(.title3)
-                .fontWeight(.bold)
-                .foregroundColor(theme.colors.textPrimary.color)
-                .multilineTextAlignment(.center)
+        ScrollView {
+            VStack(spacing: theme.spacing.lg) {
+                // Header Icon & Title
+                VStack(spacing: theme.spacing.xs) {
+                    Image(systemName: "person.crop.circle.badge.checkmark")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 64, height: 64)
+                        .foregroundColor(theme.colorToken(forDimension: "architecture").color)
+                        .padding(.top, theme.spacing.md)
 
-            Text("Starte jetzt die Selbsteinschätzung über 4 Dimensionen mit 24 Fragen.")
-                .font(.body)
-                .foregroundColor(theme.colors.textSecondary.color)
-                .multilineTextAlignment(.center)
+                    Text("Willkommen zum DevProfile Self-Assessment")
+                        .font(.title3)
+                        .fontWeight(.bold)
+                        .foregroundColor(theme.colors.textPrimary.color)
+                        .multilineTextAlignment(.center)
+                        .accessibilityIdentifier("flow.welcomeTitle")
 
-            Button {
-                viewModel.loadCatalog()
-            } label: {
-                Text("Assessment starten")
+                    Text("Strukturierte Selbsteinschätzung Deiner Software-Engineering-Kompetenzen über 4 Kerndimensionen.")
+                        .font(.body)
+                        .foregroundColor(theme.colors.textSecondary.color)
+                        .multilineTextAlignment(.center)
+                        .accessibilityIdentifier("flow.welcomeDescription")
+                }
+
+                // Information & Dimension Overview Card
+                VStack(alignment: .leading, spacing: theme.spacing.sm) {
+                    Text("Übersicht des Assessments")
+                        .font(.subheadline)
+                        .fontWeight(.bold)
+                        .foregroundColor(theme.colors.textPrimary.color)
+
+                    Divider()
+
+                    VStack(alignment: .leading, spacing: theme.spacing.xs) {
+                        infoBullet(icon: "square.grid.2x2", title: "4 Dimensionen", detail: "Architecture, Platform, Quality & Agile")
+                        infoBullet(icon: "list.number", title: "24 Fragen", detail: "Single Choice, Multi-Select, Likert & Freitext")
+                        infoBullet(icon: "clock", title: "ca. 10–15 Min.", detail: "Reflexiv und ohne künstlichen Zeitdruck")
+                    }
+                }
+                .padding(theme.spacing.md)
+                .background(
+                    RoundedRectangle(cornerRadius: theme.cornerRadius.large)
+                        .fill(theme.colors.surfaceCard.color)
+                )
+
+                // Start Action Button
+                Button {
+                    viewModel.loadCatalog()
+                } label: {
+                    HStack(spacing: 6) {
+                        Text("Assessment starten")
+                        Image(systemName: "arrow.right.circle.fill")
+                    }
                     .font(.headline)
-                    .foregroundColor(theme.colors.surfaceCard.color)
-                    .frame(maxWidth: .infinity, minHeight: 48)
-                    .background(theme.colorToken(forDimension: "architecture").color)
-                    .cornerRadius(theme.cornerRadius.medium)
+                    .foregroundColor(theme.colors.onAccent.color)
+                    .frame(maxWidth: .infinity, minHeight: theme.layout.primaryButtonHeight)
+                    .background(
+                        RoundedRectangle(cornerRadius: theme.cornerRadius.medium)
+                            .fill(theme.colorToken(forDimension: "architecture").color)
+                    )
+                }
+                .padding(.top, theme.spacing.sm)
+                .accessibilityIdentifier("flow.startButton")
             }
-            .padding(.top, theme.spacing.md)
-            .accessibilityIdentifier("flow.startButton")
+            .padding(theme.spacing.lg)
         }
-        .padding(theme.spacing.lg)
+    }
+
+    private func infoBullet(icon: String, title: String, detail: String) -> some View {
+        HStack(alignment: .top, spacing: theme.spacing.sm) {
+            Image(systemName: icon)
+                .foregroundColor(theme.colorToken(forDimension: "architecture").color)
+                .frame(width: 20)
+                .padding(.top, 2)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                    .font(.caption)
+                    .fontWeight(.semibold)
+                    .foregroundColor(theme.colors.textPrimary.color)
+                Text(detail)
+                    .font(.caption)
+                    .foregroundColor(theme.colors.textSecondary.color)
+            }
+        }
     }
 
     private var loadingView: some View {
@@ -183,11 +237,11 @@ public struct AssessmentFlowView<VM: AssessmentViewModelProtocol>: View {
                         Image(systemName: "checkmark.circle.fill")
                     }
                     .font(.headline)
-                    .foregroundColor(viewModel.isCurrentAnswerValid ? Color.white : Color.white.opacity(0.4))
+                    .foregroundColor(viewModel.isCurrentAnswerValid ? theme.colors.onAccent.color : theme.colors.textSecondary.color.opacity(0.4))
                     .frame(maxWidth: .infinity, minHeight: 44)
                     .background(
                         RoundedRectangle(cornerRadius: theme.cornerRadius.medium)
-                            .fill(viewModel.isCurrentAnswerValid ? theme.colors.successFeedback.color : theme.colors.textSecondary.color.opacity(0.3))
+                            .fill(viewModel.isCurrentAnswerValid ? theme.colors.successFeedback.color : theme.colors.textSecondary.color.opacity(0.18))
                     )
                 }
                 .disabled(!viewModel.isCurrentAnswerValid)
@@ -203,11 +257,11 @@ public struct AssessmentFlowView<VM: AssessmentViewModelProtocol>: View {
                         Image(systemName: "chevron.right")
                     }
                     .font(.headline)
-                    .foregroundColor(viewModel.isCurrentAnswerValid ? Color.white : Color.white.opacity(0.4))
+                    .foregroundColor(viewModel.canGoForward ? theme.colors.onAccent.color : theme.colors.textSecondary.color.opacity(0.4))
                     .frame(maxWidth: .infinity, minHeight: 44)
                     .background(
                         RoundedRectangle(cornerRadius: theme.cornerRadius.medium)
-                            .fill(viewModel.canGoForward ? theme.colorToken(forDimension: "architecture").color : theme.colors.textSecondary.color.opacity(0.3))
+                            .fill(viewModel.canGoForward ? currentDimensionColor : theme.colors.textSecondary.color.opacity(0.18))
                     )
                 }
                 .disabled(!viewModel.canGoForward)
@@ -217,73 +271,85 @@ public struct AssessmentFlowView<VM: AssessmentViewModelProtocol>: View {
     }
 
     private func completedView(record: AssessmentRecord) -> some View {
-        ScrollView {
-            VStack(spacing: theme.spacing.lg) {
-                Image(systemName: "checkmark.seal.fill")
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: 64, height: 64)
-                    .foregroundColor(theme.colors.successFeedback.color)
-                    .padding(.top, theme.spacing.xl)
+        VStack(spacing: 0) {
+            ScrollView {
+                VStack(spacing: theme.spacing.lg) {
+                    Image(systemName: "checkmark.seal.fill")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 56, height: 56)
+                        .foregroundColor(theme.colors.successFeedback.color)
+                        .padding(.top, theme.spacing.md)
 
-                VStack(spacing: theme.spacing.xs) {
-                    Text("Self-Assessment abgeschlossen!")
-                        .font(.title2)
-                        .fontWeight(.bold)
-                        .foregroundColor(theme.colors.textPrimary.color)
-
-                    Text("Dein diagnostisches Entwicklerprofil wurde erfolgreich synthetisiert.")
-                        .font(.subheadline)
-                        .foregroundColor(theme.colors.textSecondary.color)
-                        .multilineTextAlignment(.center)
-                }
-
-                // Archetype Card
-                VStack(alignment: .leading, spacing: theme.spacing.sm) {
-                    HStack {
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text("Diagnostizierter Archetyp")
-                                .font(.caption)
-                                .foregroundColor(theme.colors.textSecondary.color)
-                            Text(record.archetype.title)
-                                .font(.headline)
-                                .fontWeight(.bold)
-                                .foregroundColor(theme.colors.textPrimary.color)
-                        }
-                        Spacer()
-                        Text(String(format: "%.1f %%", record.overallScore))
-                            .font(.title3)
+                    VStack(spacing: theme.spacing.xs) {
+                        Text("Self-Assessment abgeschlossen!")
+                            .font(.title2)
                             .fontWeight(.bold)
-                            .foregroundColor(theme.colorToken(forDimension: "architecture").color)
+                            .foregroundColor(theme.colors.textPrimary.color)
+                            .accessibilityIdentifier("flow.completionTitle")
+
+                        Text("Dein diagnostisches Entwicklerprofil wurde erfolgreich synthetisiert.")
+                            .font(.subheadline)
+                            .foregroundColor(theme.colors.textSecondary.color)
+                            .multilineTextAlignment(.center)
                     }
 
-                    Text(record.archetype.description)
-                        .font(.body)
-                        .foregroundColor(theme.colors.textSecondary.color)
-                }
-                .padding(theme.spacing.md)
-                .background(
-                    RoundedRectangle(cornerRadius: theme.cornerRadius.large)
-                        .fill(theme.colors.surfaceCard.color)
-                )
+                    // Archetype Card
+                    VStack(alignment: .leading, spacing: theme.spacing.sm) {
+                        HStack {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("Diagnostizierter Archetyp")
+                                    .font(.caption)
+                                    .foregroundColor(theme.colors.textSecondary.color)
+                                Text(record.archetype.title)
+                                    .font(.headline)
+                                    .fontWeight(.bold)
+                                    .foregroundColor(theme.colors.textPrimary.color)
+                            }
+                            Spacer()
+                            Text(String(format: "%.1f %%", record.overallScore))
+                                .font(.title3)
+                                .fontWeight(.bold)
+                                .foregroundColor(theme.colorToken(forDimension: "architecture").color)
+                        }
 
-                // Restart Button
+                        Text(record.archetype.description)
+                            .font(.body)
+                            .foregroundColor(theme.colors.textSecondary.color)
+                    }
+                    .padding(theme.spacing.md)
+                    .background(
+                        RoundedRectangle(cornerRadius: theme.cornerRadius.large)
+                            .fill(theme.colors.surfaceCard.color)
+                    )
+                }
+                .padding(theme.spacing.lg)
+            }
+
+            Divider()
+
+            // Sticky Bottom Action Bar
+            VStack {
                 Button {
                     viewModel.reset()
                     viewModel.loadCatalog()
                 } label: {
-                    Text("Assessment wiederholen")
-                        .font(.headline)
-                        .foregroundColor(theme.colors.surfaceCard.color)
-                        .frame(maxWidth: .infinity, minHeight: 48)
-                        .background(theme.colorToken(forDimension: "architecture").color)
-                        .cornerRadius(theme.cornerRadius.medium)
+                    HStack(spacing: 6) {
+                        Image(systemName: "arrow.counterclockwise")
+                        Text("Assessment wiederholen")
+                    }
+                    .font(.headline)
+                    .foregroundColor(theme.colors.onAccent.color)
+                    .frame(maxWidth: .infinity, minHeight: 48)
+                    .background(
+                        RoundedRectangle(cornerRadius: theme.cornerRadius.medium)
+                            .fill(theme.colorToken(forDimension: "architecture").color)
+                    )
                 }
-                .padding(.top, theme.spacing.md)
                 .accessibilityIdentifier("flow.resetButton")
             }
-            .padding(theme.spacing.lg)
-            .accessibilityIdentifier("flow.completionView")
+            .padding(theme.spacing.md)
+            .background(theme.colors.surfaceCard.color)
         }
     }
 
@@ -307,7 +373,7 @@ public struct AssessmentFlowView<VM: AssessmentViewModelProtocol>: View {
             } label: {
                 Text("Erneut versuchen")
                     .font(.headline)
-                    .foregroundColor(theme.colors.surfaceCard.color)
+                    .foregroundColor(theme.colors.onAccent.color)
                     .frame(maxWidth: 200, minHeight: 44)
                     .background(theme.colorToken(forDimension: "architecture").color)
                     .cornerRadius(theme.cornerRadius.medium)

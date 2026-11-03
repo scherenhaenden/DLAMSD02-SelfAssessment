@@ -68,6 +68,7 @@ public struct ColorTokens: Sendable, Hashable {
     public let successFeedback: AdaptiveColorToken
     public let warningFeedback: AdaptiveColorToken
     public let errorFeedback: AdaptiveColorToken
+    public let onAccent: AdaptiveColorToken
 
     public init(
         background: AdaptiveColorToken = AdaptiveColorToken(
@@ -97,6 +98,10 @@ public struct ColorTokens: Sendable, Hashable {
         errorFeedback: AdaptiveColorToken = AdaptiveColorToken(
             lightRGB: AppRGBColor(hex: 0x991B1B),
             darkRGB: AppRGBColor(hex: 0xF87171)
+        ),
+        onAccent: AdaptiveColorToken = AdaptiveColorToken(
+            lightRGB: AppRGBColor(hex: 0xFFFFFF),
+            darkRGB: AppRGBColor(hex: 0x090D16)
         )
     ) {
         self.background = background
@@ -106,6 +111,7 @@ public struct ColorTokens: Sendable, Hashable {
         self.successFeedback = successFeedback
         self.warningFeedback = warningFeedback
         self.errorFeedback = errorFeedback
+        self.onAccent = onAccent
     }
 }
 

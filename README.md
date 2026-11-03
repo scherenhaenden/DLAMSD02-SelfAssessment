@@ -4,7 +4,7 @@ Native SwiftUI self-assessment application developed for **DLAMSD02 Apple Mobile
 
 ## Current Development Stage
 
-Version **0.4.1** (Build `20261030.154000`), Sprint 4.1: Assessment Flow Hardening, Validation Assertions & Multi-Paradigm XCUITest Suite.
+Version **0.5.0** (Build `20261103.160000`), Sprint 5 Opening & Audit Remediation: Welcome Screen Retention, WCAG AAA Dark Contrast, 24-Question End-to-End XCUITest Suite.
 
 ### Implemented
 
@@ -18,17 +18,16 @@ Version **0.4.1** (Build `20261030.154000`), Sprint 4.1: Assessment Flow Hardeni
   - `AssessmentFlowView`: Full navigation screen with top progress bar (`ProgressView(value: viewModel.progress)`), question counter pill (`Frage N / 24`), dimension badge, and bottom sticky navigation toolbar.
   - Strict validation gating: "Zurück" disabled on question 1; "Weiter" and "Abschließen" strictly gated by `isCurrentAnswerValid`.
   - State persistence during traversal: Navigating back preserves previous user inputs without data loss.
-- **Sprint 4.1 Hardening & UX Synchronization (`v0.4.1`):**
-  - *Likert Slider Auto-Sync:* Default rating (`3.0`) is registered via `.onAppear`, ensuring immediate valid state and eliminating the need to drag the slider back and forth to unlock "Weiter".
-  - *Multiple Choice Boundary Cap:* `toggleMultipleChoice` strictly enforces `maxSelectCount` preventing overflow selections.
-  - *Dark Mode Button Contrast:* Disabled action buttons dim foreground text (`Color.white.opacity(0.4)`) avoiding misleading active appearances.
-  - *Unit Test Invariant Coverage:* `AssessmentViewModelTests` executes explicit `isCurrentAnswerValid` assertions across all 4 question paradigms on active catalog items.
+- **Sprint 5 Opening & Audit Resolutions (`v0.5.0`):**
+  - *Welcome Screen Retention (Idle State):* Welcome screen stays visible until the user explicitly taps "Assessment starten" (`flow.startButton`), removing premature auto-load `.onAppear`.
+  - *WCAG AAA Active Button Contrast in Dark Mode:* Introduced adaptive `onAccent: AdaptiveColorToken` (`#FFFFFF` in Light Mode, deep `#090D16` in Dark Mode). Verified via programmatic unit test asserting $\ge 7.0:1$ across all 4 dimension pastels and success feedback.
+  - *Full 24-Question End-to-End XCUITest Suite:* Integration test traversing questions 1 through 24 across all 4 interaction paradigms, verifying completion synthesis, diagnostic archetype display, sticky reset button, and clean restart.
 - **Root Application Navigation:**
   - `AssessYourselfApp`: Dual-tab entry point connecting `AssessmentFlowView` as primary assessment experience alongside `ComponentShowcaseView`.
 - **Test Suite & Code Coverage:**
-  - **63 XCTest unit tests** passing with 100% success rate across SwiftPM.
-  - **4 XCUITest integration tests** passing with 100% success rate on iPhone 17 Simulator (`testSequentialAssessmentFlowProgressionAndValidation` traversing Single Choice $\to$ Multiple Choice $\to$ Stepped Slider $\to$ Short Text $\to$ Dimension Transition).
-  - **92.53% global line coverage** (`llvm-cov report`: 3,404 / 3,679 lines), with **$\ge 82.22\%$ on every individual source file**.
+  - **64 XCTest unit tests** passing with 100% success rate across SwiftPM.
+  - **6 XCUITest integration tests** passing with 100% success rate on iPhone 17 Simulator (`testCompleteFull24QuestionAssessmentFlowAndVerifyCompletion`, `testWelcomeScreenRemainsVisibleUntilStartTapped`, `testSequentialAssessmentFlowProgressionAndValidation`, `testSingleChoiceMutualExclusionInteraction`, `testMultipleChoiceBoundsAndToggleInteraction`, `testLikertSliderAndShortTextInputInteraction`).
+  - **92.64% global line coverage** (`llvm-cov report`: 3,375 / 3,643 lines), with **$\ge 82.22\%$ on every individual source file**.
 
 ## Open and Build
 
@@ -85,7 +84,7 @@ docs/                      Sprint documentation and technical verification repor
 | **0.3.3** | Placeholder visibility on iOS (`scrollContentBackground`), strict equality text assertions | ✅ Completed |
 | **0.4.0** | AssessmentViewModel, sequential navigation flow & question coordinator | ✅ Completed |
 | **0.4.1** | Flow hardening, boundary enforcement, slider auto-sync & full paradigm XCUITest | ✅ Completed |
-| **0.5.0** | Interactive validation, transition feedback, decoupled haptics | 🟡 Next |
+| **0.5.0** | Welcome retention, WCAG AAA dark contrast, 24-Q XCUITest suite, haptics & transitions prep | 🟡 In Progress / Audit Ready |
 | **0.6.0** | Result analytics, competency dashboard, archetype categorization | ⚪ Planned |
 | **0.7.0** | Local persistence (`UserDefaultsHistoryStore`), history & progress trends | ⚪ Planned |
 | **0.8.0** | Multi-device layout (iPad 640pt container), VoiceOver accessibility | ⚪ Planned |

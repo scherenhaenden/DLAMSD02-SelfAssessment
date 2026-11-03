@@ -29,9 +29,42 @@ final class AssessYourselfUITests: XCTestCase {
 
     // MARK: - Sprint 4: Sequential Assessment Flow Tests
 
+    func testWelcomeScreenRemainsVisibleUntilStartTapped() throws {
+        app.launch()
+        switchToAssessmentTabIfNeeded()
+
+        // Verify welcome elements
+        let welcomeTitle = app.staticTexts["flow.welcomeTitle"]
+        XCTAssertTrue(welcomeTitle.waitForExistence(timeout: 5), "Welcome title must be visible upon launch")
+        XCTAssertEqual(welcomeTitle.label, "Willkommen zum DevProfile Self-Assessment")
+
+        let welcomeDesc = app.staticTexts["flow.welcomeDescription"]
+        XCTAssertTrue(welcomeDesc.exists, "Welcome description must be visible")
+
+        let startButton = app.buttons["flow.startButton"]
+        XCTAssertTrue(startButton.exists, "Start button must be visible on welcome screen")
+
+        // Counter pill and navigation buttons must NOT exist yet
+        let counterPill = app.staticTexts["flow.counterPill"]
+        XCTAssertFalse(counterPill.exists, "Question counter must not be visible before starting")
+
+        // Tap start button to begin
+        startButton.tap()
+
+        // Now Question 1 must appear
+        XCTAssertTrue(counterPill.waitForExistence(timeout: 5), "Question counter must appear after starting")
+        XCTAssertEqual(counterPill.label, "Frage 1 / 24")
+    }
+
     func testSequentialAssessmentFlowProgressionAndValidation() throws {
         app.launch()
         switchToAssessmentTabIfNeeded()
+
+        // Welcome screen handling
+        let startButton = app.buttons["flow.startButton"]
+        if startButton.waitForExistence(timeout: 5) {
+            startButton.tap()
+        }
 
         // 1. Initial State: Question 1 of 24 (Single Choice)
         let counterPill = app.staticTexts["flow.counterPill"]
@@ -138,6 +171,75 @@ final class AssessYourselfUITests: XCTestCase {
         let q7Expectation = expectation(for: NSPredicate(format: "label == 'Frage 7 / 24'"), evaluatedWith: counterPill)
         wait(for: [q7Expectation], timeout: 5)
         XCTAssertEqual(dimensionBadge.label, "Swift & Apple Platform Engineering", "Dimension badge must transition smoothly")
+    }
+
+    func testCompleteFull24QuestionAssessmentFlowAndVerifyCompletion() throws {
+        app.launch()
+        switchToAssessmentTabIfNeeded()
+
+        let startButton = app.buttons["flow.startButton"]
+        if startButton.waitForExistence(timeout: 5) {
+            startButton.tap()
+        }
+
+        let counterPill = app.staticTexts["flow.counterPill"]
+        XCTAssertTrue(counterPill.waitForExistence(timeout: 10))
+
+        let nextButton = app.buttons["flow.nextButton"]
+        let submitButton = app.buttons["flow.submitButton"]
+
+        // Traverse all 24 questions
+        for questionNumber in 1...24 {
+            let qExpectation = expectation(for: NSPredicate(format: "label == 'Frage \(questionNumber) / 24'"), evaluatedWith: counterPill)
+            wait(for: [qExpectation], timeout: 5)
+
+            // Answer based on polymorphic question component
+            let scOptions = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'choiceOption.'"))
+            let mcChips = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'multiChip.'"))
+            let slider = app.sliders["likertSlider"]
+            let editor = app.textViews["shortTextEditor"]
+
+            if scOptions.count > 0 {
+                scOptions.element(boundBy: 0).tap()
+            } else if mcChips.count > 0 {
+                mcChips.element(boundBy: 0).tap()
+            } else if slider.exists {
+                // Slider default is auto-synced
+                slider.adjust(toNormalizedSliderPosition: 0.75)
+            } else if editor.exists {
+                editor.tap()
+                let reflection = "Modulare Entkopplung mit Swift Protocols und sauberer Dependency Injection."
+                editor.typeText(reflection)
+            }
+
+            if questionNumber < 24 {
+                XCTAssertTrue(nextButton.waitForExistence(timeout: 3))
+                XCTAssertTrue(nextButton.isEnabled, "Next button must be enabled for question \(questionNumber)")
+                nextButton.tap()
+            } else {
+                XCTAssertTrue(submitButton.waitForExistence(timeout: 3))
+                XCTAssertTrue(submitButton.isEnabled, "Submit button must be enabled on question 24")
+                submitButton.tap()
+            }
+        }
+
+        // Verify completion screen
+        let completionHeadline = app.staticTexts["Self-Assessment abgeschlossen!"]
+        XCTAssertTrue(completionHeadline.waitForExistence(timeout: 10), "Completion headline must appear")
+
+        let archetypeLabel = app.staticTexts["Diagnostizierter Archetyp"]
+        XCTAssertTrue(archetypeLabel.waitForExistence(timeout: 5), "Archetype diagnosis label must be visible")
+
+        let resetButton = app.buttons["flow.resetButton"]
+        if !resetButton.waitForExistence(timeout: 5) {
+            app.swipeUp()
+        }
+        XCTAssertTrue(resetButton.waitForExistence(timeout: 5), "Reset button must exist on completion view")
+
+        // Reset and verify return to Question 1
+        resetButton.tap()
+        let resetCounterExpectation = expectation(for: NSPredicate(format: "label == 'Frage 1 / 24'"), evaluatedWith: counterPill)
+        wait(for: [resetCounterExpectation], timeout: 5)
     }
 
     // MARK: - Sprint 3 Atomic Component Verification Tests

@@ -130,6 +130,43 @@ final class ColorTokenTests: XCTestCase {
         }
     }
 
+    func testOnAccentTextContrastMeetsWCAGAAAOnDimensionAndFeedbackButtons() {
+        let onAccent = theme.colors.onAccent
+        let lightTextL = relativeLuminance(rgb: onAccent.lightRGB)
+        let darkTextL = relativeLuminance(rgb: onAccent.darkRGB)
+
+        // 1. Dimension action buttons (Light Mode: white on dark accent; Dark Mode: dark text on bright accent)
+        let dimensions = ["architecture", "platform", "quality", "agile"]
+        for dimId in dimensions {
+            let dimToken = theme.colorToken(forDimension: dimId)
+
+            // Light Mode: white text (1.0) on dark dimension accent (e.g. 0x1E3A8A)
+            let dimLightL = relativeLuminance(rgb: dimToken.lightRGB)
+            let lightRatio = contrastRatio(l1: lightTextL, l2: dimLightL)
+            XCTAssertGreaterThanOrEqual(
+                lightRatio,
+                7.0,
+                "OnAccent text in Light Mode on '\(dimId)' must meet AAA (>= 7.0:1, actual: \(lightRatio))"
+            )
+
+            // Dark Mode: dark text (0x090D16) on bright pastel dimension accent (e.g. 0x38BDF8, 0xFBBF24)
+            let dimDarkL = relativeLuminance(rgb: dimToken.darkRGB)
+            let darkRatio = contrastRatio(l1: dimDarkL, l2: darkTextL)
+            XCTAssertGreaterThanOrEqual(
+                darkRatio,
+                7.0,
+                "OnAccent text in Dark Mode on '\(dimId)' must meet AAA (>= 7.0:1, actual: \(darkRatio))"
+            )
+        }
+
+        // 2. Success feedback action button (Abschließen)
+        let succToken = theme.colors.successFeedback
+        let succLightRatio = contrastRatio(l1: lightTextL, l2: relativeLuminance(rgb: succToken.lightRGB))
+        let succDarkRatio = contrastRatio(l1: relativeLuminance(rgb: succToken.darkRGB), l2: darkTextL)
+        XCTAssertGreaterThanOrEqual(succLightRatio, 7.0, "Success button in Light Mode must meet AAA")
+        XCTAssertGreaterThanOrEqual(succDarkRatio, 7.0, "Success button in Dark Mode must meet AAA")
+    }
+
     func testSpacingAndCornerRadiusDesignTokens() {
         XCTAssertEqual(theme.spacing.xs, 4.0)
         XCTAssertEqual(theme.spacing.sm, 8.0)
