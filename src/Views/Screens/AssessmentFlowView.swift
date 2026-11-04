@@ -298,87 +298,15 @@ public struct AssessmentFlowView<VM: AssessmentViewModelProtocol>: View {
     }
 
     private func completedView(record: AssessmentRecord) -> some View {
-        VStack(spacing: 0) {
-            ScrollView {
-                VStack(spacing: theme.spacing.lg) {
-                    Image(systemName: "checkmark.seal.fill")
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 56, height: 56)
-                        .foregroundColor(theme.colors.successFeedback.color)
-                        .padding(.top, theme.spacing.md)
-
-                    VStack(spacing: theme.spacing.xs) {
-                        Text("Self-Assessment abgeschlossen!")
-                            .font(.title2)
-                            .fontWeight(.bold)
-                            .foregroundColor(theme.colors.textPrimary.color)
-                            .accessibilityIdentifier("flow.completionTitle")
-
-                        Text("Dein diagnostisches Entwicklerprofil wurde erfolgreich synthetisiert.")
-                            .font(.subheadline)
-                            .foregroundColor(theme.colors.textSecondary.color)
-                            .multilineTextAlignment(.center)
-                    }
-
-                    // Archetype Card
-                    VStack(alignment: .leading, spacing: theme.spacing.sm) {
-                        HStack {
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text("Diagnostizierter Archetyp")
-                                    .font(.caption)
-                                    .foregroundColor(theme.colors.textSecondary.color)
-                                Text(record.archetype.title)
-                                    .font(.headline)
-                                    .fontWeight(.bold)
-                                    .foregroundColor(theme.colors.textPrimary.color)
-                            }
-                            Spacer()
-                            Text(String(format: "%.1f %%", record.overallScore))
-                                .font(.title3)
-                                .fontWeight(.bold)
-                                .foregroundColor(theme.colorToken(forDimension: "architecture").color)
-                        }
-
-                        Text(record.archetype.description)
-                            .font(.body)
-                            .foregroundColor(theme.colors.textSecondary.color)
-                    }
-                    .padding(theme.spacing.md)
-                    .background(
-                        RoundedRectangle(cornerRadius: theme.cornerRadius.large)
-                            .fill(theme.colors.surfaceCard.color)
-                    )
-                }
-                .padding(theme.spacing.lg)
+        AssessmentResultView(
+            record: record,
+            catalog: viewModel.catalog,
+            theme: theme,
+            onRestart: {
+                viewModel.reset()
+                viewModel.loadCatalog()
             }
-
-            Divider()
-
-            // Sticky Bottom Action Bar
-            VStack {
-                Button {
-                    viewModel.reset()
-                    viewModel.loadCatalog()
-                } label: {
-                    HStack(spacing: 6) {
-                        Image(systemName: "arrow.counterclockwise")
-                        Text("Assessment wiederholen")
-                    }
-                    .font(.headline)
-                    .foregroundColor(theme.colors.onAccent.color)
-                    .frame(maxWidth: .infinity, minHeight: 48)
-                    .background(
-                        RoundedRectangle(cornerRadius: theme.cornerRadius.medium)
-                            .fill(theme.colorToken(forDimension: "architecture").color)
-                    )
-                }
-                .buttonStyle(TactileButtonStyle())
-                .accessibilityIdentifier("flow.resetButton")
-            }
-            .padding(theme.spacing.md)
-            .background(theme.colors.surfaceCard.color)
-        }
+        )
     }
 
     private func errorView(message: String) -> some View {

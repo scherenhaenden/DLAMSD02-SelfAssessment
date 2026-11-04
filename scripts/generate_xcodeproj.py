@@ -28,6 +28,7 @@ def main():
         "src/Views/Screens/ComponentShowcaseView.swift",
         "src/Views/Screens/AssessmentQuestionContainerView.swift",
         "src/Views/Screens/AssessmentFlowView.swift",
+        "src/Views/Screens/AssessmentResultView.swift",
         "src/Views/Components/Color+Adaptive.swift",
         "src/Views/Components/MultiSelectChipGrid.swift",
         "src/Views/Components/LikertSliderCard.swift",
@@ -35,6 +36,9 @@ def main():
         "src/Views/Components/ChoiceOptionButton.swift",
         "src/Views/Components/TactileButtonStyle.swift",
         "src/Views/Components/DesignTokens.swift",
+        "src/Views/Components/DimensionScoreBarView.swift",
+        "src/Views/Components/ArchetypeCardView.swift",
+        "src/Views/Components/PedagogicalRecommendationsView.swift",
         "src/Services/CatalogLoaderProtocol.swift",
         "src/Services/EvaluationEngineProtocol.swift",
         "src/Services/HapticFeedbackService.swift",
@@ -51,6 +55,7 @@ def main():
         "src/Tests/UIComponentTests.swift",
         "src/Tests/AssessmentViewModelTests.swift",
         "src/Tests/HapticFeedbackServiceTests.swift",
+        "src/Tests/ResultViewTests.swift",
     ]
 
     ui_test_sources = [
@@ -299,7 +304,7 @@ def main():
     pbx.append(f"\t\t{components_group_id} /* Components */ = {{")
     pbx.append("\t\t\tisa = PBXGroup;")
     pbx.append("\t\t\tchildren = (")
-    for f in ["ChoiceOptionButton.swift", "Color+Adaptive.swift", "DesignTokens.swift", "LikertSliderCard.swift", "MultiSelectChipGrid.swift", "ShortTextPromptCard.swift", "TactileButtonStyle.swift"]:
+    for f in ["ArchetypeCardView.swift", "ChoiceOptionButton.swift", "Color+Adaptive.swift", "DesignTokens.swift", "DimensionScoreBarView.swift", "LikertSliderCard.swift", "MultiSelectChipGrid.swift", "PedagogicalRecommendationsView.swift", "ShortTextPromptCard.swift", "TactileButtonStyle.swift"]:
         pbx.append(f"\t\t\t\t{filerefs['src/Views/Components/' + f]} /* {f} */,")
     pbx.append("\t\t\t);")
     pbx.append("\t\t\tpath = Components;")
@@ -309,7 +314,7 @@ def main():
     pbx.append(f"\t\t{screens_group_id} /* Screens */ = {{")
     pbx.append("\t\t\tisa = PBXGroup;")
     pbx.append("\t\t\tchildren = (")
-    for f in ["ComponentShowcaseView.swift", "AssessmentQuestionContainerView.swift", "AssessmentFlowView.swift"]:
+    for f in ["AssessmentFlowView.swift", "AssessmentQuestionContainerView.swift", "AssessmentResultView.swift", "ComponentShowcaseView.swift"]:
         pbx.append(f"\t\t\t\t{filerefs['src/Views/Screens/' + f]} /* {f} */,")
     pbx.append("\t\t\t);")
     pbx.append("\t\t\tpath = Screens;")
@@ -328,7 +333,7 @@ def main():
     pbx.append(f"\t\t{tests_group_id} /* Tests */ = {{")
     pbx.append("\t\t\tisa = PBXGroup;")
     pbx.append("\t\t\tchildren = (")
-    for f in ["CatalogTests.swift", "ColorTokenTests.swift", "EvaluationEngineTests.swift", "UIComponentTests.swift", "AssessmentViewModelTests.swift", "HapticFeedbackServiceTests.swift"]:
+    for f in ["AssessmentViewModelTests.swift", "CatalogTests.swift", "ColorTokenTests.swift", "EvaluationEngineTests.swift", "HapticFeedbackServiceTests.swift", "ResultViewTests.swift", "UIComponentTests.swift"]:
         pbx.append(f"\t\t\t\t{filerefs['src/Tests/' + f]} /* {f} */,")
     pbx.append("\t\t\t);")
     pbx.append("\t\t\tpath = Tests;")
@@ -517,8 +522,8 @@ def main():
     pbx.append("/* End PBXTargetDependency section */")
 
     # Build Configuration Settings
-    build_version = "20261104.120000"
-    market_version = "0.5.3"
+    build_version = "20261104.140000"
+    market_version = "0.6.0"
 
     # XCBuildConfiguration
     pbx.append("\n/* Begin XCBuildConfiguration section */")
