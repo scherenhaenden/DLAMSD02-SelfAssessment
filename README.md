@@ -4,25 +4,25 @@ Native SwiftUI self-assessment application developed for **DLAMSD02 Apple Mobile
 
 ## Current Development Stage
 
-Version **0.6.0** (Build `20261104.140000`), Sprint 6 Released: Result Analytics, Multi-Dimensional Competency Dashboard, Dominant Archetype Presentation & Pedagogical Recommendations.
+Version **0.6.1** (Build `20261104.144500`), Sprint 6 Patch Released: Deterministic Recommendation Tie-Breaking, Transitive Quantized Comparator, Dashboard UI Test Assertions & Reconciled Architecture Documentation.
 
 ### Implemented
 
 - **Protocol-Oriented State & ViewModel Architecture (POP / MVVM):**
   - Zero static singletons: Pure dependency injection via initializers and SwiftUI Environment.
   - `AssessmentViewModelProtocol`: Contract defining session state machine, navigation affordances, answer recording, evaluation coordination, and `hapticService`.
-  - `AssessmentViewModel`: `@ObservableObject` managing 24 questions across 4 dimensions (*Architecture*, *Platform*, *Quality*, *Agile*), maintaining `[String: AnswerPayload]`, duration tracking, and error handling.
+  - `AssessmentViewModel`: Conforms to `ObservableObject` with `@Published` state properties, managing 24 questions across 4 dimensions (*Architecture*, *Platform*, *Quality*, *Agile*), maintaining `[String: AnswerPayload]`, duration tracking, and error handling. Planned future evolution path: `@Observable` / `@MainActor` (Swift 5.9+).
   - Deterministic state machine: `AssessmentSessionState` (`.idle`, `.loading`, `.inProgress`, `.completed(AssessmentRecord)`, `.error(String)`).
 - **Sequential Assessment Flow & Validation Gating:**
   - `AssessmentQuestionContainerView`: Polymorphic SwiftUI container dynamically hosting `ChoiceOptionButton`, `MultiSelectChipGrid`, `LikertSliderCard`, or `ShortTextPromptCard` based on question type.
-  - `AssessmentFlowView`: Full navigation screen with top progress bar (`ProgressView(value: viewModel.progress)`), question counter pill (`Frage N / 24`), dimension badge, and bottom sticky navigation toolbar.
+  - `AssessmentFlowView`: Full navigation screen with top progress bar (`ProgressView(value: viewModel.progress)`), question counter pill (`Frage N / 24`), dimension badge, and bottom navigation toolbar.
   - Strict validation gating: "Zurück" disabled on question 1; "Weiter" and "Abschließen" strictly gated by `isCurrentAnswerValid`.
   - State persistence during traversal: Navigating back preserves previous user inputs without data loss.
-- **Sprint 6 Result Analytics & Competency Dashboard (`v0.6.0`):**
-  - *Dominant Archetype Presentation (`ArchetypeCardView`):* Diagnostic card showcasing evaluated archetype profile (`ArchetypeProfile`), prominent SF Symbol badge, title, subtitle, comprehensive description, categorized key strengths with checkmark indicators, and growth opportunities.
-  - *Graphical Competency Dashboard (`DimensionScoreBarView`):* Adaptive horizontal progress bars for all 4 dimensions (*Architecture*, *Platform*, *Quality*, *Agile*) with exact percentage formatting (`%.1f %%`), semantic dimension color tokens, VoiceOver accessibility elements, and full `accessibilityReduceMotion` animation suppression.
-  - *Didactic Learning Recommendations (`PedagogicalRecommendationsView`):* Scoring-derived pedagogical recommendations prioritized by dimension scores (*Hohe Priorität*, *Empfohlen*, *Vertiefung*), providing structured learning guidance aligned with IU DLAMSD02 module themes.
-  - *Integrated Result Screen (`AssessmentResultView`):* Unified assessment summary featuring celebration hero header, formatted duration tracking (`X Min. Y Sek.`), archetype card, multi-dimensional bar dashboard, recommendations, and sticky restart button (`flow.resetButton`).
+- **Sprint 6 Result Analytics & Competency Dashboard (`v0.6.0` & `v0.6.1`):**
+  - *Dominant Archetype Presentation (`ArchetypeCardView`):* Diagnostic card showcasing evaluated archetype profile (`ArchetypeProfile`), prominent SF Symbol badge, title, subtitle, comprehensive description, categorized key strengths with checkmark indicators, and growth opportunities. Represents the user's relative dominant profile among the evaluated dimensions.
+  - *Graphical Competency Dashboard (`DimensionScoreBarView`):* Adaptive horizontal progress bars for all 4 dimensions (*Architecture*, *Platform*, *Quality*, *Agile*) with exact percentage formatting (`%.1f %%`), semantic dimension color tokens, VoiceOver accessibility elements (`dimensionBar.<id>`), and full `accessibilityReduceMotion` animation suppression.
+  - *Didactic Learning Recommendations (`PedagogicalRecommendationsView`):* Scoring-derived pedagogical recommendations prioritized by dimension scores (*Hohe Priorität*, *Empfohlen*, *Vertiefung*), providing structured learning guidance aligned with IU DLAMSD02 module themes. Employs a mathematically transitive quantized comparator and deterministic tie-breaker hierarchy (`canonicalDimensionPrecedence: [architecture: 0, platform: 1, quality: 2, agile: 3]` with fallback).
+  - *Integrated Result Screen (`AssessmentResultView`):* Unified assessment summary featuring celebration hero header, formatted duration tracking (`X Min. Y Sek.`), archetype card, dynamic dimension counter (`\(dimensionsToDisplay.count) Dimensionen`), multi-dimensional bar dashboard, recommendations, and terminal restart button *"Assessment wiederholen"* (`flow.resetButton`) inside the `ScrollView` to prevent safe-area clipping on compact viewports.
 - **Sprint 5 Multisensory Feedback, Haptics & Accessibility (`v0.5.3`):**
   - *Decoupled Haptic Service (`HapticFeedbackServiceProtocol`):* Pure Swift protocol abstracting tactile feedback with `SystemHapticFeedbackService` (retained generators, thread-safe `stateLock` + `generatorLock`, TSan-verified against concurrent reads/writes with 200,000 iterations probe, pre-warming lifecycle, and crash-free execution across iOS, iPadOS, Catalyst, and Simulator) and deterministic `MockHapticFeedbackService` spy.
   - *Strict Dependency Injection Precedence:* Designated initializer injection (`hasExplicitHapticService: true`) takes absolute precedence over SwiftUI Environment fallback, guaranteeing that explicitly disabled services (`isEnabled: false`) or mock configurations are preserved across view lifecycles (`onAppear`).
@@ -33,11 +33,11 @@ Version **0.6.0** (Build `20261104.140000`), Sprint 6 Released: Result Analytics
 - **Root Application Navigation:**
   - `AssessYourselfApp`: Dual-tab entry point connecting `AssessmentFlowView` as primary assessment experience alongside `ComponentShowcaseView`.
 - **Test Suite & Code Coverage:**
-  - **83 XCTest unit tests** passing with 100% success rate across SwiftPM (macOS) and native iOS Simulator.
-  - **6 XCUITest integration tests** passing with 100% success rate on iPhone 17 Simulator (`testCompleteFull24QuestionAssessmentFlowAndVerifyCompletion`, `testWelcomeScreenRemainsVisibleUntilStartTapped`, `testSequentialAssessmentFlowProgressionAndValidation`, `testSingleChoiceMutualExclusionInteraction`, `testMultipleChoiceBoundsAndToggleInteraction`, `testLikertSliderAndShortTextInputInteraction`).
-  - **89/89 total combined native tests passed** (`** TEST SUCCEEDED **`).
-  - **94.43% global line coverage on macOS** (`llvm-cov report`: 4,897 / 5,186 lines), with **$\ge 82.22\%$ on every individual source file** (all 24 production files meet $\ge 80\%$, with 100% on `ArchetypeCardView`, `DimensionScoreBarView`, `AssessmentResultView`, `TactileButtonStyle`, `HapticFeedbackService`).
-  - **95.70% line coverage on native iOS application sources**.
+  - **86 XCTest unit tests** passing with 100% success rate across SwiftPM (macOS) and native iOS Simulator.
+  - **6 XCUITest integration tests** passing with 100% success rate on iPhone 17 Simulator, including full 24-question traversal with permanent dimension bar assertions, exact percentage verification, and reset (`testCompleteFull24QuestionAssessmentFlowAndVerifyCompletion`).
+  - **92/92 total combined native tests passed** (`** TEST SUCCEEDED **`).
+  - **94.37% line coverage baseline on macOS** (`llvm-cov report`: 4,847 / 5,136 lines in 24 `src` production files), with **$\ge 82.22\%$ on every individual production source file** (minimum: `AssessmentRecord.swift` with 82.22%; `PedagogicalRecommendationsView.swift`: 99.70%; 100% on `ArchetypeCardView`, `DimensionScoreBarView`, `AssessmentResultView`, `TactileButtonStyle`, `HapticFeedbackService`).
+  - **96.46% line coverage on native iOS application target sources** (5,173 / 5,363 lines).
 
 ## Open and Build
 
@@ -99,6 +99,7 @@ docs/                      Sprint documentation and technical verification repor
 | **0.5.2** | TSan thread safety, Reduce Motion adaptation, host sizing fix | ✅ Completed |
 | **0.5.3** | Strict DI precedence, mock lifecycle verification, zero-fallback host sizing | ✅ Completed |
 | **0.6.0** | Result analytics, competency dashboard, archetype categorization | ✅ Completed |
+| **0.6.1** | Deterministic tie-breaker, transitive quantized comparator, dashboard UI test assertions | ✅ Completed |
 | **0.7.0** | Local persistence (`UserDefaultsHistoryStore`), history & progress trends | 🟡 Next |
 | **0.8.0** | Multi-device layout (iPad 640pt container), VoiceOver accessibility | ⚪ Planned |
 | **0.9.0** | In-app authoring, sandbox storage, JSON/URL import with rollback | ⚪ Planned |

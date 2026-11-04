@@ -157,7 +157,8 @@ final class ResultViewTests: XCTestCase {
             "agile": 50.0
         ]
 
-        // Verify across 50 iterations to prove mathematical determinism against Swift Dictionary random hash seeding
+        // Verify across 50 iterations that sorting within the test execution produces identical canonical order.
+        // True cross-process determinism is guaranteed by the canonical precedence contract in Tier 2.
         for _ in 0..<50 {
             let recView = PedagogicalRecommendationsView(dimensionScores: scores)
             let recommendations = recView.recommendations
@@ -171,6 +172,26 @@ final class ResultViewTests: XCTestCase {
             let top3 = Array(recommendations.prefix(3)).map(\.dimensionId)
             XCTAssertEqual(top3, ["architecture", "platform", "quality"])
         }
+    }
+
+    func testPedagogicalRecommendationsTransitiveStrictWeakOrdering() {
+        // Values with micro-differences that would trigger non-transitive epsilon cycles if compared via |a-b| < eps.
+        // With quantization, quantized equality forms a true mathematical equivalence relation, guaranteeing strict weak ordering.
+        let scores: [String: Double] = [
+            "architecture": 50.00015,
+            "platform": 50.000075,
+            "quality": 50.00000,
+            "agile": 60.0
+        ]
+        let recView = PedagogicalRecommendationsView(dimensionScores: scores)
+        let recommendations = recView.recommendations
+
+        XCTAssertEqual(recommendations.count, 4)
+        // Quantized to 0.001, all three are 50.000, so canonical precedence strictly governs without cycles:
+        XCTAssertEqual(recommendations[0].dimensionId, "architecture")
+        XCTAssertEqual(recommendations[1].dimensionId, "platform")
+        XCTAssertEqual(recommendations[2].dimensionId, "quality")
+        XCTAssertEqual(recommendations[3].dimensionId, "agile")
     }
 
     func testPedagogicalRecommendationsPreservesScoreAscendingPrecedence() {

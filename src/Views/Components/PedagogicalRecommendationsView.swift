@@ -5,8 +5,8 @@ public struct PedagogicalRecommendationsView: View {
     public let dimensionScores: [String: Double]
     public let theme: any AppThemeProtocol
 
-    /// Deterministic canonical dimension precedence for resolving ties when dimension scores are identical.
-    /// In accordance with the IU module curriculum: Architecture -> Platform -> Quality -> Agile.
+    /// Deterministic canonical dimension precedence convention for resolving ties when dimension scores are identical:
+    /// Architecture -> Platform -> Quality -> Agile.
     public static let canonicalDimensionPrecedence: [String: Int] = [
         "architecture": 0,
         "platform": 1,
@@ -35,13 +35,15 @@ public struct PedagogicalRecommendationsView: View {
         var items: [RecommendationItem] = []
 
         // Sort dimensions by score ascending (lowest score gets highest priority)
-        // Deterministic tie-breaking:
-        // Tier 1: Numerical score ascending (lowest score first)
-        // Tier 2: Canonical dimension curriculum precedence (architecture < platform < quality < agile)
+        // Deterministic tie-breaking with strict weak ordering (transitive total order):
+        // Tier 1: Quantized numerical score ascending (binned to 0.001 to guarantee mathematical transitivity and eliminate non-transitive epsilon cycles)
+        // Tier 2: Canonical dimension precedence convention (architecture < platform < quality < agile)
         // Tier 3: Lexicographical dimension ID fallback
         let sortedDimensions = dimensionScores.sorted { lhs, rhs in
-            if abs(lhs.value - rhs.value) > 0.0001 {
-                return lhs.value < rhs.value
+            let lhsQuantized = (lhs.value * 1000.0).rounded()
+            let rhsQuantized = (rhs.value * 1000.0).rounded()
+            if lhsQuantized != rhsQuantized {
+                return lhsQuantized < rhsQuantized
             }
             let lhsOrder = Self.canonicalDimensionPrecedence[lhs.key] ?? 99
             let rhsOrder = Self.canonicalDimensionPrecedence[rhs.key] ?? 99
@@ -57,7 +59,7 @@ public struct PedagogicalRecommendationsView: View {
             case "architecture":
                 items.append(
                     RecommendationItem(
-                        id: "rec-arch",
+                        id: "rec-\(dimId)",
                         dimensionId: dimId,
                         dimensionTitle: "Software Architecture",
                         iconSystemName: "building.columns.fill",
@@ -68,7 +70,7 @@ public struct PedagogicalRecommendationsView: View {
             case "platform":
                 items.append(
                     RecommendationItem(
-                        id: "rec-platform",
+                        id: "rec-\(dimId)",
                         dimensionId: dimId,
                         dimensionTitle: "Swift & Apple Platform",
                         iconSystemName: "apple.logo",
@@ -79,7 +81,7 @@ public struct PedagogicalRecommendationsView: View {
             case "quality":
                 items.append(
                     RecommendationItem(
-                        id: "rec-quality",
+                        id: "rec-\(dimId)",
                         dimensionId: dimId,
                         dimensionTitle: "Quality & Verification",
                         iconSystemName: "checkmark.seal.fill",
@@ -90,7 +92,7 @@ public struct PedagogicalRecommendationsView: View {
             case "agile":
                 items.append(
                     RecommendationItem(
-                        id: "rec-agile",
+                        id: "rec-\(dimId)",
                         dimensionId: dimId,
                         dimensionTitle: "Agile Engineering",
                         iconSystemName: "arrow.triangle.2.circlepath",
