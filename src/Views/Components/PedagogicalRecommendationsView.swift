@@ -5,6 +5,15 @@ public struct PedagogicalRecommendationsView: View {
     public let dimensionScores: [String: Double]
     public let theme: any AppThemeProtocol
 
+    /// Deterministic canonical dimension precedence for resolving ties when dimension scores are identical.
+    /// In accordance with the IU module curriculum: Architecture -> Platform -> Quality -> Agile.
+    public static let canonicalDimensionPrecedence: [String: Int] = [
+        "architecture": 0,
+        "platform": 1,
+        "quality": 2,
+        "agile": 3
+    ]
+
     public init(
         dimensionScores: [String: Double],
         theme: any AppThemeProtocol = AppTheme()
@@ -26,7 +35,21 @@ public struct PedagogicalRecommendationsView: View {
         var items: [RecommendationItem] = []
 
         // Sort dimensions by score ascending (lowest score gets highest priority)
-        let sortedDimensions = dimensionScores.sorted { $0.value < $1.value }
+        // Deterministic tie-breaking:
+        // Tier 1: Numerical score ascending (lowest score first)
+        // Tier 2: Canonical dimension curriculum precedence (architecture < platform < quality < agile)
+        // Tier 3: Lexicographical dimension ID fallback
+        let sortedDimensions = dimensionScores.sorted { lhs, rhs in
+            if abs(lhs.value - rhs.value) > 0.0001 {
+                return lhs.value < rhs.value
+            }
+            let lhsOrder = Self.canonicalDimensionPrecedence[lhs.key] ?? 99
+            let rhsOrder = Self.canonicalDimensionPrecedence[rhs.key] ?? 99
+            if lhsOrder != rhsOrder {
+                return lhsOrder < rhsOrder
+            }
+            return lhs.key < rhs.key
+        }
 
         for (dimId, score) in sortedDimensions {
             let priority = score < 60.0 ? "Hohe Priorität" : (score < 80.0 ? "Empfohlen" : "Vertiefung")
@@ -76,7 +99,17 @@ public struct PedagogicalRecommendationsView: View {
                     )
                 )
             default:
-                break
+                // Generic didactical fallback for dynamically imported custom dimensions (Sprint 9 limitation mitigation)
+                items.append(
+                    RecommendationItem(
+                        id: "rec-\(dimId)",
+                        dimensionId: dimId,
+                        dimensionTitle: dimId.capitalized,
+                        iconSystemName: "star.fill",
+                        recommendation: "Vertiefe die theoretischen und praktischen Grundlagen der Domäne \(dimId.capitalized) durch gezielte Übungseinheiten und Literaturstudium.",
+                        priority: priority
+                    )
+                )
             }
         }
 

@@ -140,7 +140,7 @@ public struct AssessmentResultView: View {
 
                 Spacer()
 
-                Text("4 Dimensionen")
+                Text("\(dimensionsToDisplay.count) Dimensionen")
                     .font(.caption)
                     .foregroundColor(theme.colors.textSecondary.color)
             }

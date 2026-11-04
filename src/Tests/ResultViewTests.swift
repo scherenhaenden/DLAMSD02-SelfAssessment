@@ -149,6 +149,58 @@ final class ResultViewTests: XCTestCase {
         XCTAssertGreaterThan(size.height, 0)
     }
 
+    func testPedagogicalRecommendationsDeterministicTieBreakerOnEqualScores() {
+        let scores: [String: Double] = [
+            "architecture": 50.0,
+            "platform": 50.0,
+            "quality": 50.0,
+            "agile": 50.0
+        ]
+
+        // Verify across 50 iterations to prove mathematical determinism against Swift Dictionary random hash seeding
+        for _ in 0..<50 {
+            let recView = PedagogicalRecommendationsView(dimensionScores: scores)
+            let recommendations = recView.recommendations
+
+            XCTAssertEqual(recommendations.count, 4)
+            XCTAssertEqual(recommendations[0].dimensionId, "architecture")
+            XCTAssertEqual(recommendations[1].dimensionId, "platform")
+            XCTAssertEqual(recommendations[2].dimensionId, "quality")
+            XCTAssertEqual(recommendations[3].dimensionId, "agile")
+
+            let top3 = Array(recommendations.prefix(3)).map(\.dimensionId)
+            XCTAssertEqual(top3, ["architecture", "platform", "quality"])
+        }
+    }
+
+    func testPedagogicalRecommendationsPreservesScoreAscendingPrecedence() {
+        // Agile has lower score than Architecture, so it must precede Architecture despite canonical order
+        let scores: [String: Double] = [
+            "architecture": 60.0,
+            "platform": 75.0,
+            "quality": 85.0,
+            "agile": 30.0
+        ]
+        let recView = PedagogicalRecommendationsView(dimensionScores: scores)
+        let recommendations = recView.recommendations
+
+        XCTAssertEqual(recommendations.first?.dimensionId, "agile")
+        XCTAssertEqual(recommendations.first?.priority, "Hohe Priorität")
+    }
+
+    func testPedagogicalRecommendationsCustomDimensionFallback() {
+        let scores: [String: Double] = [
+            "security": 40.0
+        ]
+        let recView = PedagogicalRecommendationsView(dimensionScores: scores)
+        let recommendations = recView.recommendations
+
+        XCTAssertEqual(recommendations.count, 1)
+        XCTAssertEqual(recommendations.first?.dimensionId, "security")
+        XCTAssertEqual(recommendations.first?.id, "rec-security")
+        XCTAssertEqual(recommendations.first?.priority, "Hohe Priorität")
+    }
+
     func testPedagogicalRecommendationsWithEmptyScores() {
         let recView = PedagogicalRecommendationsView(dimensionScores: [:])
         XCTAssertTrue(recView.recommendations.isEmpty)

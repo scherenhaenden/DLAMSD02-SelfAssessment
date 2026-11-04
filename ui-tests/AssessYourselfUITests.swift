@@ -188,6 +188,8 @@ final class AssessYourselfUITests: XCTestCase {
         let nextButton = app.buttons["flow.nextButton"]
         let submitButton = app.buttons["flow.submitButton"]
 
+        var observedPoints: [Int: Double] = [:]
+
         // Traverse all 24 questions
         for questionNumber in 1...24 {
             let qExpectation = expectation(for: NSPredicate(format: "label == 'Frage \(questionNumber) / 24'"), evaluatedWith: counterPill)
@@ -201,15 +203,27 @@ final class AssessYourselfUITests: XCTestCase {
 
             if scOptions.count > 0 {
                 scOptions.element(boundBy: 0).tap()
+                observedPoints[questionNumber] = 100.0
             } else if mcChips.count > 0 {
                 mcChips.element(boundBy: 0).tap()
+                observedPoints[questionNumber] = 25.0
             } else if slider.exists {
-                // Slider default is auto-synced
                 slider.adjust(toNormalizedSliderPosition: 0.75)
+                let observedBadge = app.staticTexts["likertSlider.scoreBadge"].label
+                let observedValue = Double(observedBadge.components(separatedBy: "/")[0].trimmingCharacters(in: .whitespaces)) ?? 4.0
+                observedPoints[questionNumber] = (observedValue - 1.0) / 4.0 * 100.0
             } else if editor.exists {
                 editor.tap()
                 let reflection = "Modulare Entkopplung mit Swift Protocols und sauberer Dependency Injection."
                 editor.typeText(reflection)
+                let observedText = editor.value as? String ?? reflection
+                let tokens = Set(observedText.lowercased().components(separatedBy: CharacterSet.alphanumerics.inverted).filter { !$0.isEmpty })
+                let keywords: Set<String> = [
+                    "swift", "swiftui", "protocol", "protokoll", "mvvm", "viewmodel", "combine",
+                    "test", "xctest", "coverage", "llvm", "invariant", "schichten", "architektur",
+                    "entkopplung", "git", "commit", "sprint", "refactoring", "boundary", "rollback"
+                ]
+                observedPoints[questionNumber] = 60.0 + 10.0 * Double(min(4, tokens.intersection(keywords).count))
             }
 
             if questionNumber < 24 {
@@ -229,6 +243,33 @@ final class AssessYourselfUITests: XCTestCase {
 
         let archetypeLabel = app.staticTexts["Diagnostizierter Archetyp"]
         XCTAssertTrue(archetypeLabel.waitForExistence(timeout: 5), "Archetype diagnosis label must be visible")
+
+        // Permanent integrated verification of the 4 dimension competency score bars
+        let dimensions = [
+            ("architecture", "Software Architecture & System Design"),
+            ("platform", "Swift & Apple Platform Engineering"),
+            ("quality", "Quality Assurance & Verification"),
+            ("agile", "Agile Practices & Collaboration")
+        ]
+        var expectedScores: [Double] = []
+        for (index, dimension) in dimensions.enumerated() {
+            let (id, title) = dimension
+            let points = ((index * 6 + 1)...(index * 6 + 6)).compactMap { observedPoints[$0] }
+            let expectedScore = points.isEmpty ? 0.0 : (points.reduce(0, +) / Double(points.count))
+            expectedScores.append(expectedScore)
+            let bar = app.descendants(matching: .any).matching(identifier: "dimensionBar.\(id)").firstMatch
+            XCTAssertTrue(bar.waitForExistence(timeout: 5), "Dimension score bar for \(id) must exist")
+            XCTAssertEqual(bar.label, "\(title): \(String(format: "%.0f", expectedScore)) Prozent")
+        }
+
+        let expectedOverall = expectedScores.isEmpty ? 0.0 : (expectedScores.reduce(0, +) / Double(expectedScores.count))
+        XCTAssertTrue(app.staticTexts[String(format: "%.1f %%", expectedOverall)].exists, "Overall score badge must match calculated average")
+
+        // Scroll down to recommendations and reset action
+        app.swipeUp()
+
+        let recommendations = app.descendants(matching: .any).matching(identifier: "pedagogicalRecommendations").firstMatch
+        XCTAssertTrue(recommendations.waitForExistence(timeout: 5), "Pedagogical recommendations section must exist")
 
         let resetButton = app.buttons["flow.resetButton"]
         if !resetButton.waitForExistence(timeout: 5) {
