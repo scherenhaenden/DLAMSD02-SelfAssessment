@@ -409,4 +409,21 @@ final class UIComponentTests: XCTestCase {
         let errorSize = renderInHost(errorFlow)
         XCTAssertGreaterThan(errorSize.height, 0)
     }
+
+    func testTactileButtonStyleExecution() {
+        let defaultStyle = TactileButtonStyle()
+        let customStyle = TactileButtonStyle(pressedScale: 0.95, pressedOpacity: 0.85)
+
+        let btn1 = Button("Default") {}.buttonStyle(defaultStyle)
+        let btn2 = Button("Custom") {}.buttonStyle(customStyle)
+        let btn3 = Button("Modifier") {}.tactileFeedback(scale: 0.96)
+
+        let s1 = renderInHost(btn1)
+        let s2 = renderInHost(btn2)
+        let s3 = renderInHost(btn3)
+
+        XCTAssertGreaterThan(s1.width, 0)
+        XCTAssertGreaterThan(s2.width, 0)
+        XCTAssertGreaterThan(s3.width, 0)
+    }
 }

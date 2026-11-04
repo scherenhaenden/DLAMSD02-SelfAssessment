@@ -4,7 +4,7 @@ Native SwiftUI self-assessment application developed for **DLAMSD02 Apple Mobile
 
 ## Current Development Stage
 
-Version **0.5.0** (Build `20261103.160000`), Sprint 5 Opening & Audit Remediation: Welcome Screen Retention, WCAG AAA Dark Contrast, 24-Question End-to-End XCUITest Suite.
+Version **0.5.1** (Build `20261104.090000`), Sprint 5 Completed: Multisensory Feedback Engine, Decoupled Haptics, Tactile Button Styling & 70-Test Suite.
 
 ### Implemented
 
@@ -18,16 +18,18 @@ Version **0.5.0** (Build `20261103.160000`), Sprint 5 Opening & Audit Remediatio
   - `AssessmentFlowView`: Full navigation screen with top progress bar (`ProgressView(value: viewModel.progress)`), question counter pill (`Frage N / 24`), dimension badge, and bottom sticky navigation toolbar.
   - Strict validation gating: "Zurück" disabled on question 1; "Weiter" and "Abschließen" strictly gated by `isCurrentAnswerValid`.
   - State persistence during traversal: Navigating back preserves previous user inputs without data loss.
-- **Sprint 5 Opening & Audit Resolutions (`v0.5.0`):**
-  - *Welcome Screen Retention (Idle State):* Welcome screen stays visible until the user explicitly taps "Assessment starten" (`flow.startButton`), removing premature auto-load `.onAppear`.
-  - *WCAG AAA Active Button Contrast in Dark Mode:* Introduced adaptive `onAccent: AdaptiveColorToken` (`#FFFFFF` in Light Mode, deep `#090D16` in Dark Mode). Verified via programmatic unit test asserting $\ge 7.0:1$ across all 4 dimension pastels and success feedback.
-  - *Full 24-Question End-to-End XCUITest Suite:* Integration test traversing questions 1 through 24 across all 4 interaction paradigms, verifying completion synthesis, diagnostic archetype display, sticky reset button, and clean restart.
+- **Sprint 5 Multisensory Feedback & Haptics Engine (`v0.5.1`):**
+  - *Decoupled Haptic Service (`HapticFeedbackServiceProtocol`):* Pure Swift protocol abstracting tactile feedback with `SystemHapticFeedbackService` (retained generators, `NSLock` thread safety, pre-warming lifecycle, and crash-free execution on iPad/macOS/Simulator) and deterministic `MockHapticFeedbackService` spy.
+  - *Interaction Haptic Triggers:* Selection ticks on choice options, multiple choice chips, and slider updates; light impact on navigation; medium impact on session reset; success/error notifications on assessment completion.
+  - *Tactile Button Feedback (`TactileButtonStyle`):* Native responsive touch compression (`scaleEffect(0.98)`) and subtle dimming (`0.92`) across all primary action buttons.
+  - *Fluid Animations:* Dynamic spring progress bar animations and smooth dimension transitions.
+  - *Audit Remediation Baseline:* Welcome screen retention, WCAG AAA adaptive dark mode contrast (`onAccent`), and full 24-question end-to-end traversal.
 - **Root Application Navigation:**
   - `AssessYourselfApp`: Dual-tab entry point connecting `AssessmentFlowView` as primary assessment experience alongside `ComponentShowcaseView`.
 - **Test Suite & Code Coverage:**
-  - **64 XCTest unit tests** passing with 100% success rate across SwiftPM.
+  - **70 XCTest unit tests** passing with 100% success rate across SwiftPM.
   - **6 XCUITest integration tests** passing with 100% success rate on iPhone 17 Simulator (`testCompleteFull24QuestionAssessmentFlowAndVerifyCompletion`, `testWelcomeScreenRemainsVisibleUntilStartTapped`, `testSequentialAssessmentFlowProgressionAndValidation`, `testSingleChoiceMutualExclusionInteraction`, `testMultipleChoiceBoundsAndToggleInteraction`, `testLikertSliderAndShortTextInputInteraction`).
-  - **92.64% global line coverage** (`llvm-cov report`: 3,375 / 3,643 lines), with **$\ge 82.22\%$ on every individual source file**.
+  - **92.86% global line coverage** (`llvm-cov report`: 3,501 / 3,770 lines), with **$\ge 82.22\%$ on every individual source file**.
 
 ## Open and Build
 
@@ -84,8 +86,9 @@ docs/                      Sprint documentation and technical verification repor
 | **0.3.3** | Placeholder visibility on iOS (`scrollContentBackground`), strict equality text assertions | ✅ Completed |
 | **0.4.0** | AssessmentViewModel, sequential navigation flow & question coordinator | ✅ Completed |
 | **0.4.1** | Flow hardening, boundary enforcement, slider auto-sync & full paradigm XCUITest | ✅ Completed |
-| **0.5.0** | Welcome retention, WCAG AAA dark contrast, 24-Q XCUITest suite, haptics & transitions prep | 🟡 In Progress / Audit Ready |
-| **0.6.0** | Result analytics, competency dashboard, archetype categorization | ⚪ Planned |
+| **0.5.0** | Welcome retention, WCAG AAA dark contrast, 24-Q XCUITest suite | ✅ Completed |
+| **0.5.1** | Multisensory feedback engine, decoupled haptics & tactile button styling | ✅ Completed |
+| **0.6.0** | Result analytics, competency dashboard, archetype categorization | 🟡 Next |
 | **0.7.0** | Local persistence (`UserDefaultsHistoryStore`), history & progress trends | ⚪ Planned |
 | **0.8.0** | Multi-device layout (iPad 640pt container), VoiceOver accessibility | ⚪ Planned |
 | **0.9.0** | In-app authoring, sandbox storage, JSON/URL import with rollback | ⚪ Planned |

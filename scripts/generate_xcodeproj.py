@@ -33,9 +33,11 @@ def main():
         "src/Views/Components/LikertSliderCard.swift",
         "src/Views/Components/ShortTextPromptCard.swift",
         "src/Views/Components/ChoiceOptionButton.swift",
+        "src/Views/Components/TactileButtonStyle.swift",
         "src/Views/Components/DesignTokens.swift",
         "src/Services/CatalogLoaderProtocol.swift",
         "src/Services/EvaluationEngineProtocol.swift",
+        "src/Services/HapticFeedbackService.swift",
     ]
 
     app_resources = [
@@ -48,6 +50,7 @@ def main():
         "src/Tests/EvaluationEngineTests.swift",
         "src/Tests/UIComponentTests.swift",
         "src/Tests/AssessmentViewModelTests.swift",
+        "src/Tests/HapticFeedbackServiceTests.swift",
     ]
 
     ui_test_sources = [
@@ -276,7 +279,7 @@ def main():
     pbx.append(f"\t\t{services_group_id} /* Services */ = {{")
     pbx.append("\t\t\tisa = PBXGroup;")
     pbx.append("\t\t\tchildren = (")
-    for f in ["CatalogLoaderProtocol.swift", "EvaluationEngineProtocol.swift"]:
+    for f in ["CatalogLoaderProtocol.swift", "EvaluationEngineProtocol.swift", "HapticFeedbackService.swift"]:
         pbx.append(f"\t\t\t\t{filerefs['src/Services/' + f]} /* {f} */,")
     pbx.append("\t\t\t);")
     pbx.append("\t\t\tpath = Services;")
@@ -296,7 +299,7 @@ def main():
     pbx.append(f"\t\t{components_group_id} /* Components */ = {{")
     pbx.append("\t\t\tisa = PBXGroup;")
     pbx.append("\t\t\tchildren = (")
-    for f in ["ChoiceOptionButton.swift", "Color+Adaptive.swift", "DesignTokens.swift", "LikertSliderCard.swift", "MultiSelectChipGrid.swift", "ShortTextPromptCard.swift"]:
+    for f in ["ChoiceOptionButton.swift", "Color+Adaptive.swift", "DesignTokens.swift", "LikertSliderCard.swift", "MultiSelectChipGrid.swift", "ShortTextPromptCard.swift", "TactileButtonStyle.swift"]:
         pbx.append(f"\t\t\t\t{filerefs['src/Views/Components/' + f]} /* {f} */,")
     pbx.append("\t\t\t);")
     pbx.append("\t\t\tpath = Components;")
@@ -325,7 +328,7 @@ def main():
     pbx.append(f"\t\t{tests_group_id} /* Tests */ = {{")
     pbx.append("\t\t\tisa = PBXGroup;")
     pbx.append("\t\t\tchildren = (")
-    for f in ["CatalogTests.swift", "ColorTokenTests.swift", "EvaluationEngineTests.swift", "UIComponentTests.swift", "AssessmentViewModelTests.swift"]:
+    for f in ["CatalogTests.swift", "ColorTokenTests.swift", "EvaluationEngineTests.swift", "UIComponentTests.swift", "AssessmentViewModelTests.swift", "HapticFeedbackServiceTests.swift"]:
         pbx.append(f"\t\t\t\t{filerefs['src/Tests/' + f]} /* {f} */,")
     pbx.append("\t\t\t);")
     pbx.append("\t\t\tpath = Tests;")
@@ -514,8 +517,8 @@ def main():
     pbx.append("/* End PBXTargetDependency section */")
 
     # Build Configuration Settings
-    build_version = "20261103.160000"
-    market_version = "0.5.0"
+    build_version = "20261104.090000"
+    market_version = "0.5.1"
 
     # XCBuildConfiguration
     pbx.append("\n/* Begin XCBuildConfiguration section */")

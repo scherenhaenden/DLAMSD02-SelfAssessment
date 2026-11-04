@@ -11,15 +11,18 @@ public final class AssessmentViewModel: AssessmentViewModelProtocol {
 
     private let catalogLoader: CatalogLoaderProtocol
     private let evaluationEngine: EvaluationEngineProtocol
+    private let hapticService: (any HapticFeedbackServiceProtocol)?
     private var sessionStartTime: Date?
 
     /// Injected initializer for testability and runtime flexibility.
     public init(
         catalogLoader: CatalogLoaderProtocol = CatalogLoader(),
-        evaluationEngine: EvaluationEngineProtocol = EvaluationEngine()
+        evaluationEngine: EvaluationEngineProtocol = EvaluationEngine(),
+        hapticService: (any HapticFeedbackServiceProtocol)? = SystemHapticFeedbackService()
     ) {
         self.catalogLoader = catalogLoader
         self.evaluationEngine = evaluationEngine
+        self.hapticService = hapticService
     }
 
     // MARK: - Computed Properties
@@ -117,6 +120,7 @@ public final class AssessmentViewModel: AssessmentViewModelProtocol {
 
     public func loadCatalog() {
         state = .loading
+        hapticService?.prepare()
         do {
             let loadedCatalog = try catalogLoader.loadBundledCatalog()
             self.catalog = loadedCatalog
@@ -127,11 +131,13 @@ public final class AssessmentViewModel: AssessmentViewModelProtocol {
             ensureDefaultAnswerIfNeeded()
         } catch {
             self.state = .error(error.localizedDescription)
+            hapticService?.triggerNotification(.error)
         }
     }
 
     public func recordSingleChoice(questionId: String, selectedOptionId: String) {
         answers[questionId] = .singleChoice(selectedOptionId: selectedOptionId)
+        hapticService?.triggerSelection()
     }
 
     public func toggleMultipleChoice(questionId: String, optionId: String) {
@@ -157,10 +163,12 @@ public final class AssessmentViewModel: AssessmentViewModelProtocol {
         } else {
             answers[questionId] = .multipleChoice(selectedOptionIds: current)
         }
+        hapticService?.triggerSelection()
     }
 
     public func recordSliderValue(questionId: String, value: Double) {
         answers[questionId] = .steppedSlider(value: value)
+        hapticService?.triggerSelection()
     }
 
     public func recordShortText(questionId: String, text: String) {
@@ -171,12 +179,14 @@ public final class AssessmentViewModel: AssessmentViewModelProtocol {
         guard canGoForward else { return }
         currentQuestionIndex += 1
         ensureDefaultAnswerIfNeeded()
+        hapticService?.triggerImpact(.light)
     }
 
     public func goBack() {
         guard canGoBack else { return }
         currentQuestionIndex -= 1
         ensureDefaultAnswerIfNeeded()
+        hapticService?.triggerImpact(.light)
     }
 
     private func ensureDefaultAnswerIfNeeded() {
@@ -246,8 +256,10 @@ public final class AssessmentViewModel: AssessmentViewModelProtocol {
                 durationSeconds: duration
             )
             state = .completed(record)
+            hapticService?.triggerNotification(.success)
         } catch {
             state = .error(error.localizedDescription)
+            hapticService?.triggerNotification(.error)
         }
     }
 
@@ -257,5 +269,6 @@ public final class AssessmentViewModel: AssessmentViewModelProtocol {
         currentQuestionIndex = 0
         answers.removeAll()
         sessionStartTime = nil
+        hapticService?.triggerImpact(.medium)
     }
 }

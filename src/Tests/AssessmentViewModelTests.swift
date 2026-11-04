@@ -475,4 +475,77 @@ final class AssessmentViewModelTests: XCTestCase {
             }
         }
     }
+
+    func testHapticFeedbackCoordinationAcrossAssessmentActions() {
+        let mockHaptic = MockHapticFeedbackService()
+        let vm = AssessmentViewModel(catalogLoader: loader, evaluationEngine: engine, hapticService: mockHaptic)
+
+        // 1. Load Catalog -> Prepare actuator
+        vm.loadCatalog()
+        XCTAssertEqual(mockHaptic.prepareCount, 1)
+
+        // 2. Selection haptics
+        guard let q1 = vm.currentQuestion, let opt1 = q1.options?.first?.id else {
+            XCTFail("Catalog must have question 1 with options")
+            return
+        }
+        vm.recordSingleChoice(questionId: q1.id, selectedOptionId: opt1)
+        XCTAssertEqual(mockHaptic.selectionCount, 1)
+
+        vm.toggleMultipleChoice(questionId: "arch-mc-01", optionId: "opt-1")
+        XCTAssertEqual(mockHaptic.selectionCount, 2)
+
+        vm.recordSliderValue(questionId: "arch-lk-01", value: 4.0)
+        XCTAssertEqual(mockHaptic.selectionCount, 3)
+
+        // 3. Navigation impacts
+        XCTAssertTrue(vm.canGoForward)
+        vm.advance()
+        XCTAssertEqual(mockHaptic.recordedImpacts.last, .light)
+
+        XCTAssertTrue(vm.canGoBack)
+        vm.goBack()
+        XCTAssertEqual(mockHaptic.recordedImpacts.last, .light)
+
+        // 4. Fill answers sequentially and submit -> Success notification
+        vm.reset()
+        mockHaptic.reset()
+        vm.loadCatalog()
+
+        if let questions = vm.catalog?.questions {
+            for (idx, q) in questions.enumerated() {
+                switch q.type {
+                case .singleChoice:
+                    let optId = q.options?.first?.id ?? "sc"
+                    vm.recordSingleChoice(questionId: q.id, selectedOptionId: optId)
+                case .multipleChoice:
+                    let count = q.minSelectCount ?? 1
+                    let ids = q.options?.prefix(count).map(\.id) ?? []
+                    for id in ids {
+                        vm.toggleMultipleChoice(questionId: q.id, optionId: id)
+                    }
+                case .likertSlider:
+                    let defaultVal = q.sliderDefault ?? q.sliderMin ?? 1.0
+                    vm.recordSliderValue(questionId: q.id, value: defaultVal)
+                case .shortText:
+                    vm.recordShortText(questionId: q.id, text: "Gültiger Entwurf mit sauberem Interface und TDD.")
+                }
+
+                if idx < questions.count - 1 {
+                    vm.advance()
+                }
+            }
+        }
+
+        vm.submitAssessment()
+        if case .completed = vm.state {
+            XCTAssertTrue(mockHaptic.recordedNotifications.contains(.success))
+        } else {
+            XCTFail("Assessment must complete, was \(vm.state)")
+        }
+
+        // 5. Reset -> Medium impact
+        vm.reset()
+        XCTAssertEqual(mockHaptic.recordedImpacts.last, .medium)
+    }
 }

@@ -105,6 +105,7 @@ public struct AssessmentFlowView<VM: AssessmentViewModelProtocol>: View {
                             .fill(theme.colorToken(forDimension: "architecture").color)
                     )
                 }
+                .buttonStyle(TactileButtonStyle())
                 .padding(.top, theme.spacing.sm)
                 .accessibilityIdentifier("flow.startButton")
             }
@@ -155,6 +156,10 @@ public struct AssessmentFlowView<VM: AssessmentViewModelProtocol>: View {
                 if let question = viewModel.currentQuestion {
                     AssessmentQuestionContainerView(viewModel: viewModel, question: question)
                         .id(question.id)
+                        .transition(.asymmetric(
+                            insertion: .opacity.combined(with: .scale(scale: 0.98)),
+                            removal: .opacity
+                        ))
                         .padding(theme.spacing.lg)
                 }
             }
@@ -183,6 +188,7 @@ public struct AssessmentFlowView<VM: AssessmentViewModelProtocol>: View {
                         )
                         .foregroundColor(theme.colorToken(forDimension: dimension.id).color)
                         .accessibilityIdentifier("flow.dimensionBadge")
+                        .animation(.easeInOut(duration: 0.25), value: dimension.id)
                 }
 
                 Spacer()
@@ -196,6 +202,7 @@ public struct AssessmentFlowView<VM: AssessmentViewModelProtocol>: View {
 
             ProgressView(value: viewModel.progress)
                 .tint(currentDimensionColor)
+                .animation(.spring(response: 0.35, dampingFraction: 0.75), value: viewModel.progress)
                 .accessibilityIdentifier("flow.progressBar")
                 .accessibilityLabel("Fortschritt: \(Int(viewModel.progress * 100)) Prozent")
         }
@@ -222,6 +229,7 @@ public struct AssessmentFlowView<VM: AssessmentViewModelProtocol>: View {
                         .stroke(viewModel.canGoBack ? theme.colors.textSecondary.color.opacity(0.4) : theme.colors.textSecondary.color.opacity(0.15), lineWidth: 1)
                 )
             }
+            .buttonStyle(TactileButtonStyle())
             .disabled(!viewModel.canGoBack)
             .accessibilityIdentifier("flow.backButton")
 
@@ -244,6 +252,7 @@ public struct AssessmentFlowView<VM: AssessmentViewModelProtocol>: View {
                             .fill(viewModel.isCurrentAnswerValid ? theme.colors.successFeedback.color : theme.colors.textSecondary.color.opacity(0.18))
                     )
                 }
+                .buttonStyle(TactileButtonStyle())
                 .disabled(!viewModel.isCurrentAnswerValid)
                 .accessibilityIdentifier("flow.submitButton")
             } else {
@@ -264,6 +273,7 @@ public struct AssessmentFlowView<VM: AssessmentViewModelProtocol>: View {
                             .fill(viewModel.canGoForward ? currentDimensionColor : theme.colors.textSecondary.color.opacity(0.18))
                     )
                 }
+                .buttonStyle(TactileButtonStyle())
                 .disabled(!viewModel.canGoForward)
                 .accessibilityIdentifier("flow.nextButton")
             }
@@ -346,6 +356,7 @@ public struct AssessmentFlowView<VM: AssessmentViewModelProtocol>: View {
                             .fill(theme.colorToken(forDimension: "architecture").color)
                     )
                 }
+                .buttonStyle(TactileButtonStyle())
                 .accessibilityIdentifier("flow.resetButton")
             }
             .padding(theme.spacing.md)
@@ -378,6 +389,7 @@ public struct AssessmentFlowView<VM: AssessmentViewModelProtocol>: View {
                     .background(theme.colorToken(forDimension: "architecture").color)
                     .cornerRadius(theme.cornerRadius.medium)
             }
+            .buttonStyle(TactileButtonStyle())
             .accessibilityIdentifier("flow.retryButton")
         }
         .padding(theme.spacing.lg)

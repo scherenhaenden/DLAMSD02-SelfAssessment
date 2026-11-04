@@ -24,15 +24,18 @@
 		7CCCB6231F88DAFD99807CA3 /* src/Views/Components/LikertSliderCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5CFC48CD1B8DABD906FF2436 /* LikertSliderCard.swift */; };
 		E5C0819354D714E65D4B2B1F /* src/Views/Components/ShortTextPromptCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 446B497F0129054C8A9E8F12 /* ShortTextPromptCard.swift */; };
 		7D8A4F3C67D23A185130E5EB /* src/Views/Components/ChoiceOptionButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECE1E27875EAF34E3B8EB1DD /* ChoiceOptionButton.swift */; };
+		DFB5590CC37CBA7D33BE0765 /* src/Views/Components/TactileButtonStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC9A9026110BCC024B9177C8 /* TactileButtonStyle.swift */; };
 		7FD5FC412EB2542A8FCD859D /* src/Views/Components/DesignTokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = 690F3DB44AB0C0F50A01FD3E /* DesignTokens.swift */; };
 		222CB8890DF3B0F32E5CD3FC /* src/Services/CatalogLoaderProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5A6AEA33DFE64BEBF9F8441 /* CatalogLoaderProtocol.swift */; };
 		D9B19BE79390701EF13A7E63 /* src/Services/EvaluationEngineProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA97F44FF9F337D00E9C04CF /* EvaluationEngineProtocol.swift */; };
+		BBE85B0DC745DB672A6D4713 /* src/Services/HapticFeedbackService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F8DE207FAD9E7E10493EF7C /* HapticFeedbackService.swift */; };
 		875D227688E97C4D3C56207C /* src/Resources/assessment_catalog.json in Resources */ = {isa = PBXBuildFile; fileRef = 526EDCEF77313475F83CEC84 /* assessment_catalog.json */; };
 		AB51B424884DD599880A07F0 /* src/Tests/CatalogTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABA66942F2FF49194C11B247 /* CatalogTests.swift */; };
 		C926AC62627F9F44DA75B50D /* src/Tests/ColorTokenTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4168061FD3F8A4D947A3F03E /* ColorTokenTests.swift */; };
 		4254C1A53B39E80FF187349A /* src/Tests/EvaluationEngineTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63FF6209B98BA0D253CA8DAF /* EvaluationEngineTests.swift */; };
 		B2D268D387D55DBC5E7A64C5 /* src/Tests/UIComponentTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37D757E5F24C6448E71DCF46 /* UIComponentTests.swift */; };
 		6E891F026F912FB19EAF3498 /* src/Tests/AssessmentViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE61F0C576718998694EF0DD /* AssessmentViewModelTests.swift */; };
+		FB699B84541793EDE0E9BE8D /* src/Tests/HapticFeedbackServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43D817473367C39621E4D3BE /* HapticFeedbackServiceTests.swift */; };
 		655482FA3B2CCB96D880CA76 /* ui-tests/AssessYourselfUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E002823799183206956B1DB /* AssessYourselfUITests.swift */; };
 /* End PBXBuildFile section */
 
@@ -74,15 +77,18 @@
 		5CFC48CD1B8DABD906FF2436 /* LikertSliderCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "LikertSliderCard.swift"; sourceTree = "<group>"; };
 		446B497F0129054C8A9E8F12 /* ShortTextPromptCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ShortTextPromptCard.swift"; sourceTree = "<group>"; };
 		ECE1E27875EAF34E3B8EB1DD /* ChoiceOptionButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ChoiceOptionButton.swift"; sourceTree = "<group>"; };
+		CC9A9026110BCC024B9177C8 /* TactileButtonStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TactileButtonStyle.swift"; sourceTree = "<group>"; };
 		690F3DB44AB0C0F50A01FD3E /* DesignTokens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DesignTokens.swift"; sourceTree = "<group>"; };
 		D5A6AEA33DFE64BEBF9F8441 /* CatalogLoaderProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CatalogLoaderProtocol.swift"; sourceTree = "<group>"; };
 		EA97F44FF9F337D00E9C04CF /* EvaluationEngineProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "EvaluationEngineProtocol.swift"; sourceTree = "<group>"; };
+		2F8DE207FAD9E7E10493EF7C /* HapticFeedbackService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "HapticFeedbackService.swift"; sourceTree = "<group>"; };
 		526EDCEF77313475F83CEC84 /* assessment_catalog.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "assessment_catalog.json"; sourceTree = "<group>"; };
 		ABA66942F2FF49194C11B247 /* CatalogTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CatalogTests.swift"; sourceTree = "<group>"; };
 		4168061FD3F8A4D947A3F03E /* ColorTokenTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ColorTokenTests.swift"; sourceTree = "<group>"; };
 		63FF6209B98BA0D253CA8DAF /* EvaluationEngineTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "EvaluationEngineTests.swift"; sourceTree = "<group>"; };
 		37D757E5F24C6448E71DCF46 /* UIComponentTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIComponentTests.swift"; sourceTree = "<group>"; };
 		BE61F0C576718998694EF0DD /* AssessmentViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AssessmentViewModelTests.swift"; sourceTree = "<group>"; };
+		43D817473367C39621E4D3BE /* HapticFeedbackServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "HapticFeedbackServiceTests.swift"; sourceTree = "<group>"; };
 		0E002823799183206956B1DB /* AssessYourselfUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AssessYourselfUITests.swift"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -187,6 +193,7 @@
 			children = (
 				D5A6AEA33DFE64BEBF9F8441 /* CatalogLoaderProtocol.swift */,
 				EA97F44FF9F337D00E9C04CF /* EvaluationEngineProtocol.swift */,
+				2F8DE207FAD9E7E10493EF7C /* HapticFeedbackService.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -209,6 +216,7 @@
 				5CFC48CD1B8DABD906FF2436 /* LikertSliderCard.swift */,
 				04210B4F694358BD2F726605 /* MultiSelectChipGrid.swift */,
 				446B497F0129054C8A9E8F12 /* ShortTextPromptCard.swift */,
+				CC9A9026110BCC024B9177C8 /* TactileButtonStyle.swift */,
 			);
 			path = Components;
 			sourceTree = "<group>";
@@ -239,6 +247,7 @@
 				63FF6209B98BA0D253CA8DAF /* EvaluationEngineTests.swift */,
 				37D757E5F24C6448E71DCF46 /* UIComponentTests.swift */,
 				BE61F0C576718998694EF0DD /* AssessmentViewModelTests.swift */,
+				43D817473367C39621E4D3BE /* HapticFeedbackServiceTests.swift */,
 			);
 			path = Tests;
 			sourceTree = "<group>";
@@ -389,9 +398,11 @@
 				7CCCB6231F88DAFD99807CA3 /* src/Views/Components/LikertSliderCard.swift in Sources */,
 				E5C0819354D714E65D4B2B1F /* src/Views/Components/ShortTextPromptCard.swift in Sources */,
 				7D8A4F3C67D23A185130E5EB /* src/Views/Components/ChoiceOptionButton.swift in Sources */,
+				DFB5590CC37CBA7D33BE0765 /* src/Views/Components/TactileButtonStyle.swift in Sources */,
 				7FD5FC412EB2542A8FCD859D /* src/Views/Components/DesignTokens.swift in Sources */,
 				222CB8890DF3B0F32E5CD3FC /* src/Services/CatalogLoaderProtocol.swift in Sources */,
 				D9B19BE79390701EF13A7E63 /* src/Services/EvaluationEngineProtocol.swift in Sources */,
+				BBE85B0DC745DB672A6D4713 /* src/Services/HapticFeedbackService.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -404,6 +415,7 @@
 				4254C1A53B39E80FF187349A /* src/Tests/EvaluationEngineTests.swift in Sources */,
 				B2D268D387D55DBC5E7A64C5 /* src/Tests/UIComponentTests.swift in Sources */,
 				6E891F026F912FB19EAF3498 /* src/Tests/AssessmentViewModelTests.swift in Sources */,
+				FB699B84541793EDE0E9BE8D /* src/Tests/HapticFeedbackServiceTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -478,7 +490,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 20261103.160000;
+				CURRENT_PROJECT_VERSION = 20261104.090000;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -489,7 +501,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 0.5.0;
+				MARKETING_VERSION = 0.5.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.scherenhaenden.AssessYourself;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PRODUCT_MODULE_NAME = AssessYourselfCore;
@@ -502,7 +514,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 20261103.160000;
+				CURRENT_PROJECT_VERSION = 20261104.090000;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -513,7 +525,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 0.5.0;
+				MARKETING_VERSION = 0.5.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.scherenhaenden.AssessYourself;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PRODUCT_MODULE_NAME = AssessYourselfCore;
@@ -526,10 +538,10 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 20261103.160000;
+				CURRENT_PROJECT_VERSION = 20261104.090000;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				MARKETING_VERSION = 0.5.0;
+				MARKETING_VERSION = 0.5.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.scherenhaenden.AssessYourselfTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
@@ -543,10 +555,10 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 20261103.160000;
+				CURRENT_PROJECT_VERSION = 20261104.090000;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				MARKETING_VERSION = 0.5.0;
+				MARKETING_VERSION = 0.5.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.scherenhaenden.AssessYourselfTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
@@ -560,10 +572,10 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 20261103.160000;
+				CURRENT_PROJECT_VERSION = 20261104.090000;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				MARKETING_VERSION = 0.5.0;
+				MARKETING_VERSION = 0.5.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.scherenhaenden.AssessYourselfUITests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
@@ -576,10 +588,10 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 20261103.160000;
+				CURRENT_PROJECT_VERSION = 20261104.090000;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				MARKETING_VERSION = 0.5.0;
+				MARKETING_VERSION = 0.5.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.scherenhaenden.AssessYourselfUITests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
