@@ -5,6 +5,8 @@ import SwiftUI
 public struct AssessmentFlowView<VM: AssessmentViewModelProtocol>: View {
     @ObservedObject public var viewModel: VM
     @Environment(\.appTheme) private var theme
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.hapticFeedback) private var envHapticService
 
     public init(viewModel: VM) {
         self.viewModel = viewModel
@@ -37,6 +39,11 @@ public struct AssessmentFlowView<VM: AssessmentViewModelProtocol>: View {
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif
+            .onAppear {
+                if viewModel.hapticService is SystemHapticFeedbackService {
+                    viewModel.hapticService = envHapticService
+                }
+            }
         }
     }
 
@@ -156,7 +163,7 @@ public struct AssessmentFlowView<VM: AssessmentViewModelProtocol>: View {
                 if let question = viewModel.currentQuestion {
                     AssessmentQuestionContainerView(viewModel: viewModel, question: question)
                         .id(question.id)
-                        .transition(.asymmetric(
+                        .transition(reduceMotion ? .opacity : .asymmetric(
                             insertion: .opacity.combined(with: .scale(scale: 0.98)),
                             removal: .opacity
                         ))
@@ -170,6 +177,16 @@ public struct AssessmentFlowView<VM: AssessmentViewModelProtocol>: View {
             bottomNavigationToolbar
                 .padding(theme.spacing.md)
                 .background(theme.colors.surfaceCard.color)
+        }
+    }
+
+    private func performMotionAwareAction(_ action: () -> Void) {
+        if reduceMotion {
+            action()
+        } else {
+            withAnimation(.easeInOut(duration: 0.2)) {
+                action()
+            }
         }
     }
 
@@ -188,7 +205,7 @@ public struct AssessmentFlowView<VM: AssessmentViewModelProtocol>: View {
                         )
                         .foregroundColor(theme.colorToken(forDimension: dimension.id).color)
                         .accessibilityIdentifier("flow.dimensionBadge")
-                        .animation(.easeInOut(duration: 0.25), value: dimension.id)
+                        .animation(reduceMotion ? nil : .easeInOut(duration: 0.25), value: dimension.id)
                 }
 
                 Spacer()
@@ -202,7 +219,7 @@ public struct AssessmentFlowView<VM: AssessmentViewModelProtocol>: View {
 
             ProgressView(value: viewModel.progress)
                 .tint(currentDimensionColor)
-                .animation(.spring(response: 0.35, dampingFraction: 0.75), value: viewModel.progress)
+                .animation(reduceMotion ? nil : .spring(response: 0.35, dampingFraction: 0.75), value: viewModel.progress)
                 .accessibilityIdentifier("flow.progressBar")
                 .accessibilityLabel("Fortschritt: \(Int(viewModel.progress * 100)) Prozent")
         }
@@ -212,7 +229,7 @@ public struct AssessmentFlowView<VM: AssessmentViewModelProtocol>: View {
         HStack(spacing: theme.spacing.md) {
             // Back Button
             Button {
-                withAnimation(.easeInOut(duration: 0.2)) {
+                performMotionAwareAction {
                     viewModel.goBack()
                 }
             } label: {
@@ -236,7 +253,7 @@ public struct AssessmentFlowView<VM: AssessmentViewModelProtocol>: View {
             // Next / Finish Button
             if viewModel.isLastQuestion {
                 Button {
-                    withAnimation(.easeInOut(duration: 0.2)) {
+                    performMotionAwareAction {
                         viewModel.submitAssessment()
                     }
                 } label: {
@@ -257,7 +274,7 @@ public struct AssessmentFlowView<VM: AssessmentViewModelProtocol>: View {
                 .accessibilityIdentifier("flow.submitButton")
             } else {
                 Button {
-                    withAnimation(.easeInOut(duration: 0.2)) {
+                    performMotionAwareAction {
                         viewModel.advance()
                     }
                 } label: {

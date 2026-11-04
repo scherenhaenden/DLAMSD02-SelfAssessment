@@ -11,7 +11,7 @@ public final class AssessmentViewModel: AssessmentViewModelProtocol {
 
     private let catalogLoader: CatalogLoaderProtocol
     private let evaluationEngine: EvaluationEngineProtocol
-    private let hapticService: (any HapticFeedbackServiceProtocol)?
+    public var hapticService: (any HapticFeedbackServiceProtocol)?
     private var sessionStartTime: Date?
 
     /// Injected initializer for testability and runtime flexibility.

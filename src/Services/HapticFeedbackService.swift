@@ -45,37 +45,61 @@ public protocol HapticFeedbackServiceProtocol: AnyObject, Sendable {
 /// Production haptic feedback service managing retained generator instances and thread-safe dispatch.
 /// Safely falls back on platforms lacking tactile hardware (macOS, iPadOS, Catalyst, Simulator).
 public final class SystemHapticFeedbackService: HapticFeedbackServiceProtocol, @unchecked Sendable {
-    public var isEnabled: Bool = true
+    private let stateLock = NSLock()
+    private var _isEnabled: Bool
+
+    public var isEnabled: Bool {
+        get {
+            stateLock.lock()
+            defer { stateLock.unlock() }
+            return _isEnabled
+        }
+        set {
+            stateLock.lock()
+            defer { stateLock.unlock() }
+            _isEnabled = newValue
+        }
+    }
 
     #if os(iOS) && !targetEnvironment(macCatalyst)
     private var selectionGenerator: UISelectionFeedbackGenerator?
     private var impactGenerators: [HapticImpactIntensity: UIImpactFeedbackGenerator] = [:]
     private var notificationGenerator: UINotificationFeedbackGenerator?
-    private let lock = NSLock()
+    private let generatorLock = NSLock()
     #endif
 
     public init(isEnabled: Bool = true) {
-        self.isEnabled = isEnabled
+        self._isEnabled = isEnabled
     }
 
     public func prepare() {
         guard isEnabled else { return }
         #if os(iOS) && !targetEnvironment(macCatalyst)
         DispatchQueue.main.async { [weak self] in
-            guard let self = self else { return }
-            self.lock.lock()
+            guard let self = self, self.isEnabled else { return }
+            self.generatorLock.lock()
             if self.selectionGenerator == nil {
                 self.selectionGenerator = UISelectionFeedbackGenerator()
             }
             if self.notificationGenerator == nil {
                 self.notificationGenerator = UINotificationFeedbackGenerator()
             }
+            if self.impactGenerators[.light] == nil {
+                self.impactGenerators[.light] = UIImpactFeedbackGenerator(style: .light)
+            }
+            if self.impactGenerators[.medium] == nil {
+                self.impactGenerators[.medium] = UIImpactFeedbackGenerator(style: .medium)
+            }
             let selGen = self.selectionGenerator
             let notifGen = self.notificationGenerator
-            self.lock.unlock()
+            let lightGen = self.impactGenerators[.light]
+            let medGen = self.impactGenerators[.medium]
+            self.generatorLock.unlock()
 
             selGen?.prepare()
             notifGen?.prepare()
+            lightGen?.prepare()
+            medGen?.prepare()
         }
         #endif
     }
@@ -84,13 +108,13 @@ public final class SystemHapticFeedbackService: HapticFeedbackServiceProtocol, @
         guard isEnabled else { return }
         #if os(iOS) && !targetEnvironment(macCatalyst)
         DispatchQueue.main.async { [weak self] in
-            guard let self = self else { return }
-            self.lock.lock()
+            guard let self = self, self.isEnabled else { return }
+            self.generatorLock.lock()
             if self.selectionGenerator == nil {
                 self.selectionGenerator = UISelectionFeedbackGenerator()
             }
             let generator = self.selectionGenerator
-            self.lock.unlock()
+            self.generatorLock.unlock()
 
             generator?.selectionChanged()
             generator?.prepare()
@@ -102,8 +126,8 @@ public final class SystemHapticFeedbackService: HapticFeedbackServiceProtocol, @
         guard isEnabled else { return }
         #if os(iOS) && !targetEnvironment(macCatalyst)
         DispatchQueue.main.async { [weak self] in
-            guard let self = self else { return }
-            self.lock.lock()
+            guard let self = self, self.isEnabled else { return }
+            self.generatorLock.lock()
             let generator: UIImpactFeedbackGenerator
             if let existing = self.impactGenerators[intensity] {
                 generator = existing
@@ -119,7 +143,7 @@ public final class SystemHapticFeedbackService: HapticFeedbackServiceProtocol, @
                 generator = UIImpactFeedbackGenerator(style: style)
                 self.impactGenerators[intensity] = generator
             }
-            self.lock.unlock()
+            self.generatorLock.unlock()
 
             generator.impactOccurred()
             generator.prepare()
@@ -131,13 +155,13 @@ public final class SystemHapticFeedbackService: HapticFeedbackServiceProtocol, @
         guard isEnabled else { return }
         #if os(iOS) && !targetEnvironment(macCatalyst)
         DispatchQueue.main.async { [weak self] in
-            guard let self = self else { return }
-            self.lock.lock()
+            guard let self = self, self.isEnabled else { return }
+            self.generatorLock.lock()
             if self.notificationGenerator == nil {
                 self.notificationGenerator = UINotificationFeedbackGenerator()
             }
             let generator = self.notificationGenerator
-            self.lock.unlock()
+            self.generatorLock.unlock()
 
             let feedbackType: UINotificationFeedbackGenerator.FeedbackType
             switch type {

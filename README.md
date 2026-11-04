@@ -4,13 +4,13 @@ Native SwiftUI self-assessment application developed for **DLAMSD02 Apple Mobile
 
 ## Current Development Stage
 
-Version **0.5.1** (Build `20261104.090000`), Sprint 5 Completed: Multisensory Feedback Engine, Decoupled Haptics, Tactile Button Styling & 70-Test Suite.
+Version **0.5.2** (Build `20261104.113000`), Sprint 5 Patch Released: Thread-Safe Multisensory Feedback Engine (TSan-verified), Reduce Motion Adaptation, UIKit View Sizing Fix & 79-Test Suite (73 Unit + 6 XCUITest).
 
 ### Implemented
 
 - **Protocol-Oriented State & ViewModel Architecture (POP / MVVM):**
   - Zero static singletons: Pure dependency injection via initializers and SwiftUI Environment.
-  - `AssessmentViewModelProtocol`: Contract defining session state machine, navigation affordances, answer recording, and evaluation coordination.
+  - `AssessmentViewModelProtocol`: Contract defining session state machine, navigation affordances, answer recording, evaluation coordination, and `hapticService`.
   - `AssessmentViewModel`: `@ObservableObject` managing 24 questions across 4 dimensions (*Architecture*, *Platform*, *Quality*, *Agile*), maintaining `[String: AnswerPayload]`, duration tracking, and error handling.
   - Deterministic state machine: `AssessmentSessionState` (`.idle`, `.loading`, `.inProgress`, `.completed(AssessmentRecord)`, `.error(String)`).
 - **Sequential Assessment Flow & Validation Gating:**
@@ -18,18 +18,20 @@ Version **0.5.1** (Build `20261104.090000`), Sprint 5 Completed: Multisensory Fe
   - `AssessmentFlowView`: Full navigation screen with top progress bar (`ProgressView(value: viewModel.progress)`), question counter pill (`Frage N / 24`), dimension badge, and bottom sticky navigation toolbar.
   - Strict validation gating: "Zurück" disabled on question 1; "Weiter" and "Abschließen" strictly gated by `isCurrentAnswerValid`.
   - State persistence during traversal: Navigating back preserves previous user inputs without data loss.
-- **Sprint 5 Multisensory Feedback & Haptics Engine (`v0.5.1`):**
-  - *Decoupled Haptic Service (`HapticFeedbackServiceProtocol`):* Pure Swift protocol abstracting tactile feedback with `SystemHapticFeedbackService` (retained generators, `NSLock` thread safety, pre-warming lifecycle, and crash-free execution on iPad/macOS/Simulator) and deterministic `MockHapticFeedbackService` spy.
+- **Sprint 5 Multisensory Feedback, Haptics & Accessibility (`v0.5.2`):**
+  - *Decoupled Haptic Service (`HapticFeedbackServiceProtocol`):* Pure Swift protocol abstracting tactile feedback with `SystemHapticFeedbackService` (retained generators, thread-safe `stateLock` + `generatorLock`, TSan-verified against concurrent reads/writes with 200,000 iterations probe, pre-warming lifecycle, and crash-free execution across iOS, iPadOS, Catalyst, and Simulator) and deterministic `MockHapticFeedbackService` spy.
   - *Interaction Haptic Triggers:* Selection ticks on choice options, multiple choice chips, and slider updates; light impact on navigation; medium impact on session reset; success/error notifications on assessment completion.
+  - *Adaptive Reduce Motion Support:* `TactileButtonStyle` suppresses decorative scaling (`scaleEffect(1.0)`) and disables animations when `accessibilityReduceMotion` is active, maintaining subtle opacity change for confirmation. `AssessmentFlowView` suppresses spring/ease motion and transitions using standard opacity.
   - *Tactile Button Feedback (`TactileButtonStyle`):* Native responsive touch compression (`scaleEffect(0.98)`) and subtle dimming (`0.92`) across all primary action buttons.
-  - *Fluid Animations:* Dynamic spring progress bar animations and smooth dimension transitions.
-  - *Audit Remediation Baseline:* Welcome screen retention, WCAG AAA adaptive dark mode contrast (`onAccent`), and full 24-question end-to-end traversal.
+  - *Audit Remediation Baseline:* Welcome screen retention until explicit start tap, WCAG AAA adaptive dark mode contrast (`onAccent`), and full 24-question end-to-end traversal.
 - **Root Application Navigation:**
   - `AssessYourselfApp`: Dual-tab entry point connecting `AssessmentFlowView` as primary assessment experience alongside `ComponentShowcaseView`.
 - **Test Suite & Code Coverage:**
-  - **70 XCTest unit tests** passing with 100% success rate across SwiftPM.
+  - **73 XCTest unit tests** passing with 100% success rate across SwiftPM (macOS) and native iOS Simulator.
   - **6 XCUITest integration tests** passing with 100% success rate on iPhone 17 Simulator (`testCompleteFull24QuestionAssessmentFlowAndVerifyCompletion`, `testWelcomeScreenRemainsVisibleUntilStartTapped`, `testSequentialAssessmentFlowProgressionAndValidation`, `testSingleChoiceMutualExclusionInteraction`, `testMultipleChoiceBoundsAndToggleInteraction`, `testLikertSliderAndShortTextInputInteraction`).
-  - **92.86% global line coverage** (`llvm-cov report`: 3,501 / 3,770 lines), with **$\ge 82.22\%$ on every individual source file**.
+  - **79/79 total combined native tests passed** (`** TEST SUCCEEDED **`).
+  - **93.09% global line coverage on macOS** (`llvm-cov report`: 3,877 / 4,165 lines), with **$\ge 82.22\%$ on every individual source file** (all 20 production files meet $\ge 80\%$).
+  - **95.89% line coverage on native iOS application sources**.
 
 ## Open and Build
 

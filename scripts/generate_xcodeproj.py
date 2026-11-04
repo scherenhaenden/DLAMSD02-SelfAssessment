@@ -517,8 +517,8 @@ def main():
     pbx.append("/* End PBXTargetDependency section */")
 
     # Build Configuration Settings
-    build_version = "20261104.090000"
-    market_version = "0.5.1"
+    build_version = "20261104.113000"
+    market_version = "0.5.2"
 
     # XCBuildConfiguration
     pbx.append("\n/* Begin XCBuildConfiguration section */")

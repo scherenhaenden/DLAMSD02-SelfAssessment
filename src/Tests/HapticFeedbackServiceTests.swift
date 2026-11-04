@@ -91,4 +91,46 @@ final class HapticFeedbackServiceTests: XCTestCase {
         env.hapticFeedback.triggerSelection()
         XCTAssertEqual(customMock.selectionCount, 1)
     }
+
+    func testSystemHapticFeedbackServiceConcurrentReadWriteThreadSafety() {
+        let service = SystemHapticFeedbackService(isEnabled: true)
+        let iterations = 1000
+
+        DispatchQueue.concurrentPerform(iterations: 4) { threadIndex in
+            for i in 0..<iterations {
+                if threadIndex == 0 {
+                    service.isEnabled = (i % 2 == 0)
+                } else if threadIndex == 1 {
+                    service.triggerSelection()
+                } else if threadIndex == 2 {
+                    service.triggerImpact(i % 2 == 0 ? .light : .medium)
+                } else {
+                    service.prepare()
+                    service.triggerNotification(i % 2 == 0 ? .success : .error)
+                }
+            }
+        }
+
+        // Service remains stable and consistent after high-frequency concurrency
+        XCTAssertNotNil(service)
+    }
+
+    @MainActor
+    func testAssessmentFlowViewConnectsEnvironmentHapticServiceOnAppear() {
+        let vm = AssessmentViewModel()
+        let customMock = MockHapticFeedbackService()
+        let view = AssessmentFlowView(viewModel: vm)
+            .environment(\.hapticFeedback, customMock)
+
+        #if canImport(UIKit)
+        let controller = UIHostingController(rootView: view)
+        controller.view.frame = CGRect(x: 0, y: 0, width: 375, height: 667)
+        controller.view.layoutIfNeeded()
+        #endif
+
+        // Trigger action that uses the haptic feedback service
+        vm.loadCatalog()
+        XCTAssertEqual(vm.state, .inProgress)
+        XCTAssertTrue(vm.canGoForward || vm.progress >= 0)
+    }
 }

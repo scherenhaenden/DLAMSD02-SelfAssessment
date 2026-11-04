@@ -6,7 +6,7 @@
 > **Release-Tag:** `v0.5.0`  
 > **Build-Version:** `20261103.160000` (`CURRENT_PROJECT_VERSION = 20261103.160000`, `MARKETING_VERSION = 0.5.0`)  
 > **Datum:** 3. November 2026  
-> **Referenz-Commits:** `1635338` (v0.4.1 Baseline) $\to$ `v0.5.0`
+> **Referenz-Commits:** `ce0b793` (v0.4.1 Baseline) $\to$ `v0.5.0`
 
 ---
 
@@ -46,11 +46,11 @@ Alle drei Anforderungen wurden in **Version 0.5.0** vollständig implementiert, 
   - Alle aktiven Aktions-Buttons («Assessment starten», «Weiter», «Abschließen», «Assessment wiederholen», «Erneut versuchen») verwenden nun `theme.colors.onAccent.color`.
   - **Mathematischer Nachweis & Test-Automatisierung:**
     In `ColorTokenTests.swift` berechnet der Unit Test `testOnAccentTextContrastMeetsWCAGAAAOnDimensionAndFeedbackButtons()` die relative Leuchtdichte $L = 0,2126 R + 0,7152 G + 0,0722 B$ und verifiziert das Kontrastverhältnis $(L_1 + 0,05) / (L_2 + 0,05) \ge 7,0:1$:
-    - Architecture Dark (`#38BDF8` auf `#090D16`): **10,69:1** (AAA erfüllt)
-    - Platform Dark (`#C084FC` auf `#090D16`): **8,49:1** (AAA erfüllt)
-    - Quality Dark (`#4ADE80` auf `#090D16`): **12,41:1** (AAA erfüllt)
-    - Agile Dark (`#FBBF24` auf `#090D16`): **12,98:1** (AAA erfüllt)
-    - Success Feedback Dark (`#34D399` auf `#090D16`): **11,88:1** (AAA erfüllt)
+    - Architecture Dark (`#38BDF8` auf `#090D16`): **9,07:1** (AAA erfüllt)
+    - Platform Dark (`#C084FC` auf `#090D16`): **7,35:1** (AAA erfüllt)
+    - Quality Dark (`#4ADE80` auf `#090D16`): **11,15:1** (AAA erfüllt)
+    - Agile Dark (`#FBBF24` auf `#090D16`): **11,64:1** (AAA erfüllt)
+    - Success Feedback Dark (`#4ADE80` auf `#090D16`): **11,15:1** (AAA erfüllt)
     - Alle Dimensionen im Light Mode auf `#FFFFFF`: **7,24:1 bis 14,94:1** (AAA erfüllt).
 
 ### 2.3. End-to-End XCUITest über 24 Fragen

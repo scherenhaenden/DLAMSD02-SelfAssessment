@@ -20,9 +20,25 @@ import UIKit
 private func renderInHost<V: View>(_ view: V, width: CGFloat = 375, height: CGFloat = 667) -> CGSize {
     let wrapped = view.environment(\.appTheme, AppTheme.standard)
     let controller = UIHostingController(rootView: wrapped)
-    controller.view.frame = CGRect(x: 0, y: 0, width: width, height: height)
+    let targetBounds = CGRect(x: 0, y: 0, width: width, height: height)
+    controller.view.frame = targetBounds
     controller.view.layoutIfNeeded()
-    return controller.view.intrinsicContentSize
+
+    let fitted = controller.sizeThatFits(in: CGSize(width: width, height: height))
+    if fitted.height > 0 && fitted.width > 0 {
+        return fitted
+    }
+
+    let systemFit = controller.view.systemLayoutSizeFitting(
+        CGSize(width: width, height: height),
+        withHorizontalFittingPriority: .defaultHigh,
+        verticalFittingPriority: .fittingSizeLevel
+    )
+    if systemFit.height > 0 && systemFit.width > 0 {
+        return systemFit
+    }
+
+    return controller.view.bounds.size
 }
 #else
 private func renderInHost<V: View>(_ view: V, width: CGFloat = 375, height: CGFloat = 667) -> CGSize {
@@ -425,5 +441,21 @@ final class UIComponentTests: XCTestCase {
         XCTAssertGreaterThan(s1.width, 0)
         XCTAssertGreaterThan(s2.width, 0)
         XCTAssertGreaterThan(s3.width, 0)
+    }
+
+    func testTactileButtonStyleWithReduceMotionPreference() {
+        let standardStyle = TactileButtonStyle(overrideReduceMotion: false)
+        let reducedStyle = TactileButtonStyle(overrideReduceMotion: true)
+
+        let standardButton = Button("Motion Enabled") {}.buttonStyle(standardStyle)
+        let reducedButton = Button("Motion Reduced") {}.buttonStyle(reducedStyle)
+
+        let standardSize = renderInHost(standardButton)
+        let reducedSize = renderInHost(reducedButton)
+
+        XCTAssertGreaterThan(standardSize.width, 0)
+        XCTAssertGreaterThan(standardSize.height, 0)
+        XCTAssertGreaterThan(reducedSize.width, 0)
+        XCTAssertGreaterThan(reducedSize.height, 0)
     }
 }

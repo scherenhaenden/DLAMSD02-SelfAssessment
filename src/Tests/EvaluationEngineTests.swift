@@ -250,7 +250,7 @@ final class EvaluationEngineTests: XCTestCase {
     }
 
     func testStrictTransitivityOfRecordComparison() {
-        // Reproduce Codex's cycle test with micro-variations in scores and timestamps
+        // Verify strict transitivity cycle test with micro-variations in scores and timestamps
         let baseDate = Date()
         let recA = AssessmentRecord(
             catalogId: "cat",
