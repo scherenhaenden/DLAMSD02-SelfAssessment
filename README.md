@@ -33,11 +33,11 @@ Version **0.6.1** (Build `20261104.144500`), Sprint 6 Patch Released: Determinis
 - **Root Application Navigation:**
   - `AssessYourselfApp`: Dual-tab entry point connecting `AssessmentFlowView` as primary assessment experience alongside `ComponentShowcaseView`.
 - **Test Suite & Code Coverage:**
-  - **86 XCTest unit tests** passing with 100% success rate across SwiftPM (macOS) and native iOS Simulator.
-  - **6 XCUITest integration tests** passing with 100% success rate on iPhone 17 Simulator, including full 24-question traversal with permanent dimension bar assertions, exact percentage verification, and reset (`testCompleteFull24QuestionAssessmentFlowAndVerifyCompletion`).
-  - **92/92 total combined native tests passed** (`** TEST SUCCEEDED **`).
-  - **94.37% line coverage baseline on macOS** (`llvm-cov report`: 4,847 / 5,136 lines in 24 `src` production files), with **$\ge 82.22\%$ on every individual production source file** (minimum: `AssessmentRecord.swift` with 82.22%; `PedagogicalRecommendationsView.swift`: 99.70%; 100% on `ArchetypeCardView`, `DimensionScoreBarView`, `AssessmentResultView`, `TactileButtonStyle`, `HapticFeedbackService`).
-  - **96.46% line coverage on native iOS application target sources** (5,173 / 5,363 lines).
+  - **87 SwiftPM unit tests** passing with 100% success rate (`swift test`, macOS 14, 0 failures, 0 warnings, 0.95 s, commit `6d5ab16`), including strict weak ordering test `testPedagogicalRecommendationsTransitiveStrictWeakOrdering`.
+  - **93 total combined native tests** on iPhone 17 Simulator (87 native unit tests + 6 XCUITest integration tests with permanent dashboard assertions and reset verification).
+  - *Baseline Audit (v0.6.0, commit `8bb5c3a`):* 86 unit tests (`audit-unit.log`) + 6 XCUITest tests (`audit-native.log`), totaling 92 passed.
+  - *Coverage Baseline (v0.6.0 audit):* **94.37% line coverage on macOS** (`llvm-cov report`: 4,847 / 5,136 lines in 24 `src` production files, documented in `audit-macos-coverage.json`), with $\ge 82.22\%$ on every individual production source file (`PedagogicalRecommendationsView.swift`: 99.70%; 100% on `ArchetypeCardView`, `DimensionScoreBarView`, `AssessmentResultView`, `TactileButtonStyle`, `HapticFeedbackService`).
+  - *iOS Coverage Baseline (v0.6.0 audit):* **96.46% line coverage on native iOS target sources** (5,173 / 5,363 lines in `audit-ios-coverage.json`).
 
 ## Open and Build
 
