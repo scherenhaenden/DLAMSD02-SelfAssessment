@@ -38,7 +38,8 @@ private func renderInHost<V: View>(_ view: V, width: CGFloat = 375, height: CGFl
         return systemFit
     }
 
-    return controller.view.bounds.size
+    // Fail explicitly if neither sizing strategy produced a valid size
+    return .zero
 }
 #else
 private func renderInHost<V: View>(_ view: V, width: CGFloat = 375, height: CGFloat = 667) -> CGSize {
@@ -444,9 +445,26 @@ final class UIComponentTests: XCTestCase {
     }
 
     func testTactileButtonStyleWithReduceMotionPreference() {
-        let standardStyle = TactileButtonStyle(overrideReduceMotion: false)
-        let reducedStyle = TactileButtonStyle(overrideReduceMotion: true)
+        let standardStyle = TactileButtonStyle(pressedScale: 0.98, pressedOpacity: 0.92, overrideReduceMotion: false)
+        let reducedStyle = TactileButtonStyle(pressedScale: 0.98, pressedOpacity: 0.92, overrideReduceMotion: true)
 
+        // 1. Behavioral assertions on scale suppression under Reduce Motion
+        XCTAssertEqual(reducedStyle.effectiveScale(isPressed: true, reduceMotion: true), 1.0, "Scale transform must be suppressed when Reduce Motion is active")
+        XCTAssertEqual(reducedStyle.effectiveScale(isPressed: false, reduceMotion: true), 1.0)
+        XCTAssertEqual(standardStyle.effectiveScale(isPressed: true, reduceMotion: false), 0.98, "Scale transform must be active when motion is enabled")
+        XCTAssertEqual(standardStyle.effectiveScale(isPressed: false, reduceMotion: false), 1.0)
+
+        // 2. Behavioral assertions on animation suppression
+        XCTAssertNil(reducedStyle.effectiveAnimation(isPressed: true, reduceMotion: true), "Animations must be nil when Reduce Motion is active")
+        XCTAssertNotNil(standardStyle.effectiveAnimation(isPressed: true, reduceMotion: false), "Animation must be active when motion is enabled")
+
+        // 3. Behavioral assertions on opacity preservation (subtle non-motion touch feedback)
+        XCTAssertEqual(reducedStyle.effectiveOpacity(isPressed: true), 0.92)
+        XCTAssertEqual(reducedStyle.effectiveOpacity(isPressed: false), 1.0)
+        XCTAssertEqual(standardStyle.effectiveOpacity(isPressed: true), 0.92)
+        XCTAssertEqual(standardStyle.effectiveOpacity(isPressed: false), 1.0)
+
+        // 4. Host rendering verification
         let standardButton = Button("Motion Enabled") {}.buttonStyle(standardStyle)
         let reducedButton = Button("Motion Reduced") {}.buttonStyle(reducedStyle)
 

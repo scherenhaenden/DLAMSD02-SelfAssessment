@@ -20,16 +20,29 @@ public struct TactileButtonStyle: ButtonStyle {
         self.overrideReduceMotion = overrideReduceMotion
     }
 
+    public func effectiveScale(isPressed: Bool, reduceMotion: Bool) -> CGFloat {
+        reduceMotion ? 1.0 : (isPressed ? pressedScale : 1.0)
+    }
+
+    public func effectiveOpacity(isPressed: Bool) -> Double {
+        isPressed ? pressedOpacity : 1.0
+    }
+
+    public func effectiveAnimation(isPressed: Bool, reduceMotion: Bool) -> Animation? {
+        reduceMotion ? nil : .easeOut(duration: 0.12)
+    }
+
     public func makeBody(configuration: Configuration) -> some View {
         let isPressed = configuration.isPressed
         let reduceMotion = overrideReduceMotion ?? systemReduceMotion
-        let effectiveScale = reduceMotion ? 1.0 : (isPressed ? pressedScale : 1.0)
-        let effectiveOpacity = isPressed ? pressedOpacity : 1.0
+        let scale = effectiveScale(isPressed: isPressed, reduceMotion: reduceMotion)
+        let opacity = effectiveOpacity(isPressed: isPressed)
+        let anim = effectiveAnimation(isPressed: isPressed, reduceMotion: reduceMotion)
 
         configuration.label
-            .scaleEffect(effectiveScale)
-            .opacity(effectiveOpacity)
-            .animation(reduceMotion ? nil : .easeOut(duration: 0.12), value: isPressed)
+            .scaleEffect(scale)
+            .opacity(opacity)
+            .animation(anim, value: isPressed)
     }
 }
 

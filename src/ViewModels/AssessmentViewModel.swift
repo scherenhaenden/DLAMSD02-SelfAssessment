@@ -12,17 +12,34 @@ public final class AssessmentViewModel: AssessmentViewModelProtocol {
     private let catalogLoader: CatalogLoaderProtocol
     private let evaluationEngine: EvaluationEngineProtocol
     public var hapticService: (any HapticFeedbackServiceProtocol)?
+    public internal(set) var hasExplicitHapticService: Bool
     private var sessionStartTime: Date?
 
-    /// Injected initializer for testability and runtime flexibility.
+    /// Designated initializer for explicit dependency injection.
+    /// Marks `hasExplicitHapticService = true` to preserve caller-provided configuration across view lifecycles.
     public init(
         catalogLoader: CatalogLoaderProtocol = CatalogLoader(),
         evaluationEngine: EvaluationEngineProtocol = EvaluationEngine(),
-        hapticService: (any HapticFeedbackServiceProtocol)? = SystemHapticFeedbackService()
+        hapticService: (any HapticFeedbackServiceProtocol)?
     ) {
         self.catalogLoader = catalogLoader
         self.evaluationEngine = evaluationEngine
         self.hapticService = hapticService
+        self.hasExplicitHapticService = true
+    }
+
+    /// Convenience initializer using default system haptic feedback service.
+    /// Marks `hasExplicitHapticService = false` allowing SwiftUI Environment injection to customize feedback.
+    public convenience init(
+        catalogLoader: CatalogLoaderProtocol = CatalogLoader(),
+        evaluationEngine: EvaluationEngineProtocol = EvaluationEngine()
+    ) {
+        self.init(
+            catalogLoader: catalogLoader,
+            evaluationEngine: evaluationEngine,
+            hapticService: SystemHapticFeedbackService()
+        )
+        self.hasExplicitHapticService = false
     }
 
     // MARK: - Computed Properties

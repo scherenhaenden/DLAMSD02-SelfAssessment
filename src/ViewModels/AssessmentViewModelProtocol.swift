@@ -29,6 +29,7 @@ public protocol AssessmentViewModelProtocol: ObservableObject {
     var progress: Double { get }
     var answers: [String: AnswerPayload] { get }
     var hapticService: (any HapticFeedbackServiceProtocol)? { get set }
+    var hasExplicitHapticService: Bool { get }
 
     // Navigation Affordances
     var canGoBack: Bool { get }

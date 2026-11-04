@@ -4,7 +4,7 @@ Native SwiftUI self-assessment application developed for **DLAMSD02 Apple Mobile
 
 ## Current Development Stage
 
-Version **0.5.2** (Build `20261104.113000`), Sprint 5 Patch Released: Thread-Safe Multisensory Feedback Engine (TSan-verified), Reduce Motion Adaptation, UIKit View Sizing Fix & 79-Test Suite (73 Unit + 6 XCUITest).
+Version **0.5.3** (Build `20261104.120000`), Sprint 5 Certified: Dependency Injection Precedence, Mock Event Verification, Zero-Fallback Host Sizing & 80-Test Suite (74 Unit + 6 XCUITest).
 
 ### Implemented
 
@@ -18,20 +18,21 @@ Version **0.5.2** (Build `20261104.113000`), Sprint 5 Patch Released: Thread-Saf
   - `AssessmentFlowView`: Full navigation screen with top progress bar (`ProgressView(value: viewModel.progress)`), question counter pill (`Frage N / 24`), dimension badge, and bottom sticky navigation toolbar.
   - Strict validation gating: "Zurück" disabled on question 1; "Weiter" and "Abschließen" strictly gated by `isCurrentAnswerValid`.
   - State persistence during traversal: Navigating back preserves previous user inputs without data loss.
-- **Sprint 5 Multisensory Feedback, Haptics & Accessibility (`v0.5.2`):**
+- **Sprint 5 Multisensory Feedback, Haptics & Accessibility (`v0.5.3`):**
   - *Decoupled Haptic Service (`HapticFeedbackServiceProtocol`):* Pure Swift protocol abstracting tactile feedback with `SystemHapticFeedbackService` (retained generators, thread-safe `stateLock` + `generatorLock`, TSan-verified against concurrent reads/writes with 200,000 iterations probe, pre-warming lifecycle, and crash-free execution across iOS, iPadOS, Catalyst, and Simulator) and deterministic `MockHapticFeedbackService` spy.
+  - *Strict Dependency Injection Precedence:* Designated initializer injection (`hasExplicitHapticService: true`) takes absolute precedence over SwiftUI Environment fallback, guaranteeing that explicitly disabled services (`isEnabled: false`) or mock configurations are preserved across view lifecycles (`onAppear`).
   - *Interaction Haptic Triggers:* Selection ticks on choice options, multiple choice chips, and slider updates; light impact on navigation; medium impact on session reset; success/error notifications on assessment completion.
   - *Adaptive Reduce Motion Support:* `TactileButtonStyle` suppresses decorative scaling (`scaleEffect(1.0)`) and disables animations when `accessibilityReduceMotion` is active, maintaining subtle opacity change for confirmation. `AssessmentFlowView` suppresses spring/ease motion and transitions using standard opacity.
   - *Tactile Button Feedback (`TactileButtonStyle`):* Native responsive touch compression (`scaleEffect(0.98)`) and subtle dimming (`0.92`) across all primary action buttons.
-  - *Audit Remediation Baseline:* Welcome screen retention until explicit start tap, WCAG AAA adaptive dark mode contrast (`onAccent`), and full 24-question end-to-end traversal.
+  - *Audit Remediation Baseline:* Welcome screen retention until explicit start tap, WCAG AAA adaptive dark mode contrast (`onAccent`), robust UIKit test host measurement without fallback masking, and full 24-question end-to-end traversal.
 - **Root Application Navigation:**
   - `AssessYourselfApp`: Dual-tab entry point connecting `AssessmentFlowView` as primary assessment experience alongside `ComponentShowcaseView`.
 - **Test Suite & Code Coverage:**
-  - **73 XCTest unit tests** passing with 100% success rate across SwiftPM (macOS) and native iOS Simulator.
+  - **74 XCTest unit tests** passing with 100% success rate across SwiftPM (macOS) and native iOS Simulator.
   - **6 XCUITest integration tests** passing with 100% success rate on iPhone 17 Simulator (`testCompleteFull24QuestionAssessmentFlowAndVerifyCompletion`, `testWelcomeScreenRemainsVisibleUntilStartTapped`, `testSequentialAssessmentFlowProgressionAndValidation`, `testSingleChoiceMutualExclusionInteraction`, `testMultipleChoiceBoundsAndToggleInteraction`, `testLikertSliderAndShortTextInputInteraction`).
-  - **79/79 total combined native tests passed** (`** TEST SUCCEEDED **`).
-  - **93.09% global line coverage on macOS** (`llvm-cov report`: 3,877 / 4,165 lines), with **$\ge 82.22\%$ on every individual source file** (all 20 production files meet $\ge 80\%$).
-  - **95.89% line coverage on native iOS application sources**.
+  - **80/80 total combined native tests passed** (`** TEST SUCCEEDED **`).
+  - **93.12% global line coverage on macOS** (`llvm-cov report`: 3,896 / 4,184 lines), with **$\ge 82.22\%$ on every individual source file** (all 20 production files meet $\ge 80\%$).
+  - **95.70% line coverage on native iOS application sources** (4,203 / 4,392 lines).
 
 ## Open and Build
 
@@ -90,6 +91,8 @@ docs/                      Sprint documentation and technical verification repor
 | **0.4.1** | Flow hardening, boundary enforcement, slider auto-sync & full paradigm XCUITest | ✅ Completed |
 | **0.5.0** | Welcome retention, WCAG AAA dark contrast, 24-Q XCUITest suite | ✅ Completed |
 | **0.5.1** | Multisensory feedback engine, decoupled haptics & tactile button styling | ✅ Completed |
+| **0.5.2** | TSan thread safety, Reduce Motion adaptation, host sizing fix | ✅ Completed |
+| **0.5.3** | Strict DI precedence, mock lifecycle verification, zero-fallback host sizing | ✅ Completed |
 | **0.6.0** | Result analytics, competency dashboard, archetype categorization | 🟡 Next |
 | **0.7.0** | Local persistence (`UserDefaultsHistoryStore`), history & progress trends | ⚪ Planned |
 | **0.8.0** | Multi-device layout (iPad 640pt container), VoiceOver accessibility | ⚪ Planned |

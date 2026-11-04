@@ -2,6 +2,45 @@ import XCTest
 import SwiftUI
 @testable import AssessYourselfCore
 
+#if canImport(AppKit) && !targetEnvironment(macCatalyst)
+import AppKit
+
+@MainActor
+private func hostLifecycle<V: View>(_ view: V) -> () -> Void {
+    _ = NSApplication.shared
+    let controller = NSHostingController(rootView: view)
+    let window = NSWindow(contentViewController: controller)
+    window.isReleasedWhenClosed = false
+    window.alphaValue = 0
+    window.setContentSize(NSSize(width: 375, height: 667))
+    window.makeKeyAndOrderFront(nil)
+    controller.view.layoutSubtreeIfNeeded()
+    RunLoop.current.run(until: Date().addingTimeInterval(0.15))
+    return {
+        window.close()
+    }
+}
+#elseif canImport(UIKit)
+import UIKit
+
+@MainActor
+private func hostLifecycle<V: View>(_ view: V) -> () -> Void {
+    let window = UIWindow(frame: CGRect(x: 0, y: 0, width: 375, height: 667))
+    let controller = UIHostingController(rootView: view)
+    window.rootViewController = controller
+    window.makeKeyAndVisible()
+    controller.view.layoutIfNeeded()
+    RunLoop.current.run(until: Date().addingTimeInterval(0.15))
+    return {
+        window.isHidden = true
+    }
+}
+#else
+private func hostLifecycle<V: View>(_ view: V) -> () -> Void {
+    return {}
+}
+#endif
+
 final class HapticFeedbackServiceTests: XCTestCase {
 
     func testMockHapticFeedbackServiceRecordsAllEventsAccurately() {
@@ -116,21 +155,33 @@ final class HapticFeedbackServiceTests: XCTestCase {
     }
 
     @MainActor
-    func testAssessmentFlowViewConnectsEnvironmentHapticServiceOnAppear() {
-        let vm = AssessmentViewModel()
-        let customMock = MockHapticFeedbackService()
-        let view = AssessmentFlowView(viewModel: vm)
-            .environment(\.hapticFeedback, customMock)
+    func testExplicitDisabledSystemServiceSurvivesViewAppearance() {
+        let configured = SystemHapticFeedbackService(isEnabled: false)
+        let vm = AssessmentViewModel(hapticService: configured)
+        XCTAssertTrue(vm.hasExplicitHapticService)
 
-        #if canImport(UIKit)
-        let controller = UIHostingController(rootView: view)
-        controller.view.frame = CGRect(x: 0, y: 0, width: 375, height: 667)
-        controller.view.layoutIfNeeded()
-        #endif
+        let cleanup = hostLifecycle(AssessmentFlowView(viewModel: vm))
+        defer { cleanup() }
+
+        let effective = vm.hapticService as? SystemHapticFeedbackService
+        XCTAssertTrue(vm.hapticService === configured, "View appearance must preserve the explicitly configured service")
+        XCTAssertEqual(effective?.isEnabled, false, "A service disabled by the caller must stay disabled")
+    }
+
+    @MainActor
+    func testCustomEnvironmentServiceActuallyReceivesEvents() {
+        let vm = AssessmentViewModel()
+        XCTAssertFalse(vm.hasExplicitHapticService)
+
+        let spy = MockHapticFeedbackService()
+        let cleanup = hostLifecycle(AssessmentFlowView(viewModel: vm).environment(\.hapticFeedback, spy))
+        defer { cleanup() }
+
+        XCTAssertTrue(vm.hapticService === spy, "Environment haptic service must be connected when no explicit service was provided")
 
         // Trigger action that uses the haptic feedback service
         vm.loadCatalog()
+        XCTAssertEqual(spy.prepareCount, 1, "Connected environment mock must actually receive events")
         XCTAssertEqual(vm.state, .inProgress)
-        XCTAssertTrue(vm.canGoForward || vm.progress >= 0)
     }
 }

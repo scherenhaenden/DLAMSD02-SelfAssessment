@@ -40,7 +40,7 @@ public struct AssessmentFlowView<VM: AssessmentViewModelProtocol>: View {
             .navigationBarTitleDisplayMode(.inline)
             #endif
             .onAppear {
-                if viewModel.hapticService is SystemHapticFeedbackService {
+                if !viewModel.hasExplicitHapticService {
                     viewModel.hapticService = envHapticService
                 }
             }
