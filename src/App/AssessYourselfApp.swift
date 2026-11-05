@@ -3,8 +3,15 @@ import SwiftUI
 #if !SWIFT_PACKAGE
 @main
 struct AssessYourselfApp: App {
-    @StateObject private var viewModel = AssessmentViewModel()
+    private let historyStore: UserDefaultsHistoryStore
+    @StateObject private var viewModel: AssessmentViewModel
     @State private var selectedTab: Int = 0
+
+    init() {
+        let store = UserDefaultsHistoryStore()
+        self.historyStore = store
+        _viewModel = StateObject(wrappedValue: AssessmentViewModel(historyStore: store))
+    }
 
     var body: some Scene {
         WindowGroup {
@@ -16,11 +23,18 @@ struct AssessYourselfApp: App {
                     .tag(0)
                     .accessibilityIdentifier("tab.assessmentFlow")
 
+                HistoryView(historyStore: historyStore)
+                    .tabItem {
+                        Label("Verlauf", systemImage: "clock.arrow.circlepath")
+                    }
+                    .tag(1)
+                    .accessibilityIdentifier("tab.history")
+
                 ComponentShowcaseView()
                     .tabItem {
                         Label("Showcase", systemImage: "square.grid.2x2")
                     }
-                    .tag(1)
+                    .tag(2)
                     .accessibilityIdentifier("tab.showcase")
             }
             .appTheme(AppTheme.standard)

@@ -13,6 +13,7 @@ public final class AssessmentViewModel: AssessmentViewModelProtocol {
     private let evaluationEngine: EvaluationEngineProtocol
     public var hapticService: (any HapticFeedbackServiceProtocol)?
     public internal(set) var hasExplicitHapticService: Bool
+    public var historyStore: (any HistoryStoreProtocol)?
     private var sessionStartTime: Date?
 
     /// Designated initializer for explicit dependency injection.
@@ -20,24 +21,28 @@ public final class AssessmentViewModel: AssessmentViewModelProtocol {
     public init(
         catalogLoader: CatalogLoaderProtocol = CatalogLoader(),
         evaluationEngine: EvaluationEngineProtocol = EvaluationEngine(),
-        hapticService: (any HapticFeedbackServiceProtocol)?
+        hapticService: (any HapticFeedbackServiceProtocol)?,
+        historyStore: (any HistoryStoreProtocol)? = nil
     ) {
         self.catalogLoader = catalogLoader
         self.evaluationEngine = evaluationEngine
         self.hapticService = hapticService
         self.hasExplicitHapticService = true
+        self.historyStore = historyStore
     }
 
     /// Convenience initializer using default system haptic feedback service.
     /// Marks `hasExplicitHapticService = false` allowing SwiftUI Environment injection to customize feedback.
     public convenience init(
         catalogLoader: CatalogLoaderProtocol = CatalogLoader(),
-        evaluationEngine: EvaluationEngineProtocol = EvaluationEngine()
+        evaluationEngine: EvaluationEngineProtocol = EvaluationEngine(),
+        historyStore: (any HistoryStoreProtocol)? = nil
     ) {
         self.init(
             catalogLoader: catalogLoader,
             evaluationEngine: evaluationEngine,
-            hapticService: SystemHapticFeedbackService()
+            hapticService: SystemHapticFeedbackService(),
+            historyStore: historyStore
         )
         self.hasExplicitHapticService = false
     }
@@ -272,6 +277,7 @@ public final class AssessmentViewModel: AssessmentViewModelProtocol {
                 catalog: catalog,
                 durationSeconds: duration
             )
+            try? historyStore?.save(record: record)
             state = .completed(record)
             hapticService?.triggerNotification(.success)
         } catch {

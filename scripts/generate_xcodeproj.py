@@ -29,6 +29,7 @@ def main():
         "src/Views/Screens/AssessmentQuestionContainerView.swift",
         "src/Views/Screens/AssessmentFlowView.swift",
         "src/Views/Screens/AssessmentResultView.swift",
+        "src/Views/Screens/HistoryView.swift",
         "src/Views/Components/Color+Adaptive.swift",
         "src/Views/Components/MultiSelectChipGrid.swift",
         "src/Views/Components/LikertSliderCard.swift",
@@ -42,6 +43,9 @@ def main():
         "src/Services/CatalogLoaderProtocol.swift",
         "src/Services/EvaluationEngineProtocol.swift",
         "src/Services/HapticFeedbackService.swift",
+        "src/Services/HistoryStoreProtocol.swift",
+        "src/Services/UserDefaultsHistoryStore.swift",
+        "src/Services/HistoryComparisonService.swift",
     ]
 
     app_resources = [
@@ -56,6 +60,7 @@ def main():
         "src/Tests/AssessmentViewModelTests.swift",
         "src/Tests/HapticFeedbackServiceTests.swift",
         "src/Tests/ResultViewTests.swift",
+        "src/Tests/HistoryStoreTests.swift",
     ]
 
     ui_test_sources = [
@@ -284,7 +289,7 @@ def main():
     pbx.append(f"\t\t{services_group_id} /* Services */ = {{")
     pbx.append("\t\t\tisa = PBXGroup;")
     pbx.append("\t\t\tchildren = (")
-    for f in ["CatalogLoaderProtocol.swift", "EvaluationEngineProtocol.swift", "HapticFeedbackService.swift"]:
+    for f in ["CatalogLoaderProtocol.swift", "EvaluationEngineProtocol.swift", "HapticFeedbackService.swift", "HistoryStoreProtocol.swift", "UserDefaultsHistoryStore.swift", "HistoryComparisonService.swift"]:
         pbx.append(f"\t\t\t\t{filerefs['src/Services/' + f]} /* {f} */,")
     pbx.append("\t\t\t);")
     pbx.append("\t\t\tpath = Services;")
@@ -314,7 +319,7 @@ def main():
     pbx.append(f"\t\t{screens_group_id} /* Screens */ = {{")
     pbx.append("\t\t\tisa = PBXGroup;")
     pbx.append("\t\t\tchildren = (")
-    for f in ["AssessmentFlowView.swift", "AssessmentQuestionContainerView.swift", "AssessmentResultView.swift", "ComponentShowcaseView.swift"]:
+    for f in ["AssessmentFlowView.swift", "AssessmentQuestionContainerView.swift", "AssessmentResultView.swift", "ComponentShowcaseView.swift", "HistoryView.swift"]:
         pbx.append(f"\t\t\t\t{filerefs['src/Views/Screens/' + f]} /* {f} */,")
     pbx.append("\t\t\t);")
     pbx.append("\t\t\tpath = Screens;")
@@ -333,7 +338,7 @@ def main():
     pbx.append(f"\t\t{tests_group_id} /* Tests */ = {{")
     pbx.append("\t\t\tisa = PBXGroup;")
     pbx.append("\t\t\tchildren = (")
-    for f in ["AssessmentViewModelTests.swift", "CatalogTests.swift", "ColorTokenTests.swift", "EvaluationEngineTests.swift", "HapticFeedbackServiceTests.swift", "ResultViewTests.swift", "UIComponentTests.swift"]:
+    for f in ["AssessmentViewModelTests.swift", "CatalogTests.swift", "ColorTokenTests.swift", "EvaluationEngineTests.swift", "HapticFeedbackServiceTests.swift", "ResultViewTests.swift", "UIComponentTests.swift", "HistoryStoreTests.swift"]:
         pbx.append(f"\t\t\t\t{filerefs['src/Tests/' + f]} /* {f} */,")
     pbx.append("\t\t\t);")
     pbx.append("\t\t\tpath = Tests;")
@@ -522,8 +527,8 @@ def main():
     pbx.append("/* End PBXTargetDependency section */")
 
     # Build Configuration Settings
-    build_version = "20261104.144500"
-    market_version = "0.6.1"
+    build_version = "20261105.140000"
+    market_version = "0.7.0"
 
     # XCBuildConfiguration
     pbx.append("\n/* Begin XCBuildConfiguration section */")

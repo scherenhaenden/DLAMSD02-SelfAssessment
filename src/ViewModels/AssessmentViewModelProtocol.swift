@@ -30,6 +30,7 @@ public protocol AssessmentViewModelProtocol: ObservableObject {
     var answers: [String: AnswerPayload] { get }
     var hapticService: (any HapticFeedbackServiceProtocol)? { get set }
     var hasExplicitHapticService: Bool { get }
+    var historyStore: (any HistoryStoreProtocol)? { get }
 
     // Navigation Affordances
     var canGoBack: Bool { get }
