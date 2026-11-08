@@ -8,6 +8,7 @@ public final class AssessmentViewModel: AssessmentViewModelProtocol {
     @Published public private(set) var catalog: AssessmentCatalog? = nil
     @Published public private(set) var currentQuestionIndex: Int = 0
     @Published public private(set) var answers: [String: AnswerPayload] = [:]
+    @Published public private(set) var persistenceError: String? = nil
 
     private let catalogLoader: CatalogLoaderProtocol
     private let evaluationEngine: EvaluationEngineProtocol
@@ -277,12 +278,42 @@ public final class AssessmentViewModel: AssessmentViewModelProtocol {
                 catalog: catalog,
                 durationSeconds: duration
             )
-            try? historyStore?.save(record: record)
+            if let store = historyStore {
+                do {
+                    try store.save(record: record)
+                    self.persistenceError = nil
+                } catch {
+                    self.persistenceError = error.localizedDescription
+                }
+            } else {
+                self.persistenceError = nil
+            }
             state = .completed(record)
-            hapticService?.triggerNotification(.success)
+            if persistenceError == nil {
+                hapticService?.triggerNotification(.success)
+            } else {
+                hapticService?.triggerNotification(.warning)
+            }
         } catch {
             state = .error(error.localizedDescription)
             hapticService?.triggerNotification(.error)
+        }
+    }
+
+    @discardableResult
+    public func retryPersistence() -> Bool {
+        guard case .completed(let record) = state, let store = historyStore else {
+            return false
+        }
+        do {
+            try store.save(record: record)
+            self.persistenceError = nil
+            hapticService?.triggerNotification(.success)
+            return true
+        } catch {
+            self.persistenceError = error.localizedDescription
+            hapticService?.triggerNotification(.error)
+            return false
         }
     }
 
@@ -292,6 +323,7 @@ public final class AssessmentViewModel: AssessmentViewModelProtocol {
         currentQuestionIndex = 0
         answers.removeAll()
         sessionStartTime = nil
+        persistenceError = nil
         hapticService?.triggerImpact(.medium)
     }
 }

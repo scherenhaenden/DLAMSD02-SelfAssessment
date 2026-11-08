@@ -8,6 +8,9 @@ struct AssessYourselfApp: App {
     @State private var selectedTab: Int = 0
 
     init() {
+        if CommandLine.arguments.contains("--uitesting") {
+            UserDefaults.standard.removeObject(forKey: UserDefaultsHistoryStore.defaultStorageKey)
+        }
         let store = UserDefaultsHistoryStore()
         self.historyStore = store
         _viewModel = StateObject(wrappedValue: AssessmentViewModel(historyStore: store))

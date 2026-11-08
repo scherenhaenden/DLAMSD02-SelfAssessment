@@ -5,19 +5,25 @@ import SwiftUI
 public struct AssessmentResultView: View {
     public let record: AssessmentRecord
     public let catalog: AssessmentCatalog?
+    public let persistenceWarning: String?
     public let onRestart: () -> Void
+    public let onRetryPersistence: (() -> Void)?
     public let theme: any AppThemeProtocol
 
     public init(
         record: AssessmentRecord,
         catalog: AssessmentCatalog? = nil,
+        persistenceWarning: String? = nil,
         theme: any AppThemeProtocol = AppTheme(),
-        onRestart: @escaping () -> Void
+        onRestart: @escaping () -> Void,
+        onRetryPersistence: (() -> Void)? = nil
     ) {
         self.record = record
         self.catalog = catalog
+        self.persistenceWarning = persistenceWarning
         self.theme = theme
         self.onRestart = onRestart
+        self.onRetryPersistence = onRetryPersistence
     }
 
     public var formattedDuration: String {
@@ -43,6 +49,11 @@ public struct AssessmentResultView: View {
             VStack(spacing: theme.spacing.lg) {
                 // Hero Celebration Header
                 heroHeader
+
+                // Persistence Failure Warning Banner (S7-01)
+                if let warning = persistenceWarning {
+                    persistenceWarningBanner(warning)
+                }
 
                 // Dominant Archetype Card
                 ArchetypeCardView(
@@ -124,6 +135,60 @@ public struct AssessmentResultView: View {
                     .fill(theme.colors.surfaceCard.color)
             )
         }
+    }
+
+    private func persistenceWarningBanner(_ warning: String) -> some View {
+        HStack(alignment: .top, spacing: theme.spacing.sm) {
+            Image(systemName: "exclamationmark.triangle.fill")
+                .foregroundColor(theme.colors.warningFeedback.color)
+                .font(.title3)
+                .accessibilityHidden(true)
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Speichern im Verlauf fehlgeschlagen")
+                    .font(.subheadline.weight(.bold))
+                    .foregroundColor(theme.colors.textPrimary.color)
+
+                Text(warning)
+                    .font(.caption)
+                    .foregroundColor(theme.colors.textSecondary.color)
+
+                if let retryAction = onRetryPersistence {
+                    Button(action: retryAction) {
+                        HStack(spacing: 4) {
+                            Image(systemName: "arrow.clockwise")
+                                .font(.caption2.weight(.bold))
+                            Text("Erneut versuchen")
+                                .font(.caption.weight(.semibold))
+                        }
+                        .foregroundColor(theme.colors.onAccent.color)
+                        .padding(.horizontal, theme.spacing.sm)
+                        .padding(.vertical, 6)
+                        .background(
+                            RoundedRectangle(cornerRadius: theme.cornerRadius.small)
+                                .fill(theme.colors.warningFeedback.color)
+                        )
+                    }
+                    .buttonStyle(TactileButtonStyle())
+                    .padding(.top, 2)
+                    .accessibilityLabel("Speichern im Verlauf erneut versuchen")
+                    .accessibilityIdentifier("result.retryPersistenceButton")
+                }
+            }
+
+            Spacer()
+        }
+        .padding(theme.spacing.md)
+        .background(
+            RoundedRectangle(cornerRadius: theme.cornerRadius.medium)
+                .fill(theme.colors.warningFeedback.color.opacity(0.12))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: theme.cornerRadius.medium)
+                .stroke(theme.colors.warningFeedback.color.opacity(0.3), lineWidth: 1)
+        )
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("result.persistenceWarningBanner")
     }
 
     private var competencyDashboard: some View {

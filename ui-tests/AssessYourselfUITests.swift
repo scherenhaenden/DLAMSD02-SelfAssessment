@@ -417,4 +417,35 @@ final class AssessYourselfUITests: XCTestCase {
         XCTAssertTrue(updatedStatus.label.contains("Mindestumfang erfüllt"), "Milestone must indicate requirement met unconditionally")
         XCTAssertEqual(updatedStatus.value as? String, "\(expectedInput.count) Zeichen", "Accessibility value must announce exact character count")
     }
+
+    // MARK: - Sprint 7: History View Navigation & State
+
+    func testHistoryTabShowsEmptyStateAndNavigation() throws {
+        app.launch()
+        let historyTab = app.tabBars.buttons["Verlauf"]
+        XCTAssertTrue(historyTab.waitForExistence(timeout: 5), "Verlauf tab must exist in root navigation")
+        historyTab.tap()
+
+        // If history already contains items (e.g. from an earlier persistent test run), clear it
+        let clearButton = app.buttons["history.clearButton"]
+        if clearButton.waitForExistence(timeout: 2) {
+            clearButton.tap()
+            let confirmAlertButton = app.alerts.buttons["Löschen"]
+            if confirmAlertButton.waitForExistence(timeout: 2) {
+                confirmAlertButton.tap()
+            }
+        }
+
+        // Verify empty state is displayed
+        let emptyState = app.descendants(matching: .any)["history.emptyState"]
+        XCTAssertTrue(emptyState.waitForExistence(timeout: 5), "Empty state label must be displayed when no assessments exist")
+
+        // Switch back to Assessment tab
+        let assessmentTab = app.tabBars.buttons["Assessment"]
+        XCTAssertTrue(assessmentTab.waitForExistence(timeout: 3))
+        assessmentTab.tap()
+
+        let welcomeTitle = app.staticTexts["flow.welcomeTitle"]
+        XCTAssertTrue(welcomeTitle.waitForExistence(timeout: 5), "Returning to assessment tab must restore flow")
+    }
 }

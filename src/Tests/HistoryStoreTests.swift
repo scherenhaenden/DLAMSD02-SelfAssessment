@@ -1,9 +1,65 @@
 import XCTest
 import SwiftUI
-#if canImport(UIKit)
-import UIKit
-#endif
 @testable import AssessYourselfCore
+
+#if canImport(AppKit) && !targetEnvironment(macCatalyst)
+import AppKit
+
+@MainActor
+private func renderInHost<V: View>(_ view: V, width: CGFloat = 375, height: CGFloat = 667) -> CGSize {
+    let wrapped = view.environment(\.appTheme, AppTheme.standard)
+    let hostingView = NSHostingView(rootView: wrapped)
+    hostingView.frame = CGRect(x: 0, y: 0, width: width, height: height)
+    hostingView.layout()
+    return hostingView.fittingSize
+}
+#elseif canImport(UIKit)
+import UIKit
+
+@MainActor
+private func renderInHost<V: View>(_ view: V, width: CGFloat = 375, height: CGFloat = 667) -> CGSize {
+    let wrapped = view.environment(\.appTheme, AppTheme.standard)
+    let controller = UIHostingController(rootView: wrapped)
+    let targetBounds = CGRect(x: 0, y: 0, width: width, height: height)
+    controller.view.frame = targetBounds
+    controller.view.layoutIfNeeded()
+
+    let fitted = controller.sizeThatFits(in: CGSize(width: width, height: height))
+    if fitted.height > 0 && fitted.width > 0 {
+        return fitted
+    }
+    return controller.view.bounds.size
+}
+#else
+private func renderInHost<V: View>(_ view: V, width: CGFloat = 375, height: CGFloat = 667) -> CGSize {
+    return CGSize(width: width, height: height)
+}
+#endif
+
+// MARK: - Test Doubles
+
+private final class FailingMockHistoryStore: HistoryStoreProtocol, @unchecked Sendable {
+    var shouldFail: Bool = true
+    var savedRecords: [AssessmentRecord] = []
+
+    func loadHistory() throws -> [AssessmentRecord] {
+        if shouldFail {
+            throw HistoryStoreError.corruptedData("Simulated read corruption")
+        }
+        return savedRecords
+    }
+
+    func save(record: AssessmentRecord) throws {
+        if shouldFail {
+            throw HistoryStoreError.storageFailure("Simulated disk I/O failure")
+        }
+        savedRecords.append(record)
+    }
+
+    func clearHistory() throws {
+        savedRecords.removeAll()
+    }
+}
 
 final class HistoryStoreTests: XCTestCase {
     private var testUserDefaults: UserDefaults!
@@ -35,6 +91,7 @@ final class HistoryStoreTests: XCTestCase {
     private func createSampleRecord(
         id: UUID = UUID(),
         catalogId: String = "software-engineering-ios-v1",
+        catalogVersion: String = "1.0.0",
         completedAt: Date = Date(),
         durationSeconds: Double = 120.0,
         overallScore: Double = 80.0,
@@ -58,6 +115,7 @@ final class HistoryStoreTests: XCTestCase {
         return AssessmentRecord(
             id: id,
             catalogId: catalogId,
+            catalogVersion: catalogVersion,
             completedAt: completedAt,
             durationSeconds: durationSeconds,
             dimensionScores: dimensionScores,
@@ -78,6 +136,7 @@ final class HistoryStoreTests: XCTestCase {
         XCTAssertEqual(loaded.first?.id, original.id)
         XCTAssertEqual(loaded.first?.overallScore, 84.5)
         XCTAssertEqual(loaded.first?.catalogId, original.catalogId)
+        XCTAssertEqual(loaded.first?.catalogVersion, "1.0.0")
         XCTAssertEqual(loaded.first?.archetype.title, "iOS Solution Architect")
         XCTAssertEqual(loaded.first?.dimensionScores["architecture"], 85.0)
     }
@@ -189,7 +248,7 @@ final class HistoryStoreTests: XCTestCase {
         XCTAssertEqual(try store.loadHistory().count, 0)
     }
 
-    // MARK: - Comparison Service Tests
+    // MARK: - Comparison Service Tests (S7-02, S7-03)
 
     func testComparisonCalculationInPercentagePoints() {
         let r1 = createSampleRecord(
@@ -212,15 +271,60 @@ final class HistoryStoreTests: XCTestCase {
             XCTFail("Missing architecture comparison")
             return
         }
-        XCTAssertEqual(archComp.deltaPercentagePoints, 12.0, accuracy: 0.001)
+        XCTAssertEqual(archComp.deltaPercentagePoints ?? 0.0, 12.0, accuracy: 0.001)
         XCTAssertEqual(archComp.formattedDelta, "+12.0 pp")
 
         guard let qualComp = comparison.dimensionComparisons.first(where: { $0.dimensionId == "quality" }) else {
             XCTFail("Missing quality comparison")
             return
         }
-        XCTAssertEqual(qualComp.deltaPercentagePoints, -5.0, accuracy: 0.001)
+        XCTAssertEqual(qualComp.deltaPercentagePoints ?? 0.0, -5.0, accuracy: 0.001)
         XCTAssertEqual(qualComp.formattedDelta, "-5.0 pp")
+    }
+
+    func testComparisonHandlesMissingDimensionsWithoutInventingZero() {
+        let r1 = createSampleRecord(
+            overallScore: 70.0,
+            dimensionScores: ["architecture": 70.0, "quality": 60.0]
+        )
+        let r2 = createSampleRecord(
+            overallScore: 80.0,
+            dimensionScores: ["architecture": 85.0, "security": 90.0] // quality missing, security new
+        )
+
+        guard let comparison = HistoryComparisonService.compare(current: r2, previous: r1) else {
+            XCTFail("Comparison should succeed for same catalogId")
+            return
+        }
+
+        // Architecture is present in both -> valid delta
+        let arch = comparison.dimensionComparisons.first(where: { $0.dimensionId == "architecture" })
+        XCTAssertEqual(arch?.deltaPercentagePoints ?? 0.0, 15.0, accuracy: 0.001)
+        XCTAssertEqual(arch?.formattedDelta, "+15.0 pp")
+        XCTAssertTrue(arch?.isComparable == true)
+
+        // Quality is missing in current -> NOT comparable, no fake zero invented
+        let qual = comparison.dimensionComparisons.first(where: { $0.dimensionId == "quality" })
+        XCTAssertNil(qual?.deltaPercentagePoints, "Missing current dimension must not calculate delta against 0")
+        XCTAssertEqual(qual?.formattedDelta, "–")
+        XCTAssertFalse(qual?.isComparable == true)
+
+        // Security is missing in previous -> NOT comparable, no fake zero invented
+        let sec = comparison.dimensionComparisons.first(where: { $0.dimensionId == "security" })
+        XCTAssertNil(sec?.deltaPercentagePoints, "Missing previous dimension must not calculate delta against 0")
+        XCTAssertEqual(sec?.formattedDelta, "–")
+        XCTAssertFalse(sec?.isComparable == true)
+    }
+
+    func testComparisonRejectsIncompatibleCatalogVersions() {
+        let r1 = createSampleRecord(catalogId: "catalog-v1", catalogVersion: "1.2.0")
+        let r2 = createSampleRecord(catalogId: "catalog-v1", catalogVersion: "2.0.0") // Major mismatch
+
+        XCTAssertFalse(HistoryComparisonService.areVersionsCompatible(lhs: "1.2.0", rhs: "2.0.0"))
+        XCTAssertTrue(HistoryComparisonService.areVersionsCompatible(lhs: "1.0.0", rhs: "1.4.1"))
+
+        let comparison = HistoryComparisonService.compare(current: r2, previous: r1)
+        XCTAssertNil(comparison, "Assessments with different major catalog versions must not be compared")
     }
 
     func testComparisonZeroDeltaFormatting() {
@@ -237,6 +341,29 @@ final class HistoryStoreTests: XCTestCase {
 
         let comparison = HistoryComparisonService.compare(current: r2, previous: r1)
         XCTAssertNil(comparison, "Assessments with different catalogId must not be directly compared")
+    }
+
+    func testFindPreviousCompatibleRecordAcyclicOnIdenticalCompletedAt() {
+        let fixedDate = Date()
+        let idA = UUID(uuidString: "BBBBBBBB-BBBB-BBBB-BBBB-BBBBBBBBBBBB")!
+        let idB = UUID(uuidString: "AAAAAAAA-AAAA-AAAA-AAAA-AAAAAAAAAAAA")!
+
+        let rA = createSampleRecord(id: idA, completedAt: fixedDate, overallScore: 80.0)
+        let rB = createSampleRecord(id: idB, completedAt: fixedDate, overallScore: 80.0)
+
+        // Under total ordering: rA is newer than rB because idA > idB
+        XCTAssertTrue(HistoryComparisonService.isRecordStrictlyOlder(rB, than: rA))
+        XCTAssertFalse(HistoryComparisonService.isRecordStrictlyOlder(rA, than: rB))
+
+        let history = [rA, rB]
+
+        // rA looks for previous compatible record -> finds rB
+        let foundForA = HistoryComparisonService.findPreviousCompatibleRecord(for: rA, in: history)
+        XCTAssertEqual(foundForA?.id, rB.id)
+
+        // rB looks for previous compatible record -> returns nil (must NOT pick rA circularly!)
+        let foundForB = HistoryComparisonService.findPreviousCompatibleRecord(for: rB, in: history)
+        XCTAssertNil(foundForB, "Preceding record must not circularly pick the subsequent record")
     }
 
     func testFindPreviousCompatibleRecordInOrderedHistory() {
@@ -290,7 +417,7 @@ final class HistoryStoreTests: XCTestCase {
         }
     }
 
-    // MARK: - ViewModel & UI Tests
+    // MARK: - ViewModel & Integration Tests (S7-01, S7-04, S7-05)
 
     func testViewModelIntegrationAutoSavesCompletedRecordToHistory() {
         let vm = AssessmentViewModel(
@@ -332,25 +459,110 @@ final class HistoryStoreTests: XCTestCase {
             return
         }
 
+        XCTAssertNil(vm.persistenceError, "Persistence should succeed on healthy store")
         let history = try? store.loadHistory()
         XCTAssertEqual(history?.count, 1)
         XCTAssertEqual(history?.first?.id, record.id)
         XCTAssertEqual(history?.first?.overallScore, record.overallScore)
     }
 
-    func testHistoryViewRenderingEmptyAndPopulated() throws {
-        // Test Empty State View Rendering
-        let emptyView = HistoryView(historyStore: store)
-        let _ = emptyView.body
+    func testViewModelSurfacesPersistenceFailureWithoutLosingRecord() {
+        let failingStore = FailingMockHistoryStore()
+        failingStore.shouldFail = true
 
-        // Test Populated State View Rendering
+        let vm = AssessmentViewModel(
+            catalogLoader: LocalCatalogService(),
+            evaluationEngine: AssessmentEvaluationEngine(),
+            hapticService: nil,
+            historyStore: failingStore
+        )
+
+        vm.loadCatalog()
+        guard let catalog = vm.catalog else {
+            XCTFail("Failed to load catalog")
+            return
+        }
+
+        // Fill answers
+        for question in catalog.questions {
+            switch question.type {
+            case .singleChoice:
+                vm.recordSingleChoice(questionId: question.id, selectedOptionId: question.options?.first?.id ?? "")
+            case .multipleChoice:
+                if let firstOpt = question.options?.first?.id {
+                    vm.toggleMultipleChoice(questionId: question.id, optionId: firstOpt)
+                }
+            case .likertSlider:
+                vm.recordSliderValue(questionId: question.id, value: 4.0)
+            case .shortText:
+                vm.recordShortText(questionId: question.id, text: "Architektur und Clean Code im Swift-Projekt.")
+            }
+            if !vm.isLastQuestion {
+                vm.advance()
+            }
+        }
+
+        vm.submitAssessment()
+
+        // Evaluated record must NOT be lost!
+        guard case .completed(let record) = vm.state else {
+            XCTFail("Evaluated record must be preserved even if saving failed")
+            return
+        }
+        XCTAssertEqual(record.catalogId, "devprofile-se-2026")
+
+        // Persistence error must be surfaced explicitly
+        XCTAssertNotNil(vm.persistenceError, "Persistence error must be surfaced to user")
+        XCTAssertTrue(vm.persistenceError?.contains("Simulated disk I/O failure") == true)
+
+        // Test Recovery: heal the store and retry
+        failingStore.shouldFail = false
+        let recovered = vm.retryPersistence()
+        XCTAssertTrue(recovered, "Retrying persistence after store recovery must succeed")
+        XCTAssertNil(vm.persistenceError, "Persistence error must be cleared upon successful retry")
+        XCTAssertEqual(failingStore.savedRecords.count, 1)
+    }
+
+    @MainActor
+    func testHistoryViewHostingLifecycleAndStateTransitions() throws {
+        // 1. Empty State Rendering
+        let emptyView = HistoryView(historyStore: store)
+        emptyView.loadRecords()
+        let emptySize = renderInHost(emptyView)
+        XCTAssertGreaterThan(emptySize.width, 0)
+        XCTAssertGreaterThan(emptySize.height, 0)
+
+        // 2. Populated State Rendering with Delta Comparison
         let r1 = createSampleRecord(overallScore: 70.0)
         let r2 = createSampleRecord(overallScore: 82.0)
         try store.save(record: r1)
         try store.save(record: r2)
 
         let populatedView = HistoryView(historyStore: store)
-        let _ = populatedView.body
+        populatedView.loadRecords()
+        let populatedSize = renderInHost(populatedView)
+        XCTAssertGreaterThan(populatedSize.width, 0)
+        XCTAssertGreaterThan(populatedSize.height, 0)
         XCTAssertEqual(try store.loadHistory().count, 2)
+
+        // 3. Error State and Corruption Reset Path (S7-05)
+        let corruptedStore = UserDefaultsHistoryStore(
+            userDefaults: testUserDefaults,
+            storageKey: "test.corrupt.view.\(UUID().uuidString)",
+            maxCapacity: 50
+        )
+        // Corrupt storage with invalid data
+        testUserDefaults.set("invalid-json".data(using: .utf8), forKey: "test.corrupt.view")
+
+        let errorView = HistoryView(historyStore: corruptedStore)
+        errorView.loadRecords() // Fails gracefully with corruptedData
+        let errorSize = renderInHost(errorView)
+        XCTAssertGreaterThan(errorSize.width, 0)
+        XCTAssertGreaterThan(errorSize.height, 0)
+
+        // Reset corrupted store
+        try corruptedStore.clearHistory()
+        errorView.loadRecords()
+        XCTAssertEqual(try corruptedStore.loadHistory().count, 0)
     }
 }

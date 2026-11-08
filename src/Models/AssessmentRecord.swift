@@ -52,6 +52,7 @@ public struct AssessmentAnswer: Identifiable, Codable, Sendable, Hashable {
 public struct AssessmentRecord: Identifiable, Codable, Sendable, Comparable {
     public let id: UUID
     public let catalogId: String
+    public let catalogVersion: String
     public let completedAt: Date
     public let durationSeconds: Double
 
@@ -70,6 +71,7 @@ public struct AssessmentRecord: Identifiable, Codable, Sendable, Comparable {
     public init(
         id: UUID = UUID(),
         catalogId: String,
+        catalogVersion: String = "1.0.0",
         completedAt: Date = Date(),
         durationSeconds: Double,
         dimensionScores: [String: Double],
@@ -79,12 +81,27 @@ public struct AssessmentRecord: Identifiable, Codable, Sendable, Comparable {
     ) {
         self.id = id
         self.catalogId = catalogId
+        self.catalogVersion = catalogVersion
         self.completedAt = completedAt
         self.durationSeconds = max(0.0, durationSeconds)
         self.dimensionScores = dimensionScores
         self.overallScore = min(100.0, max(0.0, overallScore))
         self.archetype = archetype
         self.answers = answers
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.id = try container.decode(UUID.self, forKey: .id)
+        self.catalogId = try container.decode(String.self, forKey: .catalogId)
+        self.catalogVersion = try container.decodeIfPresent(String.self, forKey: .catalogVersion) ?? "1.0.0"
+        self.completedAt = try container.decode(Date.self, forKey: .completedAt)
+        self.durationSeconds = max(0.0, try container.decode(Double.self, forKey: .durationSeconds))
+        self.dimensionScores = try container.decode([String: Double].self, forKey: .dimensionScores)
+        let rawScore = try container.decode(Double.self, forKey: .overallScore)
+        self.overallScore = min(100.0, max(0.0, rawScore))
+        self.archetype = try container.decode(ArchetypeProfile.self, forKey: .archetype)
+        self.answers = try container.decode([AssessmentAnswer].self, forKey: .answers)
     }
 
     /// Strict canonical 4-tier comparison satisfying mathematical strict weak ordering and transitivity:

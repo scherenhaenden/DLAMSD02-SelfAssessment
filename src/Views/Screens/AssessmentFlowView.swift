@@ -301,10 +301,14 @@ public struct AssessmentFlowView<VM: AssessmentViewModelProtocol>: View {
         AssessmentResultView(
             record: record,
             catalog: viewModel.catalog,
+            persistenceWarning: viewModel.persistenceError,
             theme: theme,
             onRestart: {
                 viewModel.reset()
                 viewModel.loadCatalog()
+            },
+            onRetryPersistence: {
+                _ = viewModel.retryPersistence()
             }
         )
     }

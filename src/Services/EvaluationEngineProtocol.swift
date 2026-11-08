@@ -324,6 +324,7 @@ public final class AssessmentEvaluationEngine: EvaluationEngineProtocol {
 
         return AssessmentRecord(
             catalogId: catalog.catalogId,
+            catalogVersion: catalog.version,
             completedAt: Date(),
             durationSeconds: durationSeconds,
             dimensionScores: dimensionScores,

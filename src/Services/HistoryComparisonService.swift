@@ -4,24 +4,35 @@ import Foundation
 public struct DimensionComparison: Equatable, Sendable, Identifiable {
     public var id: String { dimensionId }
     public let dimensionId: String
-    public let currentScore: Double
-    public let previousScore: Double
-    /// Difference in percentage points (`currentScore - previousScore`).
-    public let deltaPercentagePoints: Double
+    public let currentScore: Double?
+    public let previousScore: Double?
+    /// Difference in percentage points (`currentScore - previousScore`), or `nil` if not measured in both records.
+    public let deltaPercentagePoints: Double?
 
     public init(
         dimensionId: String,
-        currentScore: Double,
-        previousScore: Double
+        currentScore: Double?,
+        previousScore: Double?
     ) {
         self.dimensionId = dimensionId
         self.currentScore = currentScore
         self.previousScore = previousScore
-        self.deltaPercentagePoints = currentScore - previousScore
+        if let cur = currentScore, let prev = previousScore {
+            self.deltaPercentagePoints = cur - prev
+        } else {
+            self.deltaPercentagePoints = nil
+        }
+    }
+
+    public var isComparable: Bool {
+        deltaPercentagePoints != nil
     }
 
     public var formattedDelta: String {
-        HistoryComparisonService.formatPercentagePoints(deltaPercentagePoints)
+        guard let delta = deltaPercentagePoints else {
+            return "–"
+        }
+        return HistoryComparisonService.formatPercentagePoints(delta)
     }
 }
 
@@ -69,13 +80,33 @@ public enum HistoryComparisonService {
         return String(format: "%@%.1f pp", sign, delta)
     }
 
-    /// Compares two assessment records if they share the same catalog identifier.
-    /// Returns `nil` if catalogs are incompatible (`lhs.catalogId != rhs.catalogId`).
+    /// Verifies catalog compatibility based on SemVer major versioning.
+    /// Catalogs with different major versions are treated as distinct instruments.
+    public static func areVersionsCompatible(lhs: String, rhs: String) -> Bool {
+        let lhsMajor = lhs.split(separator: ".").first ?? Substring(lhs)
+        let rhsMajor = rhs.split(separator: ".").first ?? Substring(rhs)
+        return lhsMajor == rhsMajor
+    }
+
+    /// Determines whether a candidate record is strictly older than the reference record
+    /// under the total chronological ordering (completedAt descending, tie-broken by id.uuidString).
+    public static func isRecordStrictlyOlder(_ candidate: AssessmentRecord, than current: AssessmentRecord) -> Bool {
+        if candidate.completedAt != current.completedAt {
+            return candidate.completedAt < current.completedAt
+        }
+        return candidate.id.uuidString < current.id.uuidString
+    }
+
+    /// Compares two assessment records if they share the same catalog identifier and compatible schema version.
+    /// Returns `nil` if catalogs are incompatible (`lhs.catalogId != rhs.catalogId` or incompatible versions).
     public static func compare(
         current: AssessmentRecord,
         previous: AssessmentRecord
     ) -> AssessmentComparison? {
         guard current.catalogId == previous.catalogId else {
+            return nil
+        }
+        guard areVersionsCompatible(lhs: current.catalogVersion, rhs: previous.catalogVersion) else {
             return nil
         }
 
@@ -85,8 +116,8 @@ public enum HistoryComparisonService {
         let sortedDimensionIds = Array(allDimensionIds).sorted()
 
         let dimensionComparisons = sortedDimensionIds.map { dimId in
-            let curScore = current.dimensionScores[dimId] ?? 0.0
-            let prevScore = previous.dimensionScores[dimId] ?? 0.0
+            let curScore = current.dimensionScores[dimId]
+            let prevScore = previous.dimensionScores[dimId]
             return DimensionComparison(
                 dimensionId: dimId,
                 currentScore: curScore,
@@ -105,15 +136,16 @@ public enum HistoryComparisonService {
     }
 
     /// Finds the chronologically immediately preceding compatible record in an ordered history array.
+    /// Strictly guarantees acyclic, asymmetric comparison even in the presence of identical completedAt timestamps.
     public static func findPreviousCompatibleRecord(
         for current: AssessmentRecord,
         in history: [AssessmentRecord]
     ) -> AssessmentRecord? {
-        // Assume history is ordered descending by completedAt. Find the first record with completedAt < current.completedAt and same catalogId.
-        return history.first { record in
-            record.id != current.id &&
-            record.catalogId == current.catalogId &&
-            record.completedAt <= current.completedAt
+        return history.first { candidate in
+            candidate.id != current.id &&
+            candidate.catalogId == current.catalogId &&
+            areVersionsCompatible(lhs: candidate.catalogVersion, rhs: current.catalogVersion) &&
+            isRecordStrictlyOlder(candidate, than: current)
         }
     }
 }

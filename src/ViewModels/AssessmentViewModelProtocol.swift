@@ -31,6 +31,7 @@ public protocol AssessmentViewModelProtocol: ObservableObject {
     var hapticService: (any HapticFeedbackServiceProtocol)? { get set }
     var hasExplicitHapticService: Bool { get }
     var historyStore: (any HistoryStoreProtocol)? { get }
+    var persistenceError: String? { get }
 
     // Navigation Affordances
     var canGoBack: Bool { get }
@@ -47,5 +48,6 @@ public protocol AssessmentViewModelProtocol: ObservableObject {
     func advance()
     func goBack()
     func submitAssessment()
+    func retryPersistence() -> Bool
     func reset()
 }

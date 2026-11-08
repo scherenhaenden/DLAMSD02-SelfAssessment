@@ -3,12 +3,24 @@ import SwiftUI
 /// Displays a chronological log of all completed self-assessments, including dominant archetypes,
 /// multi-dimensional score distributions, and temporal delta comparisons in percentage points (pp).
 public struct HistoryView: View {
+    public enum HistoryAlertItem: Identifiable {
+        case clearAll
+        case resetCorrupted
+
+        public var id: Int {
+            switch self {
+            case .clearAll: return 1
+            case .resetCorrupted: return 2
+            }
+        }
+    }
+
     public let historyStore: any HistoryStoreProtocol
     public let theme: any AppThemeProtocol
 
     @State private var records: [AssessmentRecord] = []
     @State private var errorMessage: String?
-    @State private var showClearConfirmation: Bool = false
+    @State private var activeAlert: HistoryAlertItem? = nil
 
     private static let dateFormatter: DateFormatter = {
         let formatter = DateFormatter()
@@ -39,15 +51,27 @@ public struct HistoryView: View {
         .onAppear {
             loadRecords()
         }
-        .alert(isPresented: $showClearConfirmation) {
-            Alert(
-                title: Text("Verlauf löschen"),
-                message: Text("Möchtest du alle gespeicherten Assessment-Ergebnisse wirklich unwiderruflich löschen?"),
-                primaryButton: .destructive(Text("Löschen")) {
-                    clearAllHistory()
-                },
-                secondaryButton: .cancel(Text("Abbrechen"))
-            )
+        .alert(item: $activeAlert) { item in
+            switch item {
+            case .clearAll:
+                return Alert(
+                    title: Text("Verlauf löschen"),
+                    message: Text("Möchtest du alle gespeicherten Assessment-Ergebnisse wirklich unwiderruflich löschen?"),
+                    primaryButton: .destructive(Text("Löschen")) {
+                        clearAllHistory()
+                    },
+                    secondaryButton: .cancel(Text("Abbrechen"))
+                )
+            case .resetCorrupted:
+                return Alert(
+                    title: Text("Beschädigten Verlauf zurücksetzen"),
+                    message: Text("Möchtest du den nicht lesbaren Verlaufsdatenbestand wirklich zurücksetzen? Die beschädigten Daten werden gelöscht, damit neue Assessments wieder gespeichert werden können."),
+                    primaryButton: .destructive(Text("Zurücksetzen")) {
+                        clearAllHistory()
+                    },
+                    secondaryButton: .cancel(Text("Abbrechen"))
+                )
+            }
         }
         .accessibilityIdentifier("historyView")
     }
@@ -66,6 +90,7 @@ public struct HistoryView: View {
             Text("Keine Verlaufsdaten vorhanden")
                 .font(.title3.weight(.bold))
                 .foregroundColor(theme.colors.textPrimary.color)
+                .accessibilityIdentifier("history.emptyState")
 
             Text("Absolviere dein erstes Self-Assessment, um deinen Kompetenzverlauf und deine zeitliche Entwicklung zu dokumentieren.")
                 .font(.subheadline)
@@ -79,7 +104,7 @@ public struct HistoryView: View {
         .padding(theme.spacing.lg)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("Keine Verlaufsdaten vorhanden. Absolviere ein Assessment, um deinen Fortschritt zu verfolgen.")
-        .accessibilityIdentifier("history.emptyState")
+        .accessibilityIdentifier("history.emptyStateContainer")
     }
 
     private func errorStateView(message: String) -> some View {
@@ -101,19 +126,34 @@ public struct HistoryView: View {
                 .foregroundColor(theme.colors.textSecondary.color)
                 .padding(.horizontal, theme.spacing.lg)
 
-            Button(action: loadRecords) {
-                Text("Erneut versuchen")
-                    .font(.body.weight(.semibold))
-                    .foregroundColor(theme.colors.onAccent.color)
-                    .padding(.horizontal, theme.spacing.lg)
-                    .padding(.vertical, theme.spacing.sm)
-                    .background(
-                        RoundedRectangle(cornerRadius: theme.cornerRadius.medium)
-                            .fill(theme.colors.errorFeedback.color)
-                    )
+            VStack(spacing: theme.spacing.sm) {
+                Button(action: loadRecords) {
+                    Text("Erneut versuchen")
+                        .font(.body.weight(.semibold))
+                        .foregroundColor(theme.colors.onAccent.color)
+                        .padding(.horizontal, theme.spacing.lg)
+                        .padding(.vertical, theme.spacing.sm)
+                        .background(
+                            RoundedRectangle(cornerRadius: theme.cornerRadius.medium)
+                                .fill(theme.colors.errorFeedback.color)
+                        )
+                }
+                .buttonStyle(TactileButtonStyle())
+                .accessibilityIdentifier("history.retryButton")
+
+                Button(action: { activeAlert = .resetCorrupted }) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "arrow.counterclockwise")
+                        Text("Beschädigten Verlauf zurücksetzen")
+                    }
+                    .font(.subheadline.weight(.medium))
+                    .foregroundColor(theme.colors.errorFeedback.color)
+                    .padding(.horizontal, theme.spacing.md)
+                    .padding(.vertical, theme.spacing.xs)
+                }
+                .buttonStyle(TactileButtonStyle())
+                .accessibilityIdentifier("history.resetCorruptedButton")
             }
-            .buttonStyle(TactileButtonStyle())
-            .accessibilityIdentifier("history.retryButton")
 
             Spacer()
         }
@@ -138,7 +178,7 @@ public struct HistoryView: View {
 
                     Spacer()
 
-                    Button(action: { showClearConfirmation = true }) {
+                    Button(action: { activeAlert = .clearAll }) {
                         HStack(spacing: 4) {
                             Image(systemName: "trash")
                                 .font(.subheadline)
@@ -237,14 +277,16 @@ public struct HistoryView: View {
                 }
             }
 
-            // Dimension Mini-Bar Breakdown
+            // Dimension Mini-Bar Breakdown (dynamically rendered from evaluated dimensions)
+            let evaluatedDimensionIds = Array(record.dimensionScores.keys).sorted()
             VStack(spacing: 6) {
-                ForEach(AssessmentDimension.standardDimensions) { dimension in
-                    let score = record.dimensionScores[dimension.id] ?? 0.0
-                    let dimDelta = comparison?.dimensionComparisons.first(where: { $0.dimensionId == dimension.id })
+                ForEach(evaluatedDimensionIds, id: \.self) { dimId in
+                    let dimName = AssessmentDimension.standardDimensions.first(where: { $0.id == dimId })?.name ?? dimId.capitalized
+                    let score = record.dimensionScores[dimId] ?? 0.0
+                    let dimDelta = comparison?.dimensionComparisons.first(where: { $0.dimensionId == dimId })
 
                     HStack(spacing: theme.spacing.xs) {
-                        Text(dimension.name)
+                        Text(dimName)
                             .font(.caption2)
                             .foregroundColor(theme.colors.textSecondary.color)
                             .frame(width: 100, alignment: .leading)
@@ -256,7 +298,7 @@ public struct HistoryView: View {
                                     .frame(height: 6)
 
                                 RoundedRectangle(cornerRadius: 3)
-                                    .fill(theme.colorToken(forDimension: dimension.id).color)
+                                    .fill(theme.colorToken(forDimension: dimId).color)
                                     .frame(width: max(0, min(geo.size.width, geo.size.width * CGFloat(score / 100.0))), height: 6)
                             }
                         }
@@ -267,10 +309,10 @@ public struct HistoryView: View {
                             .foregroundColor(theme.colors.textPrimary.color)
                             .frame(width: 36, alignment: .trailing)
 
-                        if let dimDelta = dimDelta {
+                        if let dimDelta = dimDelta, let deltaVal = dimDelta.deltaPercentagePoints {
                             Text(dimDelta.formattedDelta)
                                 .font(.caption2.weight(.semibold))
-                                .foregroundColor(colorForDelta(dimDelta.deltaPercentagePoints))
+                                .foregroundColor(colorForDelta(deltaVal))
                                 .frame(width: 52, alignment: .trailing)
                         } else {
                             Text("–")
@@ -324,7 +366,10 @@ public struct HistoryView: View {
         }
     }
 
-    private func colorForDelta(_ delta: Double) -> Color {
+    private func colorForDelta(_ delta: Double?) -> Color {
+        guard let delta = delta else {
+            return theme.colors.textSecondary.color.opacity(0.5)
+        }
         if delta > 0.05 {
             return theme.colors.successFeedback.color
         } else if delta < -0.05 {
@@ -349,6 +394,19 @@ public struct HistoryView: View {
         var summary = "Assessment vom \(Self.dateFormatter.string(from: record.completedAt)), Gesamtpunktzahl \(String(format: "%.1f", record.overallScore)) Prozent, Dominanter Archetyp \(record.archetype.title)."
         if let comparison = comparison {
             summary += " Zeitlicher Vergleich zum Vorlauf: \(comparison.formattedOverallDelta)."
+        }
+        let dimDetails = record.dimensionScores.keys.sorted().compactMap { dimId -> String? in
+            guard let score = record.dimensionScores[dimId] else { return nil }
+            let name = AssessmentDimension.standardDimensions.first(where: { $0.id == dimId })?.name ?? dimId.capitalized
+            let deltaStr = comparison?.dimensionComparisons.first(where: { $0.dimensionId == dimId })?.formattedDelta
+            if let delta = deltaStr, delta != "–" {
+                return "\(name): \(Int(score)) Prozent (\(delta))"
+            } else {
+                return "\(name): \(Int(score)) Prozent"
+            }
+        }.joined(separator: ", ")
+        if !dimDetails.isEmpty {
+            summary += " Dimensionen: \(dimDetails)."
         }
         return summary
     }
