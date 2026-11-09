@@ -17,11 +17,13 @@
 		A1ED876D9404A4587019272D /* src/ViewModels/AssessmentViewModelProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15D6CC885F5D021C431BC246 /* AssessmentViewModelProtocol.swift */; };
 		44E6EE9F39D1A491BBA453C5 /* src/ViewModels/AssessmentViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2280DC883D3B6C5FDC8466A /* AssessmentViewModel.swift */; };
 		A0BBDDE9C1E0EE23EF0EDFA0 /* src/ViewModels/HistoryViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6031773CA71F0CB3F4B0A51 /* HistoryViewModel.swift */; };
+		B9811BCE3A89183728A2C832 /* src/ViewModels/CatalogManagerViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A14862248228E8259CBE2FA /* CatalogManagerViewModel.swift */; };
 		B8D40B7C011B5378771FD2F6 /* src/Views/Screens/ComponentShowcaseView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C94288482D90A5C629441AAD /* ComponentShowcaseView.swift */; };
 		5AD3E9F51E1659BEE5C0DB59 /* src/Views/Screens/AssessmentQuestionContainerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1972FA9E165BC6C836096CA /* AssessmentQuestionContainerView.swift */; };
 		5FEE8EC053A8EB51EDB8C018 /* src/Views/Screens/AssessmentFlowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A618462F6E5564B215454BFF /* AssessmentFlowView.swift */; };
 		6C804B8F5B0B749F9957EF65 /* src/Views/Screens/AssessmentResultView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F664FC54B400E9EDB7D8189 /* AssessmentResultView.swift */; };
 		CEF8A548B2E18C207A9617D8 /* src/Views/Screens/HistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5AC148052B8A704B17C844D5 /* HistoryView.swift */; };
+		7807EEC9966A0C6C7DD372F5 /* src/Views/Screens/CatalogManagerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B24F14BF5FD2DB4DFC1AE1F /* CatalogManagerView.swift */; };
 		827EFBB33E4006AB652B1E13 /* src/Views/Components/Color+Adaptive.swift in Sources */ = {isa = PBXBuildFile; fileRef = B561C4742E9D9BDE6808A726 /* Color+Adaptive.swift */; };
 		377A9914A0EA5EF5F4CF59DF /* src/Views/Components/MultiSelectChipGrid.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04210B4F694358BD2F726605 /* MultiSelectChipGrid.swift */; };
 		7CCCB6231F88DAFD99807CA3 /* src/Views/Components/LikertSliderCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5CFC48CD1B8DABD906FF2436 /* LikertSliderCard.swift */; };
@@ -38,6 +40,7 @@
 		282C3B709528D1EC01B3D3C9 /* src/Services/HistoryStoreProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1C2DE3034BCC286C618F9C3 /* HistoryStoreProtocol.swift */; };
 		EE7970535E50B8EF11893CAC /* src/Services/UserDefaultsHistoryStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2250E21AC65F4CCD3CB93BC3 /* UserDefaultsHistoryStore.swift */; };
 		5B403C6FB04D9E6D4320D5A4 /* src/Services/HistoryComparisonService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CAF9651D81DC82888971B96 /* HistoryComparisonService.swift */; };
+		510A9346C390F6D1FA229D36 /* src/Services/SandboxCatalogStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CB7A01543FBFE4A62588E32 /* SandboxCatalogStore.swift */; };
 		875D227688E97C4D3C56207C /* src/Resources/assessment_catalog.json in Resources */ = {isa = PBXBuildFile; fileRef = 526EDCEF77313475F83CEC84 /* assessment_catalog.json */; };
 		AB51B424884DD599880A07F0 /* src/Tests/CatalogTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABA66942F2FF49194C11B247 /* CatalogTests.swift */; };
 		C926AC62627F9F44DA75B50D /* src/Tests/ColorTokenTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4168061FD3F8A4D947A3F03E /* ColorTokenTests.swift */; };
@@ -47,6 +50,7 @@
 		FB699B84541793EDE0E9BE8D /* src/Tests/HapticFeedbackServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43D817473367C39621E4D3BE /* HapticFeedbackServiceTests.swift */; };
 		AC78D3D5B93BA9638801286B /* src/Tests/ResultViewTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75E76B6322319ED553D331EA /* ResultViewTests.swift */; };
 		6F10DA01DC75F61D0A4D2B5E /* src/Tests/HistoryStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 72BB8B06BA94D8D9CA74C58E /* HistoryStoreTests.swift */; };
+		54F7CD0111BE8A0028A56068 /* src/Tests/CatalogManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87057E12B0D640CC853C1D42 /* CatalogManagerTests.swift */; };
 		655482FA3B2CCB96D880CA76 /* ui-tests/AssessYourselfUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E002823799183206956B1DB /* AssessYourselfUITests.swift */; };
 /* End PBXBuildFile section */
 
@@ -81,11 +85,13 @@
 		15D6CC885F5D021C431BC246 /* AssessmentViewModelProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AssessmentViewModelProtocol.swift"; sourceTree = "<group>"; };
 		F2280DC883D3B6C5FDC8466A /* AssessmentViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AssessmentViewModel.swift"; sourceTree = "<group>"; };
 		F6031773CA71F0CB3F4B0A51 /* HistoryViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "HistoryViewModel.swift"; sourceTree = "<group>"; };
+		2A14862248228E8259CBE2FA /* CatalogManagerViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CatalogManagerViewModel.swift"; sourceTree = "<group>"; };
 		C94288482D90A5C629441AAD /* ComponentShowcaseView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ComponentShowcaseView.swift"; sourceTree = "<group>"; };
 		F1972FA9E165BC6C836096CA /* AssessmentQuestionContainerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AssessmentQuestionContainerView.swift"; sourceTree = "<group>"; };
 		A618462F6E5564B215454BFF /* AssessmentFlowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AssessmentFlowView.swift"; sourceTree = "<group>"; };
 		9F664FC54B400E9EDB7D8189 /* AssessmentResultView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AssessmentResultView.swift"; sourceTree = "<group>"; };
 		5AC148052B8A704B17C844D5 /* HistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "HistoryView.swift"; sourceTree = "<group>"; };
+		0B24F14BF5FD2DB4DFC1AE1F /* CatalogManagerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CatalogManagerView.swift"; sourceTree = "<group>"; };
 		B561C4742E9D9BDE6808A726 /* Color+Adaptive.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Color+Adaptive.swift"; sourceTree = "<group>"; };
 		04210B4F694358BD2F726605 /* MultiSelectChipGrid.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MultiSelectChipGrid.swift"; sourceTree = "<group>"; };
 		5CFC48CD1B8DABD906FF2436 /* LikertSliderCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "LikertSliderCard.swift"; sourceTree = "<group>"; };
@@ -102,6 +108,7 @@
 		B1C2DE3034BCC286C618F9C3 /* HistoryStoreProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "HistoryStoreProtocol.swift"; sourceTree = "<group>"; };
 		2250E21AC65F4CCD3CB93BC3 /* UserDefaultsHistoryStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UserDefaultsHistoryStore.swift"; sourceTree = "<group>"; };
 		4CAF9651D81DC82888971B96 /* HistoryComparisonService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "HistoryComparisonService.swift"; sourceTree = "<group>"; };
+		0CB7A01543FBFE4A62588E32 /* SandboxCatalogStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SandboxCatalogStore.swift"; sourceTree = "<group>"; };
 		526EDCEF77313475F83CEC84 /* assessment_catalog.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "assessment_catalog.json"; sourceTree = "<group>"; };
 		ABA66942F2FF49194C11B247 /* CatalogTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CatalogTests.swift"; sourceTree = "<group>"; };
 		4168061FD3F8A4D947A3F03E /* ColorTokenTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ColorTokenTests.swift"; sourceTree = "<group>"; };
@@ -111,6 +118,7 @@
 		43D817473367C39621E4D3BE /* HapticFeedbackServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "HapticFeedbackServiceTests.swift"; sourceTree = "<group>"; };
 		75E76B6322319ED553D331EA /* ResultViewTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ResultViewTests.swift"; sourceTree = "<group>"; };
 		72BB8B06BA94D8D9CA74C58E /* HistoryStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "HistoryStoreTests.swift"; sourceTree = "<group>"; };
+		87057E12B0D640CC853C1D42 /* CatalogManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CatalogManagerTests.swift"; sourceTree = "<group>"; };
 		0E002823799183206956B1DB /* AssessYourselfUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AssessYourselfUITests.swift"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -207,6 +215,7 @@
 				15D6CC885F5D021C431BC246 /* AssessmentViewModelProtocol.swift */,
 				F2280DC883D3B6C5FDC8466A /* AssessmentViewModel.swift */,
 				F6031773CA71F0CB3F4B0A51 /* HistoryViewModel.swift */,
+				2A14862248228E8259CBE2FA /* CatalogManagerViewModel.swift */,
 			);
 			path = ViewModels;
 			sourceTree = "<group>";
@@ -220,6 +229,7 @@
 				B1C2DE3034BCC286C618F9C3 /* HistoryStoreProtocol.swift */,
 				2250E21AC65F4CCD3CB93BC3 /* UserDefaultsHistoryStore.swift */,
 				4CAF9651D81DC82888971B96 /* HistoryComparisonService.swift */,
+				0CB7A01543FBFE4A62588E32 /* SandboxCatalogStore.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -258,6 +268,7 @@
 				9F664FC54B400E9EDB7D8189 /* AssessmentResultView.swift */,
 				C94288482D90A5C629441AAD /* ComponentShowcaseView.swift */,
 				5AC148052B8A704B17C844D5 /* HistoryView.swift */,
+				0B24F14BF5FD2DB4DFC1AE1F /* CatalogManagerView.swift */,
 			);
 			path = Screens;
 			sourceTree = "<group>";
@@ -281,6 +292,7 @@
 				75E76B6322319ED553D331EA /* ResultViewTests.swift */,
 				37D757E5F24C6448E71DCF46 /* UIComponentTests.swift */,
 				72BB8B06BA94D8D9CA74C58E /* HistoryStoreTests.swift */,
+				87057E12B0D640CC853C1D42 /* CatalogManagerTests.swift */,
 			);
 			path = Tests;
 			sourceTree = "<group>";
@@ -424,11 +436,13 @@
 				A1ED876D9404A4587019272D /* src/ViewModels/AssessmentViewModelProtocol.swift in Sources */,
 				44E6EE9F39D1A491BBA453C5 /* src/ViewModels/AssessmentViewModel.swift in Sources */,
 				A0BBDDE9C1E0EE23EF0EDFA0 /* src/ViewModels/HistoryViewModel.swift in Sources */,
+				B9811BCE3A89183728A2C832 /* src/ViewModels/CatalogManagerViewModel.swift in Sources */,
 				B8D40B7C011B5378771FD2F6 /* src/Views/Screens/ComponentShowcaseView.swift in Sources */,
 				5AD3E9F51E1659BEE5C0DB59 /* src/Views/Screens/AssessmentQuestionContainerView.swift in Sources */,
 				5FEE8EC053A8EB51EDB8C018 /* src/Views/Screens/AssessmentFlowView.swift in Sources */,
 				6C804B8F5B0B749F9957EF65 /* src/Views/Screens/AssessmentResultView.swift in Sources */,
 				CEF8A548B2E18C207A9617D8 /* src/Views/Screens/HistoryView.swift in Sources */,
+				7807EEC9966A0C6C7DD372F5 /* src/Views/Screens/CatalogManagerView.swift in Sources */,
 				827EFBB33E4006AB652B1E13 /* src/Views/Components/Color+Adaptive.swift in Sources */,
 				377A9914A0EA5EF5F4CF59DF /* src/Views/Components/MultiSelectChipGrid.swift in Sources */,
 				7CCCB6231F88DAFD99807CA3 /* src/Views/Components/LikertSliderCard.swift in Sources */,
@@ -445,6 +459,7 @@
 				282C3B709528D1EC01B3D3C9 /* src/Services/HistoryStoreProtocol.swift in Sources */,
 				EE7970535E50B8EF11893CAC /* src/Services/UserDefaultsHistoryStore.swift in Sources */,
 				5B403C6FB04D9E6D4320D5A4 /* src/Services/HistoryComparisonService.swift in Sources */,
+				510A9346C390F6D1FA229D36 /* src/Services/SandboxCatalogStore.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -460,6 +475,7 @@
 				FB699B84541793EDE0E9BE8D /* src/Tests/HapticFeedbackServiceTests.swift in Sources */,
 				AC78D3D5B93BA9638801286B /* src/Tests/ResultViewTests.swift in Sources */,
 				6F10DA01DC75F61D0A4D2B5E /* src/Tests/HistoryStoreTests.swift in Sources */,
+				54F7CD0111BE8A0028A56068 /* src/Tests/CatalogManagerTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -534,7 +550,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 20261109.140000;
+				CURRENT_PROJECT_VERSION = 20261110.100000;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -545,7 +561,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 0.8.0;
+				MARKETING_VERSION = 0.9.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.scherenhaenden.AssessYourself;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PRODUCT_MODULE_NAME = AssessYourselfCore;
@@ -558,7 +574,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 20261109.140000;
+				CURRENT_PROJECT_VERSION = 20261110.100000;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -569,7 +585,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 0.8.0;
+				MARKETING_VERSION = 0.9.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.scherenhaenden.AssessYourself;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PRODUCT_MODULE_NAME = AssessYourselfCore;
@@ -582,10 +598,10 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 20261109.140000;
+				CURRENT_PROJECT_VERSION = 20261110.100000;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				MARKETING_VERSION = 0.8.0;
+				MARKETING_VERSION = 0.9.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.scherenhaenden.AssessYourselfTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
@@ -599,10 +615,10 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 20261109.140000;
+				CURRENT_PROJECT_VERSION = 20261110.100000;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				MARKETING_VERSION = 0.8.0;
+				MARKETING_VERSION = 0.9.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.scherenhaenden.AssessYourselfTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
@@ -616,10 +632,10 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 20261109.140000;
+				CURRENT_PROJECT_VERSION = 20261110.100000;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				MARKETING_VERSION = 0.8.0;
+				MARKETING_VERSION = 0.9.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.scherenhaenden.AssessYourselfUITests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
@@ -632,10 +648,10 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 20261109.140000;
+				CURRENT_PROJECT_VERSION = 20261110.100000;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				MARKETING_VERSION = 0.8.0;
+				MARKETING_VERSION = 0.9.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.scherenhaenden.AssessYourselfUITests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;

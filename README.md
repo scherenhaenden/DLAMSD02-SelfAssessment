@@ -4,7 +4,7 @@ Native SwiftUI self-assessment application developed for **DLAMSD02 Apple Mobile
 
 ## Current Development Stage
 
-Version **0.8.0** (Build `20261109.140000`), Sprint 8 Released: Multi-Device iPad Ergonomics (640 pt Centered Container across Flow, Result & History, Split View, Slide Over), Deep VoiceOver Accessibility (German semantic hints, exact 1-decimal percentage formatting `%.1f %%`, adjustable slider semantics, grouped recommendation cards), Heuristic Usability Inspection (Nielsen 10 + Apple HIG), and HistoryViewModel Architecture Extraction.
+Version **0.9.0** (Build `20261110.100000`), Sprint 9 Released: In-App Question Authoring (`CatalogManagerView`), Sandbox Persistence (`Application Support/AssessYourself/custom_assessments.json`) with `.bak` Backup and Automatic Rollback upon Corruption, JSON Import/Export, and Root Quad-Tab Integration (ADR-09, US-15, US-16).
 
 ### Implemented
 
@@ -42,10 +42,10 @@ Version **0.8.0** (Build `20261109.140000`), Sprint 8 Released: Multi-Device iPa
   - *Tactile Button Feedback (`TactileButtonStyle`):* Native responsive touch compression (`scaleEffect(0.98)`) and subtle dimming (`0.92`) across all primary action buttons.
   - *Audit Remediation Baseline:* Welcome screen retention until explicit start tap, WCAG AAA adaptive dark mode contrast (`onAccent`), robust UIKit test host measurement without fallback masking, and full 24-question end-to-end traversal.
 - **Root Application Navigation:**
-  - `AssessYourselfApp`: Triple-tab entry point connecting `AssessmentFlowView` as primary assessment experience (`tab.assessmentFlow`), `HistoryView` (`tab.history`), and `ComponentShowcaseView` (`tab.showcase`).
+  - `AssessYourselfApp`: Quad-tab entry point connecting `AssessmentFlowView` as primary assessment experience (`tab.assessmentFlow`), `HistoryView` (`tab.history`), `CatalogManagerView` (`tab.catalogManager`), and `ComponentShowcaseView` (`tab.showcase`).
 - **Test Suite & Code Coverage:**
-  - **104 SwiftPM unit tests** passing on macOS 14 (`swift test`, `arm64e-apple-macos14.0`, 0 failures, 0 warnings, version `v0.7.1`), including 17 comprehensive tests in `HistoryStoreTests.swift` covering roundtrip persistence, idempotency, chronological sorting descending, FIFO 50 pruning, defensive error handling on corrupted data, thread-safety under concurrent load, percentage-point comparison math, acyclic date-tie breaking, version compatibility, dynamic dimension rendering, and UI hosting lifecycle verification.
-  - **7 XCUITest integration tests** (`ui-tests/AssessYourselfUITests.swift`) passing on iPhone 17 Simulator (`iOS 27.0`), verifying end-to-end traversal, dimension bars, score headers, reset affordances, history navigation & state transitions, and UI interactions (**111/111 native tests passed**).
+  - **125 SwiftPM unit tests** passing on macOS 14 (`swift test`, `arm64e-apple-macos14.0`, 0 failures, 0 warnings, version `v0.9.0`), covering roundtrip persistence, idempotency, chronological sorting descending, FIFO 50 pruning, defensive error handling, `.bak` backup creation, automatic rollback on corruption, in-app question creation, JSON import/export, simulated multi-device hosting layouts on iPad viewports, and German VoiceOver token semantics.
+  - **11 XCUITest integration tests** (`ui-tests/AssessYourselfUITests.swift`) passing on iPhone 17 Simulator (`iOS 27.0`), verifying end-to-end traversal, dimension bars, score headers, reset affordances, history navigation, persistence across relaunch, explicit corruption recovery, catalog management and adding custom questions (**136/136 native tests passed**). Physical iPad hardware acceptance (rotation, multi-window modes) and live VoiceOver screenreader passes remain open as planned validation tasks.
   - *Archived Baseline Audit (v0.6.0, commit `8bb5c3a`, iPhone 17 Simulator runtime `iOS 27.0` / macOS 14):* **83 unit tests** (`audit-unit.log:231`, `audit-native.log:1189`) + **6 XCUITest UI tests**, totaling **89/89 passed native tests** (`audit-native-summary.json`).
   - *Coverage Baseline (v0.6.0 audit, commit `8bb5c3a`):* **94.37% line coverage on macOS** (`llvm-cov report`: 4,847 / 5,136 lines in 24 `src` production files, `audit-macos-coverage.json`), with $\ge 82.22\%$ on every production source file (`PedagogicalRecommendationsView.swift`: 99.70%; 100% on `ArchetypeCardView`, `DimensionScoreBarView`, `AssessmentResultView`, `TactileButtonStyle`, `HapticFeedbackService`).
   - *iOS Coverage Baseline (v0.6.0 audit, commit `8bb5c3a`):* **96.46% line coverage on native iOS target sources** (5,173 / 5,363 lines in 25 files, `audit-ios-coverage.json`).
@@ -111,9 +111,10 @@ docs/                      Sprint documentation and technical verification repor
 | **0.5.3** | Strict DI precedence, mock lifecycle verification, zero-fallback host sizing | ✅ Completed |
 | **0.6.0** | Result analytics, competency dashboard, archetype categorization | ✅ Completed |
 | **0.6.1** | Deterministic tie-breaker, transitive quantized comparator, dashboard UI test assertions | ✅ Completed |
-| **0.7.0** | Local persistence (`UserDefaultsHistoryStore`), history & progress trends | 🟡 Next |
-| **0.8.0** | Multi-device layout (iPad 640pt container), VoiceOver accessibility | ⚪ Planned |
-| **0.9.0** | In-app authoring, sandbox storage, JSON/URL import with rollback | ⚪ Planned |
-| **1.0.0** | Final code freeze, $\ge 80\%$ llvm-cov, UI acceptance suite, academic report | ⚪ Planned |
+| **0.7.0** | Local persistence (`UserDefaultsHistoryStore`), history & progress trends | ✅ Completed |
+| **0.7.1** | Save-failure UI warning & retry, major version matching, explicit corruption recovery | ✅ Completed |
+| **0.8.0** | Multi-device layout (iPad 640pt container), VoiceOver a11y, history isolation & acceptance (device acceptance open) | ✅ Completed |
+| **0.9.0** | In-app authoring (`CatalogManagerView`), sandbox storage, `.bak` backup with automatic rollback, JSON import/export | ✅ Completed |
+| **1.0.0** | Final code freeze, $\ge 80\%$ llvm-cov, UI acceptance suite, academic report | 🟡 Next |
 
 Author: Edward Sergio José Flores Mogollón · B.Sc. Softwareentwicklung · IU.

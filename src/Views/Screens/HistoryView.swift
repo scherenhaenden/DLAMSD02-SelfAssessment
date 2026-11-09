@@ -306,10 +306,10 @@ public struct HistoryView: View {
                         }
                         .frame(height: 6)
 
-                        Text(String(format: "%.0f%%", score))
+                        Text(String(format: "%.1f %%", score))
                             .font(.caption2.weight(.medium))
                             .foregroundColor(theme.colors.textPrimary.color)
-                            .frame(width: 36, alignment: .trailing)
+                            .frame(width: 48, alignment: .trailing)
 
                         if let dimDelta = dimDelta, let deltaVal = dimDelta.deltaPercentagePoints {
                             Text(dimDelta.formattedDelta)
@@ -402,9 +402,9 @@ public struct HistoryView: View {
             let name = AssessmentDimension.standardDimensions.first(where: { $0.id == dimId })?.name ?? dimId.capitalized
             let deltaStr = comparison?.dimensionComparisons.first(where: { $0.dimensionId == dimId })?.formattedDelta
             if let delta = deltaStr, delta != "–" {
-                return "\(name): \(Int(score)) Prozent (\(delta))"
+                return "\(name): \(String(format: "%.1f", score)) Prozent (\(delta))"
             } else {
-                return "\(name): \(Int(score)) Prozent"
+                return "\(name): \(String(format: "%.1f", score)) Prozent"
             }
         }.joined(separator: ", ")
         if !dimDetails.isEmpty {

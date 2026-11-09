@@ -501,8 +501,9 @@ final class AssessYourselfUITests: XCTestCase {
     }
 
     func testAssessmentPersistenceSurvivesRelaunchInHistory() throws {
+        let isolatedKey = "de.iu.assessyourself.history.uitest.\(UUID().uuidString)"
         // Step 1: Clean launch, complete assessment & submit
-        app.launchArguments = ["--uitesting", "--uitesting-reset-history"]
+        app.launchArguments = ["--uitesting", "--uitesting-reset-history", "--uitesting-storage-key", isolatedKey]
         app.launch()
 
         completeFullAssessmentFlow()
@@ -516,21 +517,27 @@ final class AssessYourselfUITests: XCTestCase {
         XCTAssertTrue(countHeader.waitForExistence(timeout: 5), "History count header must report exactly 1 record")
         XCTAssertTrue(app.staticTexts["Max. 50 Einträge (FIFO)"].exists)
 
+        // Verify visible card displays dominant archetype and score before relaunch
+        XCTAssertTrue(app.staticTexts["Systems & Software Architect"].waitForExistence(timeout: 5), "Dominant archetype must be visible on history card before relaunch")
+        XCTAssertTrue(app.staticTexts["72.5 %"].exists, "Overall score must be visible on history card before relaunch")
+
         let clearButton = app.buttons["history.clearButton"]
         XCTAssertTrue(clearButton.exists, "Clear button must be available when history contains records")
 
         // Step 3: Terminate app and relaunch PRESERVING history store
         app.terminate()
-        app.launchArguments = ["--uitesting", "--uitesting-preserve-history"]
+        app.launchArguments = ["--uitesting", "--uitesting-preserve-history", "--uitesting-storage-key", isolatedKey]
         app.launch()
 
         let historyTabAfterRelaunch = app.tabBars.buttons["Verlauf"]
         XCTAssertTrue(historyTabAfterRelaunch.waitForExistence(timeout: 5))
         historyTabAfterRelaunch.tap()
 
-        // Verify persisted record survived relaunch without duplication
+        // Verify persisted record survived relaunch without duplication and with identical contents
         let countHeaderAfterRelaunch = app.staticTexts["Verlauf (1)"]
         XCTAssertTrue(countHeaderAfterRelaunch.waitForExistence(timeout: 5), "Relaunched app must retain exactly 1 record without duplication")
+        XCTAssertTrue(app.staticTexts["Systems & Software Architect"].exists, "Dominant archetype must persist identically after relaunch")
+        XCTAssertTrue(app.staticTexts["72.5 %"].exists, "Overall score must persist identically after relaunch")
 
         // Step 4: Clear history with confirmation and verify empty state
         let clearButtonAfter = app.buttons["history.clearButton"]
@@ -546,8 +553,9 @@ final class AssessYourselfUITests: XCTestCase {
     }
 
     func testHistoryCorruptionRecoveryViaAlertAction() throws {
+        let isolatedKey = "de.iu.assessyourself.history.uitest.corrupt.\(UUID().uuidString)"
         // Launch with corrupted JSON data in storageKey
-        app.launchArguments = ["--uitesting-corrupt-history"]
+        app.launchArguments = ["--uitesting", "--uitesting-corrupt-history", "--uitesting-storage-key", isolatedKey]
         app.launch()
 
         let historyTab = app.tabBars.buttons["Verlauf"]
@@ -608,5 +616,66 @@ final class AssessYourselfUITests: XCTestCase {
         let startButton = app.buttons["flow.startButton"]
         XCTAssertTrue(startButton.waitForExistence(timeout: 5))
         XCTAssertGreaterThanOrEqual(startButton.frame.height, 44.0, "Start button touch target must be >= 44 pt")
+    }
+
+    func testCatalogManagerNavigationAndAddCustomQuestion() throws {
+        let isolatedKey = "de.iu.assessyourself.history.uitest.cat.\(UUID().uuidString)"
+        app.launchArguments = ["--uitesting", "--uitesting-reset-history", "--uitesting-storage-key", isolatedKey]
+        app.launch()
+
+        let catalogTab = app.tabBars.buttons["Katalog"]
+        XCTAssertTrue(catalogTab.waitForExistence(timeout: 5), "Catalog tab must be present in root tab bar")
+        catalogTab.tap()
+
+        // Verify initial bundled state (24 questions, Standard)
+        let countBadge = app.staticTexts["catalogManager.questionCountBadge"]
+        XCTAssertTrue(countBadge.waitForExistence(timeout: 5), "Question count badge must be visible")
+        XCTAssertEqual(countBadge.label, "24 Fragen")
+
+        let storageLabel = app.staticTexts["catalogManager.storageStatusLabel"]
+        XCTAssertTrue(storageLabel.exists)
+        XCTAssertEqual(storageLabel.label, "Standard (App-Bundle)")
+
+        // Tap Add Question button
+        let addButton = app.buttons["catalogManager.addQuestionButton"]
+        XCTAssertTrue(addButton.waitForExistence(timeout: 5))
+        addButton.tap()
+
+        // Fill question creation form
+        let idField = app.textFields["catalogManager.field.id"]
+        XCTAssertTrue(idField.waitForExistence(timeout: 5))
+        idField.tap()
+        idField.typeText("q_uitest_actors")
+
+        let titleField = app.textFields["catalogManager.field.title"]
+        titleField.tap()
+        titleField.typeText("Swift Concurrency Actors")
+
+        let promptField = app.textFields["catalogManager.field.prompt"]
+        promptField.tap()
+        promptField.typeText("Wie schuetzen Sie mutable State mit Actors?")
+
+        // Save new question
+        let saveButton = app.buttons["catalogManager.saveQuestionButton"]
+        XCTAssertTrue(saveButton.isEnabled, "Save button must be enabled when required fields are filled")
+        saveButton.tap()
+
+        // Verify updated state (25 questions, Sandbox status, confirmation banner)
+        XCTAssertTrue(app.staticTexts["25 Fragen"].waitForExistence(timeout: 5), "Question count must increment to 25")
+        XCTAssertEqual(storageLabel.label, "Benutzerdefiniert (Sandbox)")
+        let successBanner = app.staticTexts.containing(NSPredicate(format: "label CONTAINS 'Swift Concurrency Actors'")).firstMatch
+        XCTAssertTrue(successBanner.waitForExistence(timeout: 5), "Confirmation banner for created question must be displayed")
+
+        // Switch to Assessment tab and verify assessment flow starts cleanly with custom catalog
+        let assessmentTab = app.tabBars.buttons["Assessment"]
+        assessmentTab.tap()
+
+        let startButton = app.buttons["flow.startButton"]
+        XCTAssertTrue(startButton.waitForExistence(timeout: 5))
+        startButton.tap()
+
+        let counterPill = app.staticTexts["flow.counterPill"]
+        XCTAssertTrue(counterPill.waitForExistence(timeout: 5), "Question counter must appear after starting")
+        XCTAssertEqual(counterPill.label, "Frage 1 / 25", "Assessment must load updated catalog containing 25 questions")
     }
 }

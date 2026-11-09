@@ -43,7 +43,7 @@ public struct MultiSelectChipGrid: View {
                     .accessibilityIdentifier("multiChip.counterPill")
             }
             .accessibilityElement(children: .combine)
-            .accessibilityLabel("Selection status: \(selectedIds.count) of maximum \(maxSelectCount) selected. Required minimum: \(minSelectCount).")
+            .accessibilityLabel("Auswahlstatus: \(selectedIds.count) von maximal \(maxSelectCount) ausgewählt. Erforderliches Minimum: \(minSelectCount).")
             .accessibilityIdentifier("multiChip.statusHeader")
 
             // Grid of selectable chips (adaptive columns with unbounded dynamic text scaling)

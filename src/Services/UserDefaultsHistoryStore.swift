@@ -4,6 +4,7 @@ import Foundation
 /// Enforces a strict FIFO retention policy of up to 50 records sorted by `completedAt` descending (newest first).
 public final class UserDefaultsHistoryStore: HistoryStoreProtocol, @unchecked Sendable {
     public static let defaultStorageKey = "de.iu.assessyourself.history.records.v1"
+    public static let uiTestStorageKey = "de.iu.assessyourself.history.records.uitest"
     public static let defaultMaxCapacity = 50
 
     private let userDefaults: UserDefaults

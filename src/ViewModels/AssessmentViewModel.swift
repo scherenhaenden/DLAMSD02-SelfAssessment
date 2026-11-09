@@ -15,6 +15,7 @@ public final class AssessmentViewModel: AssessmentViewModelProtocol {
     public var hapticService: (any HapticFeedbackServiceProtocol)?
     public internal(set) var hasExplicitHapticService: Bool
     public var historyStore: (any HistoryStoreProtocol)?
+    public var catalogStore: (any SandboxCatalogStoreProtocol)?
     private var sessionStartTime: Date?
 
     /// Designated initializer for explicit dependency injection.
@@ -23,13 +24,15 @@ public final class AssessmentViewModel: AssessmentViewModelProtocol {
         catalogLoader: CatalogLoaderProtocol = CatalogLoader(),
         evaluationEngine: EvaluationEngineProtocol = EvaluationEngine(),
         hapticService: (any HapticFeedbackServiceProtocol)?,
-        historyStore: (any HistoryStoreProtocol)? = nil
+        historyStore: (any HistoryStoreProtocol)? = nil,
+        catalogStore: (any SandboxCatalogStoreProtocol)? = nil
     ) {
         self.catalogLoader = catalogLoader
         self.evaluationEngine = evaluationEngine
         self.hapticService = hapticService
         self.hasExplicitHapticService = true
         self.historyStore = historyStore
+        self.catalogStore = catalogStore
     }
 
     /// Convenience initializer using default system haptic feedback service.
@@ -37,13 +40,15 @@ public final class AssessmentViewModel: AssessmentViewModelProtocol {
     public convenience init(
         catalogLoader: CatalogLoaderProtocol = CatalogLoader(),
         evaluationEngine: EvaluationEngineProtocol = EvaluationEngine(),
-        historyStore: (any HistoryStoreProtocol)? = nil
+        historyStore: (any HistoryStoreProtocol)? = nil,
+        catalogStore: (any SandboxCatalogStoreProtocol)? = nil
     ) {
         self.init(
             catalogLoader: catalogLoader,
             evaluationEngine: evaluationEngine,
             hapticService: SystemHapticFeedbackService(),
-            historyStore: historyStore
+            historyStore: historyStore,
+            catalogStore: catalogStore
         )
         self.hasExplicitHapticService = false
     }
@@ -145,7 +150,12 @@ public final class AssessmentViewModel: AssessmentViewModelProtocol {
         state = .loading
         hapticService?.prepare()
         do {
-            let loadedCatalog = try catalogLoader.loadBundledCatalog()
+            let loadedCatalog: AssessmentCatalog
+            if let store = catalogStore {
+                loadedCatalog = try store.loadActiveCatalog()
+            } else {
+                loadedCatalog = try catalogLoader.loadBundledCatalog()
+            }
             self.catalog = loadedCatalog
             self.currentQuestionIndex = 0
             self.answers.removeAll()
