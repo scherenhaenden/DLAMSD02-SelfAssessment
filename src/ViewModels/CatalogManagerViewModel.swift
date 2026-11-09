@@ -10,10 +10,12 @@ public final class CatalogManagerViewModel: ObservableObject {
     @Published public private(set) var statusMessage: String?
     @Published public private(set) var errorMessage: String?
 
-    @Published public var selectedDimensionFilter: String? = nil
+    @Published public var selectedDimensionFilter: String?
     @Published public var isAddQuestionSheetPresented: Bool = false
     @Published public var isImportSheetPresented: Bool = false
+    @Published public var isExportSheetPresented: Bool = false
     @Published public var isResetConfirmPresented: Bool = false
+    @Published public var questionToDelete: AssessmentQuestion?
     @Published public var importJSONText: String = ""
 
     // Form inputs for question creation
@@ -68,6 +70,20 @@ public final class CatalogManagerViewModel: ObservableObject {
 
     // MARK: - Core Catalog Operations
 
+    /// Revalidates the active dimension filter against the currently loaded dimensions,
+    /// resetting it to nil if the dimension was removed (e.g., following a catalog reset or import).
+    private func revalidateFilter() {
+        guard let current = currentCatalog else { return }
+        if let filter = selectedDimensionFilter, !current.dimensions.contains(where: { $0.id == filter }) {
+            self.selectedDimensionFilter = nil
+        }
+    }
+
+    public func clearMessages() {
+        self.errorMessage = nil
+        self.statusMessage = nil
+    }
+
     public func loadCatalog() {
         errorMessage = nil
         do {
@@ -79,6 +95,7 @@ public final class CatalogManagerViewModel: ObservableObject {
             if formDimensionId.isEmpty, let firstDim = catalog.dimensions.first {
                 self.formDimensionId = firstDim.id
             }
+            revalidateFilter()
         } catch let error as SandboxCatalogError {
             self.errorMessage = error.errorDescription
             self.hasCustomCatalog = catalogStore.hasCustomCatalog
@@ -88,6 +105,7 @@ public final class CatalogManagerViewModel: ObservableObject {
                     self.currentCatalog = catalog
                     self.questions = catalog.questions
                     self.dimensions = catalog.dimensions
+                    revalidateFilter()
                 }
             }
         } catch {
@@ -251,10 +269,13 @@ public final class CatalogManagerViewModel: ObservableObject {
             self.hasCustomCatalog = true
             self.statusMessage = "Frage erfolgreich entfernt."
             self.errorMessage = nil
+            self.questionToDelete = nil
+            revalidateFilter()
             hapticService?.triggerImpact(.medium)
             return true
         } catch {
             self.errorMessage = error.localizedDescription
+            self.questionToDelete = nil
             hapticService?.triggerNotification(.error)
             return false
         }
@@ -268,6 +289,7 @@ public final class CatalogManagerViewModel: ObservableObject {
             self.statusMessage = "Katalog erfolgreich auf den integrierten Standard zurückgesetzt."
             self.errorMessage = nil
             self.isResetConfirmPresented = false
+            revalidateFilter()
             hapticService?.triggerNotification(.success)
             return true
         } catch {
@@ -280,7 +302,7 @@ public final class CatalogManagerViewModel: ObservableObject {
     @discardableResult
     public func importCatalogJSON(_ jsonString: String) -> Bool {
         guard let data = jsonString.data(using: .utf8) else {
-            self.errorMessage = "Ungültige Textcodierung für JSON-Import."
+            self.errorMessage = "Katalog-Integritätsprüfung fehlgeschlagen / ungültig: Ungültige UTF-8 Textcodierung."
             hapticService?.triggerNotification(.error)
             return false
         }
@@ -292,11 +314,12 @@ public final class CatalogManagerViewModel: ObservableObject {
             self.hasCustomCatalog = true
             self.statusMessage = "Katalog mit \(imported.questions.count) Fragen erfolgreich importiert."
             self.errorMessage = nil
+            revalidateFilter()
             self.isImportSheetPresented = false
             hapticService?.triggerNotification(.success)
             return true
         } catch {
-            self.errorMessage = error.localizedDescription
+            self.errorMessage = "Katalog-Integritätsprüfung fehlgeschlagen / ungültig: \(error.localizedDescription)"
             hapticService?.triggerNotification(.error)
             return false
         }

@@ -110,6 +110,16 @@ public enum HistoryComparisonService {
             return nil
         }
 
+        // Psychometric validity constraint: if both records have captured question answers,
+        // their question item sets must match exactly so that we do not compare different test forms.
+        if !current.answers.isEmpty && !previous.answers.isEmpty {
+            let currentIds = Set(current.answers.map(\.questionId))
+            let previousIds = Set(previous.answers.map(\.questionId))
+            guard currentIds == previousIds else {
+                return nil
+            }
+        }
+
         // Collect all dimension IDs from both records deterministically
         var allDimensionIds = Set(current.dimensionScores.keys)
         allDimensionIds.formUnion(previous.dimensionScores.keys)
@@ -145,7 +155,9 @@ public enum HistoryComparisonService {
             candidate.id != current.id &&
             candidate.catalogId == current.catalogId &&
             areVersionsCompatible(lhs: candidate.catalogVersion, rhs: current.catalogVersion) &&
-            isRecordStrictlyOlder(candidate, than: current)
+            isRecordStrictlyOlder(candidate, than: current) &&
+            (current.answers.isEmpty || candidate.answers.isEmpty ||
+             Set(current.answers.map(\.questionId)) == Set(candidate.answers.map(\.questionId)))
         }
     }
 }

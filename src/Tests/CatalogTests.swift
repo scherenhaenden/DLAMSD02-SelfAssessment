@@ -369,7 +369,7 @@ final class CatalogTests: XCTestCase {
         }
 
         // 2. Corrupted JSON decoding failed
-        let corruptData = "Not valid JSON content".data(using: .utf8)!
+        let corruptData = Data("Not valid JSON content".utf8)
         XCTAssertThrowsError(try loader.decodeCatalog(from: corruptData)) { error in
             guard case CatalogLoaderError.jsonDecodingFailed = error else {
                 XCTFail("Expected jsonDecodingFailed, got \(error)")
@@ -378,7 +378,7 @@ final class CatalogTests: XCTestCase {
         }
 
         // 3. Valid JSON with broken integrity invariants (validation failed)
-        let invalidCatalogJSON = """
+        let invalidCatalogJSON = Data("""
         {
             "catalogId": "test",
             "version": "1.0",
@@ -389,7 +389,7 @@ final class CatalogTests: XCTestCase {
             "questions": [],
             "archetypes": []
         }
-        """.data(using: .utf8)!
+        """.utf8)
         XCTAssertThrowsError(try loader.decodeCatalog(from: invalidCatalogJSON)) { error in
             guard case CatalogLoaderError.validationFailed = error else {
                 XCTFail("Expected validationFailed, got \(error)")

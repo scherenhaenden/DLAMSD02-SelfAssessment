@@ -126,18 +126,22 @@ public struct AssessmentQuestion: Identifiable, Codable, Sendable, Hashable {
             }
 
         case .likertSlider:
+            // Ensure slider endpoints and stepping are finite numbers to avoid arithmetic traps or NaN propagation
             let minVal = sliderMin ?? 1.0
             let maxVal = sliderMax ?? 5.0
+            guard minVal.isFinite && maxVal.isFinite else {
+                throw AssessmentValidationError.invalidSliderRange(questionId: id, min: minVal, max: maxVal)
+            }
             guard minVal < maxVal else {
                 throw AssessmentValidationError.invalidSliderRange(questionId: id, min: minVal, max: maxVal)
             }
             if let step = sliderStep {
-                guard step > 0.0 else {
+                guard step.isFinite && step > 0.0 else {
                     throw AssessmentValidationError.invalidSliderStep(questionId: id, step: step)
                 }
             }
             if let defaultVal = sliderDefault {
-                guard defaultVal >= minVal && defaultVal <= maxVal else {
+                guard defaultVal.isFinite && defaultVal >= minVal && defaultVal <= maxVal else {
                     throw AssessmentValidationError.invalidSliderDefault(
                         questionId: id,
                         defaultVal: defaultVal,

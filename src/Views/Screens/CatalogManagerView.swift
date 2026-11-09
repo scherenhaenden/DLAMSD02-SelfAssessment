@@ -80,6 +80,16 @@ public struct CatalogManagerView: View {
                     }
 
                     Button(action: {
+                        viewModel.clearMessages()
+                        viewModel.isExportSheetPresented = true
+                    }) {
+                        Image(systemName: "square.and.arrow.up")
+                    }
+                    .accessibilityIdentifier("catalogManager.exportButton")
+                    .accessibilityLabel("Katalog als JSON exportieren")
+
+                    Button(action: {
+                        viewModel.clearMessages()
                         viewModel.isImportSheetPresented = true
                     }) {
                         Image(systemName: "square.and.arrow.down")
@@ -88,6 +98,7 @@ public struct CatalogManagerView: View {
                     .accessibilityLabel("JSON-Katalog importieren")
 
                     Button(action: {
+                        viewModel.clearMessages()
                         viewModel.resetForm()
                         viewModel.isAddQuestionSheetPresented = true
                     }) {
@@ -105,6 +116,9 @@ public struct CatalogManagerView: View {
             .sheet(isPresented: $viewModel.isImportSheetPresented) {
                 importSheet
             }
+            .sheet(isPresented: $viewModel.isExportSheetPresented) {
+                exportSheet
+            }
             .confirmationDialog(
                 "Katalog zurücksetzen?",
                 isPresented: $viewModel.isResetConfirmPresented,
@@ -116,6 +130,27 @@ public struct CatalogManagerView: View {
                 Button("Abbrechen", role: .cancel) {}
             } message: {
                 Text("Alle benutzerdefinierten Fragen und Sandbox-Änderungen werden unwiderruflich gelöscht.")
+            }
+            .confirmationDialog(
+                "Frage löschen?",
+                isPresented: Binding(
+                    get: { viewModel.questionToDelete != nil },
+                    set: { if !$0 { viewModel.questionToDelete = nil } }
+                ),
+                titleVisibility: .visible
+            ) {
+                if let question = viewModel.questionToDelete {
+                    Button("Frage unwiderruflich löschen", role: .destructive) {
+                        viewModel.deleteQuestion(id: question.id)
+                    }
+                }
+                Button("Abbrechen", role: .cancel) {
+                    viewModel.questionToDelete = nil
+                }
+            } message: {
+                if let question = viewModel.questionToDelete {
+                    Text("Möchten Sie die Frage '\(question.title)' wirklich aus dem benutzerdefinierten Katalog entfernen?")
+                }
             }
         }
     }
@@ -226,7 +261,7 @@ public struct CatalogManagerView: View {
                     question: question,
                     dimensionName: viewModel.dimensions.first(where: { $0.id == question.dimensionId })?.name ?? question.dimensionId,
                     onDelete: viewModel.hasCustomCatalog ? {
-                        viewModel.deleteQuestion(id: question.id)
+                        viewModel.questionToDelete = question
                     } : nil
                 )
             }
@@ -238,6 +273,18 @@ public struct CatalogManagerView: View {
     private var addQuestionSheet: some View {
         NavigationStack {
             Form {
+                if let error = viewModel.errorMessage {
+                    Section {
+                        HStack(alignment: .top, spacing: theme.spacing.xs) {
+                            Image(systemName: "exclamationmark.triangle.fill")
+                                .foregroundColor(theme.colors.errorFeedback.color)
+                            Text(error)
+                                .font(.caption)
+                                .foregroundColor(theme.colors.errorFeedback.color)
+                        }
+                    }
+                }
+
                 Section(header: Text("Identifikation")) {
                     TextField("Eindeutige ID (z.B. q_custom_01)", text: $viewModel.formQuestionId)
                         #if os(iOS)
@@ -328,6 +375,24 @@ public struct CatalogManagerView: View {
                     .font(.footnote)
                     .foregroundColor(theme.colors.textSecondary.color)
 
+                if let error = viewModel.errorMessage {
+                    HStack(alignment: .top, spacing: theme.spacing.xs) {
+                        Image(systemName: "exclamationmark.triangle.fill")
+                            .foregroundColor(theme.colors.errorFeedback.color)
+                        Text(error)
+                            .font(.caption)
+                            .foregroundColor(theme.colors.errorFeedback.color)
+                            .multilineTextAlignment(.leading)
+                    }
+                    .padding(theme.spacing.sm)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(
+                        RoundedRectangle(cornerRadius: theme.cornerRadius.small)
+                            .fill(theme.colors.errorFeedback.color.opacity(0.12))
+                    )
+                    .accessibilityIdentifier("catalogManager.importErrorMessage")
+                }
+
                 TextEditor(text: $viewModel.importJSONText)
                     .font(.system(.caption, design: .monospaced))
                     .padding(theme.spacing.xs)
@@ -359,6 +424,56 @@ public struct CatalogManagerView: View {
                     }
                     .disabled(viewModel.importJSONText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                     .accessibilityIdentifier("catalogManager.executeImportButton")
+                }
+            }
+        }
+    }
+
+    // MARK: - Export Sheet
+
+    private var exportSheet: some View {
+        NavigationStack {
+            VStack(alignment: .leading, spacing: theme.spacing.md) {
+                Text("Aktiver Fragenkatalog im JSON-Format zur Sicherung oder Weiterverwendung.")
+                    .font(.footnote)
+                    .foregroundColor(theme.colors.textSecondary.color)
+
+                ScrollView {
+                    Text(viewModel.exportCatalogJSON() ?? "Kein aktiver Katalog exportierbar.")
+                        .font(.system(.caption, design: .monospaced))
+                        .foregroundColor(theme.colors.textPrimary.color)
+                        .padding(theme.spacing.sm)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(theme.colors.surfaceCard.color)
+                        .cornerRadius(theme.cornerRadius.small)
+                }
+                .accessibilityIdentifier("catalogManager.exportContent")
+
+                if let json = viewModel.exportCatalogJSON() {
+                    ShareLink(item: json, subject: Text("DevProfile Katalog"), message: Text("Exportierter Selbsteinschätzungskatalog")) {
+                        HStack {
+                            Image(systemName: "square.and.arrow.up")
+                            Text("Katalog teilen / exportieren")
+                        }
+                        .frame(maxWidth: .infinity, minHeight: 44)
+                        .background(accentColor)
+                        .foregroundColor(theme.colors.onAccent.color)
+                        .cornerRadius(theme.cornerRadius.medium)
+                    }
+                    .accessibilityIdentifier("catalogManager.shareExportButton")
+                }
+            }
+            .padding(theme.spacing.md)
+            .navigationTitle("Katalog exportieren")
+            #if os(iOS)
+            .navigationBarTitleDisplayMode(.inline)
+            #endif
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Fertig") {
+                        viewModel.isExportSheetPresented = false
+                    }
+                    .accessibilityIdentifier("catalogManager.doneExportButton")
                 }
             }
         }
@@ -438,7 +553,7 @@ private struct QuestionCardView: View {
                 Spacer()
                 Text("ID: \(question.id)")
                     .font(.caption2)
-                    .foregroundColor(theme.colors.textSecondary.color.opacity(0.8))
+                    .foregroundColor(theme.colors.textSecondary.color)
             }
             .padding(.top, 4)
         }

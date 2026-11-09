@@ -51,6 +51,7 @@
 		AC78D3D5B93BA9638801286B /* src/Tests/ResultViewTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75E76B6322319ED553D331EA /* ResultViewTests.swift */; };
 		6F10DA01DC75F61D0A4D2B5E /* src/Tests/HistoryStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 72BB8B06BA94D8D9CA74C58E /* HistoryStoreTests.swift */; };
 		54F7CD0111BE8A0028A56068 /* src/Tests/CatalogManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87057E12B0D640CC853C1D42 /* CatalogManagerTests.swift */; };
+		85B3DAE3353205FB7B91E3AB /* src/Tests/CatalogAcceptanceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD53BE032E1D574E85752701 /* CatalogAcceptanceTests.swift */; };
 		655482FA3B2CCB96D880CA76 /* ui-tests/AssessYourselfUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E002823799183206956B1DB /* AssessYourselfUITests.swift */; };
 /* End PBXBuildFile section */
 
@@ -119,6 +120,7 @@
 		75E76B6322319ED553D331EA /* ResultViewTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ResultViewTests.swift"; sourceTree = "<group>"; };
 		72BB8B06BA94D8D9CA74C58E /* HistoryStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "HistoryStoreTests.swift"; sourceTree = "<group>"; };
 		87057E12B0D640CC853C1D42 /* CatalogManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CatalogManagerTests.swift"; sourceTree = "<group>"; };
+		DD53BE032E1D574E85752701 /* CatalogAcceptanceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CatalogAcceptanceTests.swift"; sourceTree = "<group>"; };
 		0E002823799183206956B1DB /* AssessYourselfUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AssessYourselfUITests.swift"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -284,15 +286,16 @@
 		689828DCA2203C7F22E93C29 /* Tests */ = {
 			isa = PBXGroup;
 			children = (
-				BE61F0C576718998694EF0DD /* AssessmentViewModelTests.swift */,
 				ABA66942F2FF49194C11B247 /* CatalogTests.swift */,
 				4168061FD3F8A4D947A3F03E /* ColorTokenTests.swift */,
 				63FF6209B98BA0D253CA8DAF /* EvaluationEngineTests.swift */,
+				37D757E5F24C6448E71DCF46 /* UIComponentTests.swift */,
+				BE61F0C576718998694EF0DD /* AssessmentViewModelTests.swift */,
 				43D817473367C39621E4D3BE /* HapticFeedbackServiceTests.swift */,
 				75E76B6322319ED553D331EA /* ResultViewTests.swift */,
-				37D757E5F24C6448E71DCF46 /* UIComponentTests.swift */,
 				72BB8B06BA94D8D9CA74C58E /* HistoryStoreTests.swift */,
 				87057E12B0D640CC853C1D42 /* CatalogManagerTests.swift */,
+				DD53BE032E1D574E85752701 /* CatalogAcceptanceTests.swift */,
 			);
 			path = Tests;
 			sourceTree = "<group>";
@@ -476,6 +479,7 @@
 				AC78D3D5B93BA9638801286B /* src/Tests/ResultViewTests.swift in Sources */,
 				6F10DA01DC75F61D0A4D2B5E /* src/Tests/HistoryStoreTests.swift in Sources */,
 				54F7CD0111BE8A0028A56068 /* src/Tests/CatalogManagerTests.swift in Sources */,
+				85B3DAE3353205FB7B91E3AB /* src/Tests/CatalogAcceptanceTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

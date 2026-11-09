@@ -106,12 +106,25 @@ public final class SandboxCatalogStore: SandboxCatalogStoreProtocol, @unchecked 
                 try fileManager.createDirectory(at: directoryURL, withIntermediateDirectories: true, attributes: nil)
             }
 
-            // Create or replace .bak backup before overwriting active file
+            // Create or update .bak backup before saving new catalog content.
+            // Safety invariant: Only promote active file to .bak if it contains valid, decodable catalog data.
+            // If the active file was corrupted on disk, preserving the last known-good .bak prevents
+            // clobbering recoverable state with malformed bytes.
             if fileManager.fileExists(atPath: activeFileURL.path) {
-                if fileManager.fileExists(atPath: backupFileURL.path) {
-                    try? fileManager.removeItem(at: backupFileURL)
+                let activeData = try? Data(contentsOf: activeFileURL)
+                let activeIsValid: Bool
+                if let data = activeData, (try? catalogLoader.decodeCatalog(from: data)) != nil {
+                    activeIsValid = true
+                } else {
+                    activeIsValid = false
                 }
-                try fileManager.copyItem(at: activeFileURL, to: backupFileURL)
+
+                if activeIsValid {
+                    if fileManager.fileExists(atPath: backupFileURL.path) {
+                        try? fileManager.removeItem(at: backupFileURL)
+                    }
+                    try fileManager.copyItem(at: activeFileURL, to: backupFileURL)
+                }
             }
 
             let encoder = JSONEncoder()

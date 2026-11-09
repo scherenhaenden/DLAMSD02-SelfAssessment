@@ -55,41 +55,73 @@ public struct LikertSliderCard: View {
                     .accessibilityIdentifier("likertSlider.scoreBadge")
             }
 
-            // Slider control
-            Slider(
-                value: Binding(
-                    get: { value },
-                    set: { newValue in
-                        let stepped = (round((newValue - minVal) / step) * step) + minVal
-                        let clamped = min(maxVal, max(minVal, stepped))
-                        onValueChange(clamped)
+            // Slider control: use discrete stepping only if step count fits comfortably in memory/integer space,
+            // otherwise use continuous range with manual snapping in binding to prevent SwiftUI internal Int overflow.
+            if (maxVal - minVal) / step <= 1000 {
+                Slider(
+                    value: Binding(
+                        get: { value },
+                        set: { newValue in
+                            let stepped = (round((newValue - minVal) / step) * step) + minVal
+                            let clamped = min(maxVal, max(minVal, stepped))
+                            onValueChange(clamped)
+                        }
+                    ),
+                    in: minVal...maxVal,
+                    step: step
+                )
+                .tint(accentColor)
+                .accessibilityIdentifier("likertSlider")
+                .accessibilityLabel("Einschätzung auf einer Skala von \(safeNumberString(minVal)) bis \(safeNumberString(maxVal))")
+                .accessibilityValue("\(formattedScore): \(verbalAnchor)")
+                .accessibilityHint("Streiche mit einem Finger nach oben oder unten, um den Wert anzupassen.")
+                .accessibilityAdjustableAction { direction in
+                    switch direction {
+                    case .increment:
+                        let next = min(maxVal, value + step)
+                        onValueChange(next)
+                    case .decrement:
+                        let prev = max(minVal, value - step)
+                        onValueChange(prev)
+                    @unknown default:
+                        break
                     }
-                ),
-                in: minVal...maxVal,
-                step: step
-            )
-            .tint(accentColor)
-            .accessibilityIdentifier("likertSlider")
-            .accessibilityLabel("Einschätzung auf einer Skala von \(Int(minVal)) bis \(Int(maxVal))")
-            .accessibilityValue("\(formattedScore): \(verbalAnchor)")
-            .accessibilityHint("Streiche mit einem Finger nach oben oder unten, um den Wert anzupassen.")
-            .accessibilityAdjustableAction { direction in
-                switch direction {
-                case .increment:
-                    let next = min(maxVal, value + step)
-                    onValueChange(next)
-                case .decrement:
-                    let prev = max(minVal, value - step)
-                    onValueChange(prev)
-                @unknown default:
-                    break
+                }
+            } else {
+                Slider(
+                    value: Binding(
+                        get: { value },
+                        set: { newValue in
+                            let stepped = (round((newValue - minVal) / step) * step) + minVal
+                            let clamped = min(maxVal, max(minVal, stepped))
+                            onValueChange(clamped)
+                        }
+                    ),
+                    in: minVal...maxVal
+                )
+                .tint(accentColor)
+                .accessibilityIdentifier("likertSlider")
+                .accessibilityLabel("Einschätzung auf einer Skala von \(safeNumberString(minVal)) bis \(safeNumberString(maxVal))")
+                .accessibilityValue("\(formattedScore): \(verbalAnchor)")
+                .accessibilityHint("Streiche mit einem Finger nach oben oder unten, um den Wert anzupassen.")
+                .accessibilityAdjustableAction { direction in
+                    switch direction {
+                    case .increment:
+                        let next = min(maxVal, value + step)
+                        onValueChange(next)
+                    case .decrement:
+                        let prev = max(minVal, value - step)
+                        onValueChange(prev)
+                    @unknown default:
+                        break
+                    }
                 }
             }
 
             // Extreme scale anchors
             HStack(alignment: .top) {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("\(Int(minVal))")
+                    Text(safeNumberString(minVal))
                         .font(.caption)
                         .fontWeight(.bold)
                         .foregroundColor(theme.colors.textSecondary.color)
@@ -101,7 +133,7 @@ public struct LikertSliderCard: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
 
                 VStack(alignment: .trailing, spacing: 2) {
-                    Text("\(Int(maxVal))")
+                    Text(safeNumberString(maxVal))
                         .font(.caption)
                         .fontWeight(.bold)
                         .foregroundColor(theme.colors.textSecondary.color)
@@ -125,9 +157,19 @@ public struct LikertSliderCard: View {
         )
     }
 
+    private func safeNumberString(_ val: Double) -> String {
+        guard val.isFinite else { return "0" }
+        // Keep within safe integer range (+/- 1e15) to guarantee exact Double integer representation
+        // and avoid IEEE 754 rounding into Int.max + 1 overflow.
+        if val >= -1e15 && val <= 1e15 && val.truncatingRemainder(dividingBy: 1.0) == 0.0 {
+            return "\(Int64(val))"
+        }
+        return String(format: "%.1f", val)
+    }
+
     private var formattedScore: String {
-        if step == 1.0 {
-            return "\(Int(value)) / \(Int(maxVal))"
+        if step == 1.0 && value.truncatingRemainder(dividingBy: 1.0) == 0.0 {
+            return "\(safeNumberString(value)) / \(safeNumberString(maxVal))"
         } else {
             return String(format: "%.1f / %.1f", value, maxVal)
         }

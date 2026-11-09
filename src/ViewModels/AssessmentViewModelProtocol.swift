@@ -24,6 +24,7 @@ public protocol AssessmentViewModelProtocol: ObservableObject {
     var catalog: AssessmentCatalog? { get }
     var currentQuestionIndex: Int { get }
     var totalQuestions: Int { get }
+    var activeDimensionCount: Int { get }
     var currentQuestion: AssessmentQuestion? { get }
     var currentDimension: AssessmentDimension? { get }
     var progress: Double { get }
@@ -40,6 +41,7 @@ public protocol AssessmentViewModelProtocol: ObservableObject {
     var isCurrentAnswerValid: Bool { get }
 
     // Action Methods
+    func prepareInitialCatalogIfNeeded()
     func loadCatalog()
     func recordSingleChoice(questionId: String, selectedOptionId: String)
     func toggleMultipleChoice(questionId: String, optionId: String)

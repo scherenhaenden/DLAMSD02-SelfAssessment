@@ -13,15 +13,27 @@ final class AssessYourselfUITests: XCTestCase {
         app = nil
     }
 
+    private func tabButton(_ label: String) -> XCUIElement {
+        let tabBarButton = app.tabBars.buttons[label].firstMatch
+        if tabBarButton.waitForExistence(timeout: 2) {
+            return tabBarButton
+        }
+        let navButton = app.navigationBars.buttons[label].firstMatch
+        if navButton.waitForExistence(timeout: 2) {
+            return navButton
+        }
+        return app.buttons[label].firstMatch
+    }
+
     private func switchToShowcaseTabIfNeeded() {
-        let showcaseTab = app.tabBars.buttons["Showcase"]
+        let showcaseTab = tabButton("Showcase")
         if showcaseTab.waitForExistence(timeout: 3) {
             showcaseTab.tap()
         }
     }
 
     private func switchToAssessmentTabIfNeeded() {
-        let assessmentTab = app.tabBars.buttons["Assessment"]
+        let assessmentTab = tabButton("Assessment")
         if assessmentTab.waitForExistence(timeout: 3) {
             assessmentTab.tap()
         }
@@ -422,7 +434,7 @@ final class AssessYourselfUITests: XCTestCase {
 
     func testHistoryTabShowsEmptyStateAndNavigation() throws {
         app.launch()
-        let historyTab = app.tabBars.buttons["Verlauf"]
+        let historyTab = tabButton("Verlauf")
         XCTAssertTrue(historyTab.waitForExistence(timeout: 5), "Verlauf tab must exist in root navigation")
         historyTab.tap()
 
@@ -441,7 +453,7 @@ final class AssessYourselfUITests: XCTestCase {
         XCTAssertTrue(emptyState.waitForExistence(timeout: 5), "Empty state label must be displayed when no assessments exist")
 
         // Switch back to Assessment tab
-        let assessmentTab = app.tabBars.buttons["Assessment"]
+        let assessmentTab = tabButton("Assessment")
         XCTAssertTrue(assessmentTab.waitForExistence(timeout: 3))
         assessmentTab.tap()
 
@@ -451,7 +463,7 @@ final class AssessYourselfUITests: XCTestCase {
 
     // MARK: - Sprint 8 Acceptance: History Persistence & Corruption Recovery Scenarios
 
-    private func completeFullAssessmentFlow() {
+    private func completeFullAssessmentFlow(totalQuestions: Int = 24, appendedTitles: [String] = []) {
         switchToAssessmentTabIfNeeded()
 
         let startButton = app.buttons["flow.startButton"]
@@ -465,8 +477,8 @@ final class AssessYourselfUITests: XCTestCase {
         let nextButton = app.buttons["flow.nextButton"]
         let submitButton = app.buttons["flow.submitButton"]
 
-        for questionNumber in 1...24 {
-            let qExpectation = expectation(for: NSPredicate(format: "label == 'Frage \(questionNumber) / 24'"), evaluatedWith: counterPill)
+        for questionNumber in 1...totalQuestions {
+            let qExpectation = expectation(for: NSPredicate(format: "label == 'Frage \(questionNumber) / \(totalQuestions)'"), evaluatedWith: counterPill)
             wait(for: [qExpectation], timeout: 5)
 
             let scOptions = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'choiceOption.'"))
@@ -485,7 +497,7 @@ final class AssessYourselfUITests: XCTestCase {
                 editor.typeText("Modulare Entkopplung mit Swift Protocols und sauberer Dependency Injection.")
             }
 
-            if questionNumber < 24 {
+            if questionNumber < totalQuestions {
                 XCTAssertTrue(nextButton.waitForExistence(timeout: 3))
                 XCTAssertTrue(nextButton.isEnabled)
                 nextButton.tap()
@@ -509,7 +521,7 @@ final class AssessYourselfUITests: XCTestCase {
         completeFullAssessmentFlow()
 
         // Step 2: Navigate to Verlauf tab and verify the assessment card exists
-        let historyTab = app.tabBars.buttons["Verlauf"]
+        let historyTab = tabButton("Verlauf")
         XCTAssertTrue(historyTab.waitForExistence(timeout: 5), "Verlauf tab must exist")
         historyTab.tap()
 
@@ -529,7 +541,7 @@ final class AssessYourselfUITests: XCTestCase {
         app.launchArguments = ["--uitesting", "--uitesting-preserve-history", "--uitesting-storage-key", isolatedKey]
         app.launch()
 
-        let historyTabAfterRelaunch = app.tabBars.buttons["Verlauf"]
+        let historyTabAfterRelaunch = tabButton("Verlauf")
         XCTAssertTrue(historyTabAfterRelaunch.waitForExistence(timeout: 5))
         historyTabAfterRelaunch.tap()
 
@@ -558,7 +570,7 @@ final class AssessYourselfUITests: XCTestCase {
         app.launchArguments = ["--uitesting", "--uitesting-corrupt-history", "--uitesting-storage-key", isolatedKey]
         app.launch()
 
-        let historyTab = app.tabBars.buttons["Verlauf"]
+        let historyTab = tabButton("Verlauf")
         XCTAssertTrue(historyTab.waitForExistence(timeout: 5))
         historyTab.tap()
 
@@ -609,7 +621,7 @@ final class AssessYourselfUITests: XCTestCase {
         XCTAssertGreaterThanOrEqual(multiChipButton.frame.height, 44.0, "Touch target must meet HIG minimum 44 pt")
 
         // Switch to Assessment tab and verify start button touch target
-        let assessmentTab = app.tabBars.buttons["Assessment"]
+        let assessmentTab = tabButton("Assessment")
         XCTAssertTrue(assessmentTab.waitForExistence(timeout: 5))
         assessmentTab.tap()
 
@@ -623,7 +635,7 @@ final class AssessYourselfUITests: XCTestCase {
         app.launchArguments = ["--uitesting", "--uitesting-reset-history", "--uitesting-storage-key", isolatedKey]
         app.launch()
 
-        let catalogTab = app.tabBars.buttons["Katalog"]
+        let catalogTab = tabButton("Katalog")
         XCTAssertTrue(catalogTab.waitForExistence(timeout: 5), "Catalog tab must be present in root tab bar")
         catalogTab.tap()
 
@@ -667,7 +679,7 @@ final class AssessYourselfUITests: XCTestCase {
         XCTAssertTrue(successBanner.waitForExistence(timeout: 5), "Confirmation banner for created question must be displayed")
 
         // Switch to Assessment tab and verify assessment flow starts cleanly with custom catalog
-        let assessmentTab = app.tabBars.buttons["Assessment"]
+        let assessmentTab = tabButton("Assessment")
         assessmentTab.tap()
 
         let startButton = app.buttons["flow.startButton"]
@@ -677,5 +689,108 @@ final class AssessYourselfUITests: XCTestCase {
         let counterPill = app.staticTexts["flow.counterPill"]
         XCTAssertTrue(counterPill.waitForExistence(timeout: 5), "Question counter must appear after starting")
         XCTAssertEqual(counterPill.label, "Frage 1 / 25", "Assessment must load updated catalog containing 25 questions")
+    }
+
+    func testAuthorFourQuestionTypesRelaunchCompleteAndPersist() throws {
+        let key = "de.iu.assessyourself.audit.history.\(UUID().uuidString)"
+        let dir = "/tmp/assessyourself-audit-catalog-\(UUID().uuidString)"
+        let flags = ["--uitesting", "--uitesting-storage-key", key, "--uitesting-catalog-dir", dir]
+        app.launchArguments = flags
+        app.launch()
+
+        let catalogTab = tabButton("Katalog")
+        XCTAssertTrue(catalogTab.waitForExistence(timeout: 10))
+        catalogTab.tap()
+
+        let picker = app.buttons["catalogManager.picker.type"]
+        let labels = ["Single Choice", "Multiple Choice", "Likert-Skala", "Freitext"]
+        let titles = ["Audit Single", "Audit Multiple", "Audit Likert", "Audit Freitext"]
+
+        for (index, title) in titles.enumerated() {
+            let addButton = app.buttons["catalogManager.addQuestionButton"]
+            XCTAssertTrue(addButton.waitForExistence(timeout: 4))
+            addButton.tap()
+
+            if index > 0 {
+                XCTAssertTrue(picker.waitForExistence(timeout: 4))
+                picker.tap()
+                let selectedType = app.buttons[labels[index]].firstMatch
+                XCTAssertTrue(selectedType.waitForExistence(timeout: 4))
+                selectedType.tap()
+            }
+
+            let idField = app.textFields["catalogManager.field.id"]
+            XCTAssertTrue(idField.waitForExistence(timeout: 4))
+            idField.tap()
+            idField.typeText("_\(index)")
+
+            let titleField = app.textFields["catalogManager.field.title"]
+            titleField.tap()
+            titleField.typeText(title)
+
+            let promptField = app.textFields["catalogManager.field.prompt"]
+            promptField.tap()
+            promptField.typeText("Audited custom question \(index)")
+
+            let save = app.buttons["catalogManager.saveQuestionButton"]
+            XCTAssertTrue(save.isEnabled)
+            save.tap()
+
+            XCTAssertTrue(app.staticTexts["\(25 + index) Fragen"].waitForExistence(timeout: 5))
+        }
+
+        app.terminate()
+        app.launchArguments = flags + ["--uitesting-preserve-history"]
+        app.launch()
+
+        let reloadedCatalogTab = tabButton("Katalog")
+        XCTAssertTrue(reloadedCatalogTab.waitForExistence(timeout: 6))
+        reloadedCatalogTab.tap()
+
+        XCTAssertTrue(app.staticTexts["28 Fragen"].waitForExistence(timeout: 6))
+        XCTAssertEqual(app.staticTexts["catalogManager.storageStatusLabel"].label, "Benutzerdefiniert (Sandbox)")
+
+        switchToAssessmentTabIfNeeded()
+        let start = app.buttons["flow.startButton"]
+        XCTAssertTrue(start.waitForExistence(timeout: 5))
+
+        let outdatedWelcome = app.staticTexts["24 Fragen"].exists
+        start.tap()
+
+        completeFullAssessmentFlow(totalQuestions: 28, appendedTitles: titles)
+
+        let history = tabButton("Verlauf")
+        history.tap()
+
+        XCTAssertTrue(app.staticTexts["Verlauf (1)"].waitForExistence(timeout: 6))
+        XCTAssertTrue(app.descendants(matching: .any)["history.recordCard.0"].exists)
+        XCTAssertFalse(outdatedWelcome, "Welcome screen must not display stale 24-question count after catalog persists 28 items.")
+    }
+
+    func testMalformedImportShowsErrorInOpenSheet() throws {
+        app.launch()
+        let catalog = tabButton("Katalog")
+        XCTAssertTrue(catalog.waitForExistence(timeout: 5))
+        catalog.tap()
+
+        let importBtn = app.buttons["catalogManager.importButton"]
+        XCTAssertTrue(importBtn.waitForExistence(timeout: 5))
+        importBtn.tap()
+
+        let editor = app.textViews["catalogManager.importEditor"]
+        XCTAssertTrue(editor.waitForExistence(timeout: 5))
+        editor.tap()
+        editor.typeText("{invalid json")
+
+        let execBtn = app.buttons["catalogManager.executeImportButton"]
+        XCTAssertTrue(execBtn.waitForExistence(timeout: 5))
+        execBtn.tap()
+
+        XCTAssertTrue(editor.exists, "Import sheet must remain open to allow correcting malformed payloads.")
+        XCTAssertTrue(
+            app.alerts.firstMatch.exists ||
+            app.staticTexts.containing(NSPredicate(format: "label CONTAINS[c] %@ OR label CONTAINS[c] %@", "Integritätsprüfung", "ungültig")).firstMatch.isHittable,
+            "The import error banner must be visible and hittable on the active sheet."
+        )
     }
 }

@@ -132,7 +132,7 @@ final class CatalogManagerTests: XCTestCase {
         try sutStore.saveCustomCatalog(customCat2)
 
         // Corrupt active file
-        try "CORRUPTED_JSON_DATA_NON_PARSABLE".data(using: .utf8)!.write(to: sutStore.activeFileURL)
+        try Data("CORRUPTED_JSON_DATA_NON_PARSABLE".utf8).write(to: sutStore.activeFileURL)
 
         // Loading must trigger rollback and throw corruptedRollbackTriggered
         XCTAssertThrowsError(try sutStore.loadActiveCatalog()) { error in
@@ -162,8 +162,8 @@ final class CatalogManagerTests: XCTestCase {
         try sutStore.saveCustomCatalog(baseCatalog) // creates .bak
 
         // Corrupt both active and backup files
-        try "CORRUPT_ACTIVE".data(using: .utf8)!.write(to: sutStore.activeFileURL)
-        try "CORRUPT_BACKUP".data(using: .utf8)!.write(to: sutStore.backupFileURL)
+        try Data("CORRUPT_ACTIVE".utf8).write(to: sutStore.activeFileURL)
+        try Data("CORRUPT_BACKUP".utf8).write(to: sutStore.backupFileURL)
 
         XCTAssertThrowsError(try sutStore.loadActiveCatalog()) { error in
             guard case SandboxCatalogError.corruptedRollbackFailed = error else {
@@ -179,7 +179,7 @@ final class CatalogManagerTests: XCTestCase {
         XCTAssertFalse(FileManager.default.fileExists(atPath: sutStore.backupFileURL.path))
 
         // Corrupt active file
-        try "CORRUPT_ACTIVE_NO_BAK".data(using: .utf8)!.write(to: sutStore.activeFileURL)
+        try Data("CORRUPT_ACTIVE_NO_BAK".utf8).write(to: sutStore.activeFileURL)
 
         XCTAssertThrowsError(try sutStore.loadActiveCatalog()) { error in
             guard case SandboxCatalogError.corruptedNoBackup = error else {
@@ -234,7 +234,7 @@ final class CatalogManagerTests: XCTestCase {
         XCTAssertEqual(imported.catalogId, baseCatalog.catalogId)
         XCTAssertTrue(sutStore.hasCustomCatalog)
 
-        let malformedData = "{ \"catalogId\": \"incomplete\" }".data(using: .utf8)!
+        let malformedData = Data("{ \"catalogId\": \"incomplete\" }".utf8)
         XCTAssertThrowsError(try sutStore.importCatalog(from: malformedData)) { error in
             guard case SandboxCatalogError.catalogValidationFailed = error else {
                 XCTFail("Expected catalogValidationFailed for malformed import, got \(error)")

@@ -5,10 +5,10 @@ import Combine
 /// sequential navigation, answer storage, and evaluation coordination without static singletons.
 public final class AssessmentViewModel: AssessmentViewModelProtocol {
     @Published public private(set) var state: AssessmentSessionState = .idle
-    @Published public private(set) var catalog: AssessmentCatalog? = nil
+    @Published public private(set) var catalog: AssessmentCatalog?
     @Published public private(set) var currentQuestionIndex: Int = 0
     @Published public private(set) var answers: [String: AnswerPayload] = [:]
-    @Published public private(set) var persistenceError: String? = nil
+    @Published public private(set) var persistenceError: String?
 
     private let catalogLoader: CatalogLoaderProtocol
     private let evaluationEngine: EvaluationEngineProtocol
@@ -57,6 +57,11 @@ public final class AssessmentViewModel: AssessmentViewModelProtocol {
 
     public var totalQuestions: Int {
         catalog?.questions.count ?? 0
+    }
+
+    /// Number of dimensions configured in the active catalog (defaults to 4 in standard catalog).
+    public var activeDimensionCount: Int {
+        catalog?.dimensions.count ?? 0
     }
 
     public var currentQuestion: AssessmentQuestion? {
@@ -222,11 +227,34 @@ public final class AssessmentViewModel: AssessmentViewModelProtocol {
         hapticService?.triggerImpact(.light)
     }
 
+    /// Refreshes catalog metadata while idle so that welcome summaries accurately
+    /// reflect custom sandbox additions or restored configurations prior to starting the test.
+    public func prepareInitialCatalogIfNeeded() {
+        guard state == .idle else { return }
+        if let store = catalogStore {
+            self.catalog = try? store.loadActiveCatalog()
+        } else {
+            self.catalog = try? catalogLoader.loadBundledCatalog()
+        }
+    }
+
     private func ensureDefaultAnswerIfNeeded() {
         guard let question = currentQuestion else { return }
         if question.type == .likertSlider && answers[question.id] == nil {
-            let defaultVal = question.sliderDefault ?? question.sliderMin ?? 1.0
-            answers[question.id] = .steppedSlider(value: defaultVal)
+            let minVal = question.sliderMin ?? 1.0
+            let maxVal = question.sliderMax ?? 5.0
+            let rawDefault = question.sliderDefault ?? minVal
+            let clamped = min(max(rawDefault, minVal), maxVal)
+            let snapped: Double
+            if let step = question.sliderStep, step > 0.0 {
+                // Snap default to nearest valid grid step from minVal
+                let stepsFromMin = round((clamped - minVal) / step)
+                let candidate = minVal + stepsFromMin * step
+                snapped = min(max(candidate, minVal), maxVal)
+            } else {
+                snapped = clamped
+            }
+            answers[question.id] = .steppedSlider(value: snapped)
         }
     }
 

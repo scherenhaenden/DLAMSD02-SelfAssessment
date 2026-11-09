@@ -22,14 +22,14 @@ struct AssessYourselfApp: App {
             }
 
             if CommandLine.arguments.contains("--uitesting-corrupt-history") {
-                UserDefaults.standard.set("corrupted-json-payload-dlamsd02".data(using: .utf8), forKey: activeStorageKey)
+                UserDefaults.standard.set(Data("corrupted-json-payload-dlamsd02".utf8), forKey: activeStorageKey)
             } else if CommandLine.arguments.contains("--uitesting-reset-history") || !CommandLine.arguments.contains("--uitesting-preserve-history") {
                 UserDefaults.standard.removeObject(forKey: activeStorageKey)
             }
         }
         let store = UserDefaultsHistoryStore(storageKey: activeStorageKey)
 
-        var catalogDir: URL? = nil
+        var catalogDir: URL?
         if let customCatalogDirIndex = CommandLine.arguments.firstIndex(of: "--uitesting-catalog-dir"),
            customCatalogDirIndex + 1 < CommandLine.arguments.count {
             catalogDir = URL(fileURLWithPath: CommandLine.arguments[customCatalogDirIndex + 1], isDirectory: true)

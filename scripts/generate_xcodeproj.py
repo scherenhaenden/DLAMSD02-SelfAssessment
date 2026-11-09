@@ -66,6 +66,7 @@ def main():
         "src/Tests/ResultViewTests.swift",
         "src/Tests/HistoryStoreTests.swift",
         "src/Tests/CatalogManagerTests.swift",
+        "src/Tests/CatalogAcceptanceTests.swift",
     ]
 
     ui_test_sources = [
@@ -343,8 +344,8 @@ def main():
     pbx.append(f"\t\t{tests_group_id} /* Tests */ = {{")
     pbx.append("\t\t\tisa = PBXGroup;")
     pbx.append("\t\t\tchildren = (")
-    for f in ["AssessmentViewModelTests.swift", "CatalogTests.swift", "ColorTokenTests.swift", "EvaluationEngineTests.swift", "HapticFeedbackServiceTests.swift", "ResultViewTests.swift", "UIComponentTests.swift", "HistoryStoreTests.swift", "CatalogManagerTests.swift"]:
-        pbx.append(f"\t\t\t\t{filerefs['src/Tests/' + f]} /* {f} */,")
+    for f in test_sources:
+        pbx.append(f"\t\t\t\t{filerefs[f]} /* {os.path.basename(f)} */,")
     pbx.append("\t\t\t);")
     pbx.append("\t\t\tpath = Tests;")
     pbx.append("\t\t\tsourceTree = \"<group>\";")

@@ -101,6 +101,17 @@ public struct AssessmentCatalog: Identifiable, Codable, Sendable {
         }
     }
 
+    /// Bumps the major SemVer component when structural questions are added or removed.
+    /// Modifying the item battery alters the underlying measurement instrument,
+    /// so historical delta comparisons against the prior version must be invalidated.
+    private func bumpedMajorVersion() -> String {
+        let components = version.split(separator: ".")
+        if let majorStr = components.first, let major = Int(majorStr) {
+            return "\(major + 1).0.0"
+        }
+        return "\(version).1.0"
+    }
+
     /// Returns a new catalog instance with an added question, ensuring catalog integrity.
     public func addingQuestion(_ question: AssessmentQuestion) throws -> AssessmentCatalog {
         guard !questions.contains(where: { $0.id == question.id }) else {
@@ -110,7 +121,7 @@ public struct AssessmentCatalog: Identifiable, Codable, Sendable {
         updated.append(question)
         let newCatalog = AssessmentCatalog(
             catalogId: self.catalogId,
-            version: self.version,
+            version: bumpedMajorVersion(),
             title: self.title,
             subtitle: self.subtitle,
             description: self.description,
@@ -127,7 +138,7 @@ public struct AssessmentCatalog: Identifiable, Codable, Sendable {
         let updated = questions.filter { $0.id != id }
         let newCatalog = AssessmentCatalog(
             catalogId: self.catalogId,
-            version: self.version,
+            version: bumpedMajorVersion(),
             title: self.title,
             subtitle: self.subtitle,
             description: self.description,

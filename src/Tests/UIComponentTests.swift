@@ -514,14 +514,20 @@ final class UIComponentTests: XCTestCase {
         try? testStore.save(record: record)
         let historyView = HistoryView(historyStore: testStore)
 
+        struct ViewportSpec {
+            let name: String
+            let width: CGFloat
+            let height: CGFloat
+        }
+
         // 1. iPad 9th Generation (10.2") Viewport Configurations
-        let viewports: [(name: String, width: CGFloat, height: CGFloat)] = [
-            ("iPad 9 Portrait", 810, 1080),
-            ("iPad 9 Landscape", 1080, 810),
-            ("iPad Split View 1/3", 320, 810),
-            ("iPad Split View 1/2", 540, 810),
-            ("iPad Split View 2/3", 704, 810),
-            ("iPad Slide Over", 320, 810)
+        let viewports: [ViewportSpec] = [
+            ViewportSpec(name: "iPad 9 Portrait", width: 810, height: 1080),
+            ViewportSpec(name: "iPad 9 Landscape", width: 1080, height: 810),
+            ViewportSpec(name: "iPad Split View 1/3", width: 320, height: 810),
+            ViewportSpec(name: "iPad Split View 1/2", width: 540, height: 810),
+            ViewportSpec(name: "iPad Split View 2/3", width: 704, height: 810),
+            ViewportSpec(name: "iPad Slide Over", width: 320, height: 810)
         ]
 
         for vp in viewports {

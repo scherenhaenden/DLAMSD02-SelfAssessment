@@ -34,8 +34,8 @@ public final class HistoryViewModel: HistoryViewModelProtocol {
     public let historyStore: any HistoryStoreProtocol
 
     @Published public private(set) var records: [AssessmentRecord] = []
-    @Published public private(set) var errorMessage: String? = nil
-    @Published public var activeAlert: HistoryAlertItem? = nil
+    @Published public private(set) var errorMessage: String?
+    @Published public var activeAlert: HistoryAlertItem?
 
     public init(historyStore: any HistoryStoreProtocol = UserDefaultsHistoryStore()) {
         self.historyStore = historyStore

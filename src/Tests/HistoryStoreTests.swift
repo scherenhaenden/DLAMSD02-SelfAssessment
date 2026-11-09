@@ -553,7 +553,7 @@ final class HistoryStoreTests: XCTestCase {
             maxCapacity: 50
         )
         // Corrupt storage with invalid data using the EXACT same storage key
-        testUserDefaults.set("invalid-json-payload".data(using: .utf8), forKey: corruptKey)
+        testUserDefaults.set(Data("invalid-json-payload".utf8), forKey: corruptKey)
 
         let errorView = HistoryView(historyStore: corruptedStore)
         errorView.loadRecords() // Fails gracefully with corruptedData

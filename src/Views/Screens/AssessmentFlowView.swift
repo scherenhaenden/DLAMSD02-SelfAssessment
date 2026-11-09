@@ -43,6 +43,7 @@ public struct AssessmentFlowView<VM: AssessmentViewModelProtocol>: View {
                 if !viewModel.hasExplicitHapticService {
                     viewModel.hapticService = envHapticService
                 }
+                viewModel.prepareInitialCatalogIfNeeded()
             }
         }
     }
@@ -85,8 +86,8 @@ public struct AssessmentFlowView<VM: AssessmentViewModelProtocol>: View {
                     Divider()
 
                     VStack(alignment: .leading, spacing: theme.spacing.xs) {
-                        infoBullet(icon: "square.grid.2x2", title: "4 Dimensionen", detail: "Architecture, Platform, Quality & Agile")
-                        infoBullet(icon: "list.number", title: "24 Fragen", detail: "Single Choice, Multi-Select, Likert & Freitext")
+                        infoBullet(icon: "square.grid.2x2", title: "\(viewModel.activeDimensionCount) Dimensionen", detail: "Architecture, Platform, Quality & Agile")
+                        infoBullet(icon: "list.number", title: "\(viewModel.totalQuestions) Fragen", detail: "Single Choice, Multi-Select, Likert & Freitext")
                         infoBullet(icon: "clock", title: "ca. 10–15 Min.", detail: "Reflexiv und ohne künstlichen Zeitdruck")
                     }
                 }

@@ -288,14 +288,14 @@ final class EvaluationEngineTests: XCTestCase {
     }
 
     func testDecoderClampsForgedNormalizedScoreJSON() throws {
-        let json = """
+        let json = Data("""
         {
             "questionId": "arch-sc-01",
             "dimensionId": "architecture",
             "questionType": "single_choice",
             "normalizedScore": 999.0
         }
-        """.data(using: .utf8)!
+        """.utf8)
 
         let answer = try JSONDecoder().decode(AssessmentAnswer.self, from: json)
         XCTAssertEqual(answer.normalizedScore, 100.0, "Decoder must strictly clamp normalizedScore to 100.0")

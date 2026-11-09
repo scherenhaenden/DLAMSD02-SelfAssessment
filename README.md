@@ -4,7 +4,17 @@ Native SwiftUI self-assessment application developed for **DLAMSD02 Apple Mobile
 
 ## Current Development Stage
 
-Version **0.9.0** (Build `20261110.100000`), Sprint 9 Released: In-App Question Authoring (`CatalogManagerView`), Sandbox Persistence (`Application Support/AssessYourself/custom_assessments.json`) with `.bak` Backup and Automatic Rollback upon Corruption, JSON Import/Export, and Root Quad-Tab Integration (ADR-09, US-15, US-16).
+Version **0.9.1** (Build `20261110.100001`), Sprint 9 Audit Remediation & Hardening:
+- **Independent Audit Remediation:** Resolved 7 high/medium findings (V09-01 to V09-07) and Dark Mode contrast token DT-01.
+- **Resilient Likert Slider & Stepping Invariants (V09-01):** Safe conversion with overflow prevention for extreme slider bounds, automatic step-grid alignment (*snapping*) for off-grid initial slider answers, and finite domain validation.
+- **Transactional Backup Integrity (V09-02):** Active catalog files corrupted on disk are never promoted to `.bak`, guaranteeing persistent recovery.
+- **Psychometric Instrument Comparability (V09-03):** Structural battery changes increment SemVer major version to invalidate invalid temporal delta comparisons.
+- **Dynamic Filter Reset (V09-04):** Automatic cleanup of orphaned dimension filters upon catalog reset or custom imports.
+- **In-App Feedback, Export & Deletion Safety (V09-05 & V09-06):** In-sheet error alerts, catalog JSON export via `ShareLink`, and confirmation alerts before question deletion.
+- **Dynamic Welcome Count (V09-07):** Live binding of total questions and dimension counts in `AssessmentFlowView`.
+- **WCAG AA Dark Mode Contrast (DT-01):** Elevated question identifier contrast to 5.71:1 on dark surfaces.
+- **Cross-Device UI Tests (iPadOS & iPhone):** Resolved floating tab bar duplicate queries via `.firstMatch`, enabling green test execution on both iPhone 17 and iPad 9 simulators.
+- **Linting & Code Quality:** Integrated SwiftLint configuration (`.swiftlint.yml`) and `scripts/lint.sh` passing with 0 violations across 45 Swift files.
 
 ### Implemented
 
@@ -44,8 +54,8 @@ Version **0.9.0** (Build `20261110.100000`), Sprint 9 Released: In-App Question 
 - **Root Application Navigation:**
   - `AssessYourselfApp`: Quad-tab entry point connecting `AssessmentFlowView` as primary assessment experience (`tab.assessmentFlow`), `HistoryView` (`tab.history`), `CatalogManagerView` (`tab.catalogManager`), and `ComponentShowcaseView` (`tab.showcase`).
 - **Test Suite & Code Coverage:**
-  - **125 SwiftPM unit tests** passing on macOS 14 (`swift test`, `arm64e-apple-macos14.0`, 0 failures, 0 warnings, version `v0.9.0`), covering roundtrip persistence, idempotency, chronological sorting descending, FIFO 50 pruning, defensive error handling, `.bak` backup creation, automatic rollback on corruption, in-app question creation, JSON import/export, simulated multi-device hosting layouts on iPad viewports, and German VoiceOver token semantics.
-  - **11 XCUITest integration tests** (`ui-tests/AssessYourselfUITests.swift`) passing on iPhone 17 Simulator (`iOS 27.0`), verifying end-to-end traversal, dimension bars, score headers, reset affordances, history navigation, persistence across relaunch, explicit corruption recovery, catalog management and adding custom questions (**136/136 native tests passed**). Physical iPad hardware acceptance (rotation, multi-window modes) and live VoiceOver screenreader passes remain open as planned validation tasks.
+  - **130 SwiftPM unit tests** passing on macOS 14 (`swift test`, `arm64e-apple-macos14.0`, 0 failures, 0 warnings, version `v0.9.1`), covering roundtrip persistence, idempotency, chronological sorting descending, FIFO 50 pruning, defensive error handling, `.bak` backup creation, automatic rollback on corruption, in-app question creation, JSON import/export, simulated multi-device hosting layouts on iPad viewports, and German VoiceOver token semantics.
+  - **13 XCUITest integration tests** (`ui-tests/AssessYourselfUITests.swift`) passing on **both iPhone 17 and iPad 9 Simulators** (`iOS 27.0`), verifying end-to-end traversal, dimension bars, score headers, reset affordances, history navigation, persistence across relaunch, explicit corruption recovery, catalog management, authoring 4 question types with persistence, and error feedback on import sheets (**143/143 native tests passed on both devices**). Physical iPad hardware acceptance (rotation, multi-window modes) and live VoiceOver screenreader passes remain open as planned validation tasks.
   - *Archived Baseline Audit (v0.6.0, commit `8bb5c3a`, iPhone 17 Simulator runtime `iOS 27.0` / macOS 14):* **83 unit tests** (`audit-unit.log:231`, `audit-native.log:1189`) + **6 XCUITest UI tests**, totaling **89/89 passed native tests** (`audit-native-summary.json`).
   - *Coverage Baseline (v0.6.0 audit, commit `8bb5c3a`):* **94.37% line coverage on macOS** (`llvm-cov report`: 4,847 / 5,136 lines in 24 `src` production files, `audit-macos-coverage.json`), with $\ge 82.22\%$ on every production source file (`PedagogicalRecommendationsView.swift`: 99.70%; 100% on `ArchetypeCardView`, `DimensionScoreBarView`, `AssessmentResultView`, `TactileButtonStyle`, `HapticFeedbackService`).
   - *iOS Coverage Baseline (v0.6.0 audit, commit `8bb5c3a`):* **96.46% line coverage on native iOS target sources** (5,173 / 5,363 lines in 25 files, `audit-ios-coverage.json`).
@@ -54,10 +64,16 @@ Version **0.9.0** (Build `20261110.100000`), Sprint 9 Released: In-App Question 
 
 The project supports both standalone SwiftPM workflows and native Xcode Simulator builds.
 
-### SwiftPM Tests & Coverage
+### SwiftPM Tests, Linting & Coverage
 ```sh
+# Run SwiftPM Unit Tests (130 tests)
 swift test
+
+# Run Code Coverage
 swift test --enable-code-coverage
+
+# Run Code Style & Architecture Linting (SwiftLint & swift-format)
+./scripts/lint.sh
 ```
 
 ### Xcode Simulator Build & UI Tests
