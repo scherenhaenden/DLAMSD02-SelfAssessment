@@ -174,6 +174,9 @@ public struct PedagogicalRecommendationsView: View {
                         RoundedRectangle(cornerRadius: theme.cornerRadius.medium)
                             .stroke(theme.colors.textSecondary.color.opacity(0.12), lineWidth: 1)
                     )
+                    .accessibilityElement(children: .combine)
+                    .accessibilityLabel("\(item.dimensionTitle), Priorität: \(item.priority). Empfehlung: \(item.recommendation)")
+                    .accessibilityIdentifier("recommendationCard.\(item.dimensionId)")
                 }
             }
         }

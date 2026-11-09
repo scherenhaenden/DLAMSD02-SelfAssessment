@@ -3,24 +3,10 @@ import SwiftUI
 /// Displays a chronological log of all completed self-assessments, including dominant archetypes,
 /// multi-dimensional score distributions, and temporal delta comparisons in percentage points (pp).
 public struct HistoryView: View {
-    public enum HistoryAlertItem: Identifiable {
-        case clearAll
-        case resetCorrupted
+    public typealias HistoryAlertItem = AssessYourselfCore.HistoryAlertItem
 
-        public var id: Int {
-            switch self {
-            case .clearAll: return 1
-            case .resetCorrupted: return 2
-            }
-        }
-    }
-
-    public let historyStore: any HistoryStoreProtocol
+    @ObservedObject public var viewModel: HistoryViewModel
     public let theme: any AppThemeProtocol
-
-    @State private var records: [AssessmentRecord] = []
-    @State private var errorMessage: String?
-    @State private var activeAlert: HistoryAlertItem? = nil
 
     private static let dateFormatter: DateFormatter = {
         let formatter = DateFormatter()
@@ -30,18 +16,30 @@ public struct HistoryView: View {
     }()
 
     public init(
+        viewModel: HistoryViewModel,
+        theme: any AppThemeProtocol = AppTheme()
+    ) {
+        self.viewModel = viewModel
+        self.theme = theme
+    }
+
+    public init(
         historyStore: any HistoryStoreProtocol = UserDefaultsHistoryStore(),
         theme: any AppThemeProtocol = AppTheme()
     ) {
-        self.historyStore = historyStore
+        self.viewModel = HistoryViewModel(historyStore: historyStore)
         self.theme = theme
+    }
+
+    public var historyStore: any HistoryStoreProtocol {
+        viewModel.historyStore
     }
 
     public var body: some View {
         Group {
-            if let error = errorMessage {
+            if let error = viewModel.errorMessage {
                 errorStateView(message: error)
-            } else if records.isEmpty {
+            } else if viewModel.records.isEmpty {
                 emptyStateView
             } else {
                 recordsListView
@@ -49,16 +47,16 @@ public struct HistoryView: View {
         }
         .background(theme.colors.background.color.ignoresSafeArea())
         .onAppear {
-            loadRecords()
+            viewModel.loadRecords()
         }
-        .alert(item: $activeAlert) { item in
+        .alert(item: $viewModel.activeAlert) { item in
             switch item {
             case .clearAll:
                 return Alert(
                     title: Text("Verlauf löschen"),
                     message: Text("Möchtest du alle gespeicherten Assessment-Ergebnisse wirklich unwiderruflich löschen?"),
                     primaryButton: .destructive(Text("Löschen")) {
-                        clearAllHistory()
+                        viewModel.clearAllHistory()
                     },
                     secondaryButton: .cancel(Text("Abbrechen"))
                 )
@@ -67,7 +65,7 @@ public struct HistoryView: View {
                     title: Text("Beschädigten Verlauf zurücksetzen"),
                     message: Text("Möchtest du den nicht lesbaren Verlaufsdatenbestand wirklich zurücksetzen? Die beschädigten Daten werden gelöscht, damit neue Assessments wieder gespeichert werden können."),
                     primaryButton: .destructive(Text("Zurücksetzen")) {
-                        clearAllHistory()
+                        viewModel.clearAllHistory()
                     },
                     secondaryButton: .cancel(Text("Abbrechen"))
                 )
@@ -101,6 +99,7 @@ public struct HistoryView: View {
             Spacer()
         }
         .frame(maxWidth: theme.layout.maxContentWidthiPad)
+        .frame(maxWidth: .infinity)
         .padding(theme.spacing.lg)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("Keine Verlaufsdaten vorhanden. Absolviere ein Assessment, um deinen Fortschritt zu verfolgen.")
@@ -119,6 +118,7 @@ public struct HistoryView: View {
             Text("Fehler beim Laden")
                 .font(.headline)
                 .foregroundColor(theme.colors.textPrimary.color)
+                .accessibilityIdentifier("history.errorTitle")
 
             Text(message)
                 .font(.subheadline)
@@ -127,7 +127,7 @@ public struct HistoryView: View {
                 .padding(.horizontal, theme.spacing.lg)
 
             VStack(spacing: theme.spacing.sm) {
-                Button(action: loadRecords) {
+                Button(action: { viewModel.loadRecords() }) {
                     Text("Erneut versuchen")
                         .font(.body.weight(.semibold))
                         .foregroundColor(theme.colors.onAccent.color)
@@ -138,10 +138,10 @@ public struct HistoryView: View {
                                 .fill(theme.colors.errorFeedback.color)
                         )
                 }
-                .buttonStyle(TactileButtonStyle())
                 .accessibilityIdentifier("history.retryButton")
+                .buttonStyle(TactileButtonStyle())
 
-                Button(action: { activeAlert = .resetCorrupted }) {
+                Button(action: { viewModel.requestResetCorrupted() }) {
                     HStack(spacing: 4) {
                         Image(systemName: "arrow.counterclockwise")
                         Text("Beschädigten Verlauf zurücksetzen")
@@ -151,13 +151,14 @@ public struct HistoryView: View {
                     .padding(.horizontal, theme.spacing.md)
                     .padding(.vertical, theme.spacing.xs)
                 }
-                .buttonStyle(TactileButtonStyle())
                 .accessibilityIdentifier("history.resetCorruptedButton")
+                .buttonStyle(TactileButtonStyle())
             }
 
             Spacer()
         }
         .frame(maxWidth: theme.layout.maxContentWidthiPad)
+        .frame(maxWidth: .infinity)
         .padding(theme.spacing.lg)
         .accessibilityIdentifier("history.errorState")
     }
@@ -168,7 +169,7 @@ public struct HistoryView: View {
                 // Header with Count & Clear Action
                 HStack {
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("Verlauf (\(records.count))")
+                        Text("Verlauf (\(viewModel.records.count))")
                             .font(.title2.weight(.bold))
                             .foregroundColor(theme.colors.textPrimary.color)
                         Text("Max. 50 Einträge (FIFO)")
@@ -178,7 +179,7 @@ public struct HistoryView: View {
 
                     Spacer()
 
-                    Button(action: { activeAlert = .clearAll }) {
+                    Button(action: { viewModel.requestClearAll() }) {
                         HStack(spacing: 4) {
                             Image(systemName: "trash")
                                 .font(.subheadline)
@@ -201,10 +202,10 @@ public struct HistoryView: View {
                 .padding(.top, theme.spacing.sm)
 
                 // Cards List
-                ForEach(Array(records.enumerated()), id: \.element.id) { index, record in
+                ForEach(Array(viewModel.records.enumerated()), id: \.element.id) { index, record in
                     let previousRecord = HistoryComparisonService.findPreviousCompatibleRecord(
                         for: record,
-                        in: records
+                        in: viewModel.records
                     )
                     let comparison = previousRecord.flatMap {
                         HistoryComparisonService.compare(current: record, previous: $0)
@@ -218,6 +219,7 @@ public struct HistoryView: View {
                 }
             }
             .frame(maxWidth: theme.layout.maxContentWidthiPad)
+            .frame(maxWidth: .infinity)
             .padding(theme.spacing.md)
         }
     }
@@ -411,24 +413,33 @@ public struct HistoryView: View {
         return summary
     }
 
-    // MARK: - Actions
+    // MARK: - Actions & Test Affordances
 
     public func loadRecords() {
-        do {
-            records = try historyStore.loadHistory()
-            errorMessage = nil
-        } catch {
-            errorMessage = error.localizedDescription
-        }
+        viewModel.loadRecords()
     }
 
-    private func clearAllHistory() {
-        do {
-            try historyStore.clearHistory()
-            records.removeAll()
-            errorMessage = nil
-        } catch {
-            errorMessage = error.localizedDescription
-        }
+    public var currentErrorMessage: String? {
+        viewModel.errorMessage
+    }
+
+    public var displayedRecordsCount: Int {
+        viewModel.records.count
+    }
+
+    public var currentActiveAlert: HistoryAlertItem? {
+        viewModel.activeAlert
+    }
+
+    public func requestResetCorrupted() {
+        viewModel.requestResetCorrupted()
+    }
+
+    public func confirmActiveAlert() {
+        viewModel.confirmActiveAlert()
+    }
+
+    public func dismissAlert() {
+        viewModel.dismissAlert()
     }
 }

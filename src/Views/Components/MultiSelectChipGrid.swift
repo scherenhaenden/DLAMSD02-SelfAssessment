@@ -92,7 +92,7 @@ public struct MultiSelectChipGrid: View {
                     .accessibilityLabel(option.title)
                     .accessibilityValue(isSelected ? "Ausgewählt" : "Nicht ausgewählt")
                     .accessibilityAddTraits(isSelected ? [.isButton, .isSelected] : [.isButton])
-                    .accessibilityHint(isSelected ? "Selected. Double tap to deselect." : "Not selected. Double tap to select.")
+                    .accessibilityHint(isSelected ? "Ausgewählt. Doppeltippen zum Abwählen." : "Nicht ausgewählt. Doppeltippen zum Auswählen.")
                 }
             }
         }

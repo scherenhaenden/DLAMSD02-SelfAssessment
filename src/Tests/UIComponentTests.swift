@@ -476,4 +476,119 @@ final class UIComponentTests: XCTestCase {
         XCTAssertGreaterThan(reducedSize.width, 0)
         XCTAssertGreaterThan(reducedSize.height, 0)
     }
+
+    // MARK: - Multi-Device & iPad Ergonomics (US-13, ADR-08)
+
+    func testMultiDeviceResponsiveLayoutErgonomicsOnIPadAndSplitViews() {
+        let vm = AssessmentViewModel()
+        vm.loadCatalog()
+
+        let flowView = AssessmentFlowView(viewModel: vm)
+        let record = AssessmentRecord(
+            id: UUID(),
+            catalogId: "ios-dev-2026-q4",
+            catalogVersion: "1.0.0",
+            completedAt: Date(),
+            durationSeconds: 120,
+            dimensionScores: [
+                "architecture": 95.0,
+                "platform": 80.0,
+                "quality": 85.0,
+                "agile": 70.0
+            ],
+            overallScore: 82.5,
+            archetype: ArchetypeProfile(
+                id: "architect",
+                title: "Systems & Software Architect",
+                subtitle: "Meister architektonischer Abstraktion",
+                dominantDimensionId: "architecture",
+                description: "Fokussiert auf Modularität und Entwurfsmuster.",
+                strengths: ["Clean Architecture"],
+                growthOpportunities: ["Agile Praktiken"],
+                badgeSymbol: "building.columns.fill"
+            ),
+            answers: []
+        )
+        let resultView = AssessmentResultView(record: record, onRestart: {})
+        let testStore = UserDefaultsHistoryStore(storageKey: "test.ui.ipad.\(UUID().uuidString)")
+        try? testStore.save(record: record)
+        let historyView = HistoryView(historyStore: testStore)
+
+        // 1. iPad 9th Generation (10.2") Viewport Configurations
+        let viewports: [(name: String, width: CGFloat, height: CGFloat)] = [
+            ("iPad 9 Portrait", 810, 1080),
+            ("iPad 9 Landscape", 1080, 810),
+            ("iPad Split View 1/3", 320, 810),
+            ("iPad Split View 1/2", 540, 810),
+            ("iPad Split View 2/3", 704, 810),
+            ("iPad Slide Over", 320, 810)
+        ]
+
+        for vp in viewports {
+            let flowSize = renderInHost(flowView, width: vp.width, height: vp.height)
+            XCTAssertGreaterThan(flowSize.height, 0, "\(vp.name): flowView height must be > 0")
+
+            let resultSize = renderInHost(resultView, width: vp.width, height: vp.height)
+            XCTAssertGreaterThan(resultSize.height, 0, "\(vp.name): resultView height must be > 0")
+
+            let histSize = renderInHost(historyView, width: vp.width, height: vp.height)
+            XCTAssertGreaterThan(histSize.height, 0, "\(vp.name): historyView height must be > 0")
+        }
+
+        // 2. Token consistency assertions for ADR-08
+        XCTAssertEqual(theme.layout.maxContentWidthiPad, 640.0)
+        XCTAssertEqual(theme.spacing.maxContainerWidth, 640.0)
+    }
+
+    // MARK: - VoiceOver Accessibility & Semantics (US-14, ADR-10)
+
+    func testVoiceOverSemanticsAndAccessibilityLabels() {
+        // 1. DimensionScoreBarView formatting to 1 decimal place
+        let scoreBar = DimensionScoreBarView(
+            dimensionId: "architecture",
+            title: "Software-Architektur",
+            iconSystemName: "building.columns.fill",
+            score: 87.54,
+            theme: theme
+        )
+        XCTAssertEqual(scoreBar.formattedScore, "87.5 %")
+        let barSize = renderInHost(scoreBar)
+        XCTAssertGreaterThan(barSize.height, 0)
+
+        // 2. PedagogicalRecommendationsView combined accessibility items
+        let recView = PedagogicalRecommendationsView(
+            dimensionScores: [
+                "architecture": 90.0,
+                "platform": 65.0,
+                "quality": 75.0,
+                "agile": 55.0
+            ],
+            theme: theme
+        )
+        XCTAssertEqual(recView.recommendations.count, 4)
+        XCTAssertEqual(recView.recommendations.first?.dimensionId, "agile")
+        XCTAssertEqual(recView.recommendations.first?.priority, "Hohe Priorität")
+        let recSize = renderInHost(recView)
+        XCTAssertGreaterThan(recSize.height, 0)
+
+        // 3. ChoiceOptionButton and MultiSelectChipGrid rendering with German accessibility hints
+        let option = ChoiceOption(id: "opt-1", title: "Test-Driven Development", scoreWeight: 100.0)
+        let singleChoice = ChoiceOptionButton(
+            option: option,
+            isSelected: true,
+            dimensionId: "quality",
+            onSelect: {}
+        )
+        let scSize = renderInHost(singleChoice)
+        XCTAssertGreaterThan(scSize.height, 0)
+
+        let multiGrid = MultiSelectChipGrid(
+            options: [option],
+            selectedIds: ["opt-1"],
+            dimensionId: "quality",
+            onToggle: { _ in }
+        )
+        let mgSize = renderInHost(multiGrid)
+        XCTAssertGreaterThan(mgSize.height, 0)
+    }
 }

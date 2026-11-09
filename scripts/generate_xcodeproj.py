@@ -25,6 +25,7 @@ def main():
         "src/Models/AssessmentRecord.swift",
         "src/ViewModels/AssessmentViewModelProtocol.swift",
         "src/ViewModels/AssessmentViewModel.swift",
+        "src/ViewModels/HistoryViewModel.swift",
         "src/Views/Screens/ComponentShowcaseView.swift",
         "src/Views/Screens/AssessmentQuestionContainerView.swift",
         "src/Views/Screens/AssessmentFlowView.swift",
@@ -279,7 +280,7 @@ def main():
     pbx.append(f"\t\t{viewmodels_group_id} /* ViewModels */ = {{")
     pbx.append("\t\t\tisa = PBXGroup;")
     pbx.append("\t\t\tchildren = (")
-    for f in ["AssessmentViewModelProtocol.swift", "AssessmentViewModel.swift"]:
+    for f in ["AssessmentViewModelProtocol.swift", "AssessmentViewModel.swift", "HistoryViewModel.swift"]:
         pbx.append(f"\t\t\t\t{filerefs['src/ViewModels/' + f]} /* {f} */,")
     pbx.append("\t\t\t);")
     pbx.append("\t\t\tpath = ViewModels;")
@@ -527,8 +528,8 @@ def main():
     pbx.append("/* End PBXTargetDependency section */")
 
     # Build Configuration Settings
-    build_version = "20261108.140000"
-    market_version = "0.7.1"
+    build_version = "20261109.140000"
+    market_version = "0.8.0"
 
     # XCBuildConfiguration
     pbx.append("\n/* Begin XCBuildConfiguration section */")

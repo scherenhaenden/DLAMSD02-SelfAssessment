@@ -75,6 +75,8 @@ public struct AssessmentResultView: View {
                 bottomActionBar
             }
             .padding(theme.spacing.lg)
+            .frame(maxWidth: theme.layout.maxContentWidthiPad)
+            .frame(maxWidth: .infinity)
         }
         .background(theme.colors.background.color)
         .accessibilityIdentifier("assessmentResultView")

@@ -70,7 +70,7 @@ public struct ChoiceOptionButton: View {
         .accessibilityElement(children: .combine)
         .accessibilityLabel(option.title)
         .accessibilityAddTraits(isSelected ? [.isButton, .isSelected] : [.isButton])
-        .accessibilityHint(isSelected ? "Selected single choice option" : "Double tap to select this option")
+        .accessibilityHint(isSelected ? "Ausgewählt. Doppeltippen, um die Auswahl zu ändern." : "Doppeltippen zum Auswählen dieser Option.")
     }
 
     private var accentColor: Color {

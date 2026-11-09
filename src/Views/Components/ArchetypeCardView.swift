@@ -62,6 +62,8 @@ public struct ArchetypeCardView: View {
                         .foregroundColor(theme.colors.textSecondary.color)
                 }
             }
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel("Diagnostizierter Archetyp: \(archetype.title), \(archetype.subtitle). Gesamtpunktzahl: \(String(format: "%.1f", overallScore)) Prozent.")
 
             // Description
             Text(archetype.description)

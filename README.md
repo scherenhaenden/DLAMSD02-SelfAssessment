@@ -4,7 +4,7 @@ Native SwiftUI self-assessment application developed for **DLAMSD02 Apple Mobile
 
 ## Current Development Stage
 
-Version **0.7.1** (Build `20261108.140000`), Sprint 7 Patch Released: Persistent History Resilience, Save-Failure UI Banner with Retry, Strict Version Compatibility & Date-Tie Ordering, Explicit Corruption Recovery & 111/111 Tests.
+Version **0.8.0** (Build `20261109.140000`), Sprint 8 Released: Multi-Device iPad Ergonomics (640 pt Centered Container across Flow, Result & History, Split View, Slide Over), Deep VoiceOver Accessibility (German semantic hints, exact 1-decimal percentage formatting `%.1f %%`, adjustable slider semantics, grouped recommendation cards), Heuristic Usability Inspection (Nielsen 10 + Apple HIG), and HistoryViewModel Architecture Extraction.
 
 ### Implemented
 

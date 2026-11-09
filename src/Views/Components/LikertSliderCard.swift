@@ -72,6 +72,7 @@ public struct LikertSliderCard: View {
             .accessibilityIdentifier("likertSlider")
             .accessibilityLabel("Einschätzung auf einer Skala von \(Int(minVal)) bis \(Int(maxVal))")
             .accessibilityValue("\(formattedScore): \(verbalAnchor)")
+            .accessibilityHint("Streiche mit einem Finger nach oben oder unten, um den Wert anzupassen.")
             .accessibilityAdjustableAction { direction in
                 switch direction {
                 case .increment:

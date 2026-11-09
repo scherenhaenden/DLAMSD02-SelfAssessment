@@ -16,6 +16,7 @@
 		B4FCC807E6552C8BFB6D3199 /* src/Models/AssessmentRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = 65EB9B039618C8B3FE5750AC /* AssessmentRecord.swift */; };
 		A1ED876D9404A4587019272D /* src/ViewModels/AssessmentViewModelProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15D6CC885F5D021C431BC246 /* AssessmentViewModelProtocol.swift */; };
 		44E6EE9F39D1A491BBA453C5 /* src/ViewModels/AssessmentViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2280DC883D3B6C5FDC8466A /* AssessmentViewModel.swift */; };
+		A0BBDDE9C1E0EE23EF0EDFA0 /* src/ViewModels/HistoryViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6031773CA71F0CB3F4B0A51 /* HistoryViewModel.swift */; };
 		B8D40B7C011B5378771FD2F6 /* src/Views/Screens/ComponentShowcaseView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C94288482D90A5C629441AAD /* ComponentShowcaseView.swift */; };
 		5AD3E9F51E1659BEE5C0DB59 /* src/Views/Screens/AssessmentQuestionContainerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1972FA9E165BC6C836096CA /* AssessmentQuestionContainerView.swift */; };
 		5FEE8EC053A8EB51EDB8C018 /* src/Views/Screens/AssessmentFlowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A618462F6E5564B215454BFF /* AssessmentFlowView.swift */; };
@@ -79,6 +80,7 @@
 		65EB9B039618C8B3FE5750AC /* AssessmentRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AssessmentRecord.swift"; sourceTree = "<group>"; };
 		15D6CC885F5D021C431BC246 /* AssessmentViewModelProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AssessmentViewModelProtocol.swift"; sourceTree = "<group>"; };
 		F2280DC883D3B6C5FDC8466A /* AssessmentViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AssessmentViewModel.swift"; sourceTree = "<group>"; };
+		F6031773CA71F0CB3F4B0A51 /* HistoryViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "HistoryViewModel.swift"; sourceTree = "<group>"; };
 		C94288482D90A5C629441AAD /* ComponentShowcaseView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ComponentShowcaseView.swift"; sourceTree = "<group>"; };
 		F1972FA9E165BC6C836096CA /* AssessmentQuestionContainerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AssessmentQuestionContainerView.swift"; sourceTree = "<group>"; };
 		A618462F6E5564B215454BFF /* AssessmentFlowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AssessmentFlowView.swift"; sourceTree = "<group>"; };
@@ -204,6 +206,7 @@
 			children = (
 				15D6CC885F5D021C431BC246 /* AssessmentViewModelProtocol.swift */,
 				F2280DC883D3B6C5FDC8466A /* AssessmentViewModel.swift */,
+				F6031773CA71F0CB3F4B0A51 /* HistoryViewModel.swift */,
 			);
 			path = ViewModels;
 			sourceTree = "<group>";
@@ -420,6 +423,7 @@
 				B4FCC807E6552C8BFB6D3199 /* src/Models/AssessmentRecord.swift in Sources */,
 				A1ED876D9404A4587019272D /* src/ViewModels/AssessmentViewModelProtocol.swift in Sources */,
 				44E6EE9F39D1A491BBA453C5 /* src/ViewModels/AssessmentViewModel.swift in Sources */,
+				A0BBDDE9C1E0EE23EF0EDFA0 /* src/ViewModels/HistoryViewModel.swift in Sources */,
 				B8D40B7C011B5378771FD2F6 /* src/Views/Screens/ComponentShowcaseView.swift in Sources */,
 				5AD3E9F51E1659BEE5C0DB59 /* src/Views/Screens/AssessmentQuestionContainerView.swift in Sources */,
 				5FEE8EC053A8EB51EDB8C018 /* src/Views/Screens/AssessmentFlowView.swift in Sources */,
@@ -530,7 +534,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 20261108.140000;
+				CURRENT_PROJECT_VERSION = 20261109.140000;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -541,7 +545,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 0.7.1;
+				MARKETING_VERSION = 0.8.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.scherenhaenden.AssessYourself;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PRODUCT_MODULE_NAME = AssessYourselfCore;
@@ -554,7 +558,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 20261108.140000;
+				CURRENT_PROJECT_VERSION = 20261109.140000;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -565,7 +569,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 0.7.1;
+				MARKETING_VERSION = 0.8.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.scherenhaenden.AssessYourself;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PRODUCT_MODULE_NAME = AssessYourselfCore;
@@ -578,10 +582,10 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 20261108.140000;
+				CURRENT_PROJECT_VERSION = 20261109.140000;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				MARKETING_VERSION = 0.7.1;
+				MARKETING_VERSION = 0.8.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.scherenhaenden.AssessYourselfTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
@@ -595,10 +599,10 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 20261108.140000;
+				CURRENT_PROJECT_VERSION = 20261109.140000;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				MARKETING_VERSION = 0.7.1;
+				MARKETING_VERSION = 0.8.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.scherenhaenden.AssessYourselfTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
@@ -612,10 +616,10 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 20261108.140000;
+				CURRENT_PROJECT_VERSION = 20261109.140000;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				MARKETING_VERSION = 0.7.1;
+				MARKETING_VERSION = 0.8.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.scherenhaenden.AssessYourselfUITests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
@@ -628,10 +632,10 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 20261108.140000;
+				CURRENT_PROJECT_VERSION = 20261109.140000;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				MARKETING_VERSION = 0.7.1;
+				MARKETING_VERSION = 0.8.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.scherenhaenden.AssessYourselfUITests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;

@@ -117,6 +117,8 @@ public struct AssessmentFlowView<VM: AssessmentViewModelProtocol>: View {
                 .accessibilityIdentifier("flow.startButton")
             }
             .padding(theme.spacing.lg)
+            .frame(maxWidth: theme.layout.maxContentWidthiPad)
+            .frame(maxWidth: .infinity)
         }
     }
 
@@ -154,6 +156,8 @@ public struct AssessmentFlowView<VM: AssessmentViewModelProtocol>: View {
             topProgressHeader
                 .padding(.horizontal, theme.spacing.lg)
                 .padding(.vertical, theme.spacing.sm)
+                .frame(maxWidth: theme.layout.maxContentWidthiPad)
+                .frame(maxWidth: .infinity)
                 .background(theme.colors.surfaceCard.color)
 
             Divider()
@@ -168,6 +172,8 @@ public struct AssessmentFlowView<VM: AssessmentViewModelProtocol>: View {
                             removal: .opacity
                         ))
                         .padding(theme.spacing.lg)
+                        .frame(maxWidth: theme.layout.maxContentWidthiPad)
+                        .frame(maxWidth: .infinity)
                 }
             }
 
@@ -176,6 +182,8 @@ public struct AssessmentFlowView<VM: AssessmentViewModelProtocol>: View {
             // Sticky Bottom Navigation Actions
             bottomNavigationToolbar
                 .padding(theme.spacing.md)
+                .frame(maxWidth: theme.layout.maxContentWidthiPad)
+                .frame(maxWidth: .infinity)
                 .background(theme.colors.surfaceCard.color)
         }
     }
@@ -342,6 +350,8 @@ public struct AssessmentFlowView<VM: AssessmentViewModelProtocol>: View {
             .accessibilityIdentifier("flow.retryButton")
         }
         .padding(theme.spacing.lg)
+        .frame(maxWidth: theme.layout.maxContentWidthiPad)
+        .frame(maxWidth: .infinity)
     }
 
     private var currentDimensionColor: Color {

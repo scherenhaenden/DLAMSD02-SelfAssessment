@@ -9,19 +9,22 @@ public struct SpacingTokens: Sendable, Hashable {
     public let md: CGFloat
     public let lg: CGFloat
     public let xl: CGFloat
+    public let maxContainerWidth: CGFloat
 
     public init(
         xs: CGFloat = 4.0,
         sm: CGFloat = 8.0,
         md: CGFloat = 16.0,
         lg: CGFloat = 24.0,
-        xl: CGFloat = 32.0
+        xl: CGFloat = 32.0,
+        maxContainerWidth: CGFloat = 640.0
     ) {
         self.xs = xs
         self.sm = sm
         self.md = md
         self.lg = lg
         self.xl = xl
+        self.maxContainerWidth = maxContainerWidth
     }
 }
 

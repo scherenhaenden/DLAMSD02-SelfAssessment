@@ -259,7 +259,7 @@ final class AssessYourselfUITests: XCTestCase {
             expectedScores.append(expectedScore)
             let bar = app.descendants(matching: .any).matching(identifier: "dimensionBar.\(id)").firstMatch
             XCTAssertTrue(bar.waitForExistence(timeout: 5), "Dimension score bar for \(id) must exist")
-            XCTAssertEqual(bar.label, "\(title): \(String(format: "%.0f", expectedScore)) Prozent")
+            XCTAssertEqual(bar.label, "\(title): \(String(format: "%.1f %%", expectedScore))")
         }
 
         let expectedOverall = expectedScores.isEmpty ? 0.0 : (expectedScores.reduce(0, +) / Double(expectedScores.count))
@@ -447,5 +447,166 @@ final class AssessYourselfUITests: XCTestCase {
 
         let welcomeTitle = app.staticTexts["flow.welcomeTitle"]
         XCTAssertTrue(welcomeTitle.waitForExistence(timeout: 5), "Returning to assessment tab must restore flow")
+    }
+
+    // MARK: - Sprint 8 Acceptance: History Persistence & Corruption Recovery Scenarios
+
+    private func completeFullAssessmentFlow() {
+        switchToAssessmentTabIfNeeded()
+
+        let startButton = app.buttons["flow.startButton"]
+        if startButton.waitForExistence(timeout: 5) {
+            startButton.tap()
+        }
+
+        let counterPill = app.staticTexts["flow.counterPill"]
+        XCTAssertTrue(counterPill.waitForExistence(timeout: 10))
+
+        let nextButton = app.buttons["flow.nextButton"]
+        let submitButton = app.buttons["flow.submitButton"]
+
+        for questionNumber in 1...24 {
+            let qExpectation = expectation(for: NSPredicate(format: "label == 'Frage \(questionNumber) / 24'"), evaluatedWith: counterPill)
+            wait(for: [qExpectation], timeout: 5)
+
+            let scOptions = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'choiceOption.'"))
+            let mcChips = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'multiChip.'"))
+            let slider = app.sliders["likertSlider"]
+            let editor = app.textViews["shortTextEditor"]
+
+            if scOptions.count > 0 {
+                scOptions.element(boundBy: 0).tap()
+            } else if mcChips.count > 0 {
+                mcChips.element(boundBy: 0).tap()
+            } else if slider.exists {
+                slider.adjust(toNormalizedSliderPosition: 0.75)
+            } else if editor.exists {
+                editor.tap()
+                editor.typeText("Modulare Entkopplung mit Swift Protocols und sauberer Dependency Injection.")
+            }
+
+            if questionNumber < 24 {
+                XCTAssertTrue(nextButton.waitForExistence(timeout: 3))
+                XCTAssertTrue(nextButton.isEnabled)
+                nextButton.tap()
+            } else {
+                XCTAssertTrue(submitButton.waitForExistence(timeout: 3))
+                XCTAssertTrue(submitButton.isEnabled)
+                submitButton.tap()
+            }
+        }
+
+        let completionHeadline = app.staticTexts["Self-Assessment abgeschlossen!"]
+        XCTAssertTrue(completionHeadline.waitForExistence(timeout: 10))
+    }
+
+    func testAssessmentPersistenceSurvivesRelaunchInHistory() throws {
+        // Step 1: Clean launch, complete assessment & submit
+        app.launchArguments = ["--uitesting", "--uitesting-reset-history"]
+        app.launch()
+
+        completeFullAssessmentFlow()
+
+        // Step 2: Navigate to Verlauf tab and verify the assessment card exists
+        let historyTab = app.tabBars.buttons["Verlauf"]
+        XCTAssertTrue(historyTab.waitForExistence(timeout: 5), "Verlauf tab must exist")
+        historyTab.tap()
+
+        let countHeader = app.staticTexts["Verlauf (1)"]
+        XCTAssertTrue(countHeader.waitForExistence(timeout: 5), "History count header must report exactly 1 record")
+        XCTAssertTrue(app.staticTexts["Max. 50 Einträge (FIFO)"].exists)
+
+        let clearButton = app.buttons["history.clearButton"]
+        XCTAssertTrue(clearButton.exists, "Clear button must be available when history contains records")
+
+        // Step 3: Terminate app and relaunch PRESERVING history store
+        app.terminate()
+        app.launchArguments = ["--uitesting", "--uitesting-preserve-history"]
+        app.launch()
+
+        let historyTabAfterRelaunch = app.tabBars.buttons["Verlauf"]
+        XCTAssertTrue(historyTabAfterRelaunch.waitForExistence(timeout: 5))
+        historyTabAfterRelaunch.tap()
+
+        // Verify persisted record survived relaunch without duplication
+        let countHeaderAfterRelaunch = app.staticTexts["Verlauf (1)"]
+        XCTAssertTrue(countHeaderAfterRelaunch.waitForExistence(timeout: 5), "Relaunched app must retain exactly 1 record without duplication")
+
+        // Step 4: Clear history with confirmation and verify empty state
+        let clearButtonAfter = app.buttons["history.clearButton"]
+        XCTAssertTrue(clearButtonAfter.waitForExistence(timeout: 3))
+        clearButtonAfter.tap()
+
+        let alertDelete = app.alerts.buttons["Löschen"]
+        XCTAssertTrue(alertDelete.waitForExistence(timeout: 3))
+        alertDelete.tap()
+
+        let emptyState = app.descendants(matching: .any)["history.emptyState"]
+        XCTAssertTrue(emptyState.waitForExistence(timeout: 5), "Empty state must be displayed after confirming clear")
+    }
+
+    func testHistoryCorruptionRecoveryViaAlertAction() throws {
+        // Launch with corrupted JSON data in storageKey
+        app.launchArguments = ["--uitesting-corrupt-history"]
+        app.launch()
+
+        let historyTab = app.tabBars.buttons["Verlauf"]
+        XCTAssertTrue(historyTab.waitForExistence(timeout: 5))
+        historyTab.tap()
+
+        // Verify error headline is displayed
+        let errorTitle = app.staticTexts["Fehler beim Laden"]
+        XCTAssertTrue(errorTitle.waitForExistence(timeout: 5), "Error headline must appear when store is corrupted")
+
+        let retryButton = app.buttons["Erneut versuchen"]
+        XCTAssertTrue(retryButton.waitForExistence(timeout: 5), "Retry button must exist")
+
+        let resetCorruptedButton = app.buttons["Beschädigten Verlauf zurücksetzen"]
+        XCTAssertTrue(resetCorruptedButton.waitForExistence(timeout: 5), "Reset corrupted button must exist")
+
+        // Scenario A: User taps reset but cancels dialog -> error view remains
+        resetCorruptedButton.tap()
+        let alertCancel = app.alerts.buttons["Abbrechen"]
+        XCTAssertTrue(alertCancel.waitForExistence(timeout: 5))
+        alertCancel.tap()
+
+        XCTAssertTrue(errorTitle.waitForExistence(timeout: 5), "Error title must persist when user cancels corruption reset")
+
+        // Scenario B: User taps reset and confirms -> corrupted data is cleared, empty state appears
+        resetCorruptedButton.tap()
+        let alertReset = app.alerts.buttons["Zurücksetzen"]
+        XCTAssertTrue(alertReset.waitForExistence(timeout: 5))
+        alertReset.tap()
+
+        let emptyState = app.descendants(matching: .any)["history.emptyState"]
+        XCTAssertTrue(emptyState.waitForExistence(timeout: 5), "Empty state must appear after confirming corrupted history reset")
+    }
+
+    // MARK: - Multi-Device & Ergonomics Acceptance (US-13, ADR-08)
+
+    func testIPadAndMultiDeviceShowcaseLayoutErgonomics() throws {
+        app.launch()
+        switchToShowcaseTabIfNeeded()
+
+        let showcaseTitle = app.staticTexts["Sprint 3 Component Showcase"]
+        XCTAssertTrue(showcaseTitle.waitForExistence(timeout: 10))
+
+        // Verify touch target ergonomics on primary interactive elements (HIG >= 44 pt)
+        let singleChoiceButton = app.buttons["choiceOption.sc-opt-1"]
+        XCTAssertTrue(singleChoiceButton.waitForExistence(timeout: 5))
+        XCTAssertGreaterThanOrEqual(singleChoiceButton.frame.height, 44.0, "Touch target must meet HIG minimum 44 pt")
+
+        let multiChipButton = app.buttons["multiChip.mc-opt-1"]
+        XCTAssertTrue(multiChipButton.waitForExistence(timeout: 5))
+        XCTAssertGreaterThanOrEqual(multiChipButton.frame.height, 44.0, "Touch target must meet HIG minimum 44 pt")
+
+        // Switch to Assessment tab and verify start button touch target
+        let assessmentTab = app.tabBars.buttons["Assessment"]
+        XCTAssertTrue(assessmentTab.waitForExistence(timeout: 5))
+        assessmentTab.tap()
+
+        let startButton = app.buttons["flow.startButton"]
+        XCTAssertTrue(startButton.waitForExistence(timeout: 5))
+        XCTAssertGreaterThanOrEqual(startButton.frame.height, 44.0, "Start button touch target must be >= 44 pt")
     }
 }

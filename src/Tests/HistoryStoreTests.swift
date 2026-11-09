@@ -546,23 +546,124 @@ final class HistoryStoreTests: XCTestCase {
         XCTAssertEqual(try store.loadHistory().count, 2)
 
         // 3. Error State and Corruption Reset Path (S7-05)
+        let corruptKey = "test.corrupt.view.\(UUID().uuidString)"
         let corruptedStore = UserDefaultsHistoryStore(
             userDefaults: testUserDefaults,
-            storageKey: "test.corrupt.view.\(UUID().uuidString)",
+            storageKey: corruptKey,
             maxCapacity: 50
         )
-        // Corrupt storage with invalid data
-        testUserDefaults.set("invalid-json".data(using: .utf8), forKey: "test.corrupt.view")
+        // Corrupt storage with invalid data using the EXACT same storage key
+        testUserDefaults.set("invalid-json-payload".data(using: .utf8), forKey: corruptKey)
 
         let errorView = HistoryView(historyStore: corruptedStore)
         errorView.loadRecords() // Fails gracefully with corruptedData
+        XCTAssertNotNil(errorView.currentErrorMessage, "Corrupted storage must trigger error state message")
+        XCTAssertTrue(errorView.currentErrorMessage?.contains("corruptedData") == true || errorView.currentErrorMessage?.contains("decode") == true)
+
         let errorSize = renderInHost(errorView)
         XCTAssertGreaterThan(errorSize.width, 0)
         XCTAssertGreaterThan(errorSize.height, 0)
 
-        // Reset corrupted store
-        try corruptedStore.clearHistory()
-        errorView.loadRecords()
-        XCTAssertEqual(try corruptedStore.loadHistory().count, 0)
+        // Verify alert flow: user requests reset dialog
+        errorView.requestResetCorrupted()
+        XCTAssertEqual(errorView.currentActiveAlert?.id, HistoryView.HistoryAlertItem.resetCorrupted.id)
+
+        // Scenario A: User cancels alert -> storage and error remain intact
+        errorView.dismissAlert()
+        XCTAssertNil(errorView.currentActiveAlert)
+        XCTAssertNotNil(errorView.currentErrorMessage, "Dismissing alert must not clear error message")
+        XCTAssertThrowsError(try corruptedStore.loadHistory(), "Store remains corrupted after cancel")
+
+        // Scenario B: User confirms reset -> store is cleared, error is reset, count becomes 0
+        errorView.requestResetCorrupted()
+        errorView.confirmActiveAlert()
+        XCTAssertNil(errorView.currentActiveAlert)
+        XCTAssertNil(errorView.currentErrorMessage, "Confirming reset must clear error state")
+        XCTAssertEqual(errorView.displayedRecordsCount, 0, "Display count must be zero after corruption reset")
+        XCTAssertEqual(try corruptedStore.loadHistory().count, 0, "Underlying store must be completely wiped")
+    }
+
+    @MainActor
+    func testCompleteAssessmentPersistsAndSurvivesStoreReinstantiation() throws {
+        let isolatedKey = "test.lifecycle.relaunch.\(UUID().uuidString)"
+        let initialStore = UserDefaultsHistoryStore(
+            userDefaults: testUserDefaults,
+            storageKey: isolatedKey,
+            maxCapacity: 50
+        )
+
+        // 1. Load catalog & complete assessment via AssessmentViewModel
+        let vm = AssessmentViewModel(
+            catalogLoader: CatalogLoader(),
+            evaluationEngine: EvaluationEngine(),
+            historyStore: initialStore
+        )
+        vm.loadCatalog()
+
+        guard let questions = vm.catalog?.questions else {
+            XCTFail("Catalog must be loaded")
+            return
+        }
+
+        for (idx, question) in questions.enumerated() {
+            switch question.type {
+            case .singleChoice:
+                let optId = question.options?.first?.id ?? "opt"
+                vm.recordSingleChoice(questionId: question.id, selectedOptionId: optId)
+            case .multipleChoice:
+                let optId = question.options?.first?.id ?? "opt"
+                vm.toggleMultipleChoice(questionId: question.id, optionId: optId)
+            case .likertSlider:
+                let defaultVal = question.sliderDefault ?? question.sliderMin ?? 1.0
+                vm.recordSliderValue(questionId: question.id, value: defaultVal)
+            case .shortText:
+                let sampleText = "Praxiseinsatz mit sauberer Software-Architektur und testgetriebener Entwicklung."
+                vm.recordShortText(questionId: question.id, text: sampleText)
+            }
+
+            if idx < questions.count - 1 {
+                vm.advance()
+            }
+        }
+
+        XCTAssertTrue(vm.isLastQuestion)
+        XCTAssertTrue(vm.isCurrentAnswerValid)
+        vm.submitAssessment()
+        guard case .completed = vm.state else {
+            XCTFail("AssessmentViewModel state must be .completed after submit")
+            return
+        }
+        XCTAssertNil(vm.persistenceError, "Save must succeed without persistence error")
+
+        // Verify initial save
+        let initialRecords = try initialStore.loadHistory()
+        XCTAssertEqual(initialRecords.count, 1)
+        let savedRecord = initialRecords[0]
+        XCTAssertEqual(savedRecord.catalogId, "devprofile-se-2026")
+        XCTAssertEqual(savedRecord.catalogVersion, "1.0.0")
+        XCTAssertFalse(savedRecord.archetype.title.isEmpty)
+
+        // 2. Simulate App Relaunch by creating a fresh store with the SAME storageKey
+        let relaunchedStore = UserDefaultsHistoryStore(
+            userDefaults: testUserDefaults,
+            storageKey: isolatedKey,
+            maxCapacity: 50
+        )
+        let relaunchedRecords = try relaunchedStore.loadHistory()
+        XCTAssertEqual(relaunchedRecords.count, 1, "Relaunched store must contain exactly 1 persisted record")
+        XCTAssertEqual(relaunchedRecords[0].id, savedRecord.id)
+        XCTAssertEqual(relaunchedRecords[0].overallScore, savedRecord.overallScore)
+        XCTAssertEqual(relaunchedRecords[0].archetype.title, savedRecord.archetype.title)
+        XCTAssertEqual(relaunchedRecords[0].dimensionScores, savedRecord.dimensionScores)
+
+        // 3. Verify HistoryView displays this persisted record upon launch
+        let historyView = HistoryView(historyStore: relaunchedStore)
+        historyView.loadRecords()
+        XCTAssertEqual(historyView.displayedRecordsCount, 1)
+        XCTAssertNil(historyView.currentErrorMessage)
+
+        let hostedSize = renderInHost(historyView)
+        XCTAssertGreaterThan(hostedSize.width, 0)
+        XCTAssertGreaterThan(hostedSize.height, 0)
     }
 }

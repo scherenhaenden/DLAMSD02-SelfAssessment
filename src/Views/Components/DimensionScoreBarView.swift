@@ -74,7 +74,8 @@ public struct DimensionScoreBarView: View {
         }
         .padding(.vertical, theme.spacing.xs)
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("\(title): \(String(format: "%.0f", score)) Prozent")
+        .accessibilityLabel("\(title): \(formattedScore)")
+        .accessibilityValue(formattedScore)
         .accessibilityIdentifier("dimensionBar.\(dimensionId)")
     }
 }
