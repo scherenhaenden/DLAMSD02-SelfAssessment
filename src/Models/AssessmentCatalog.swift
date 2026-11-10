@@ -37,6 +37,18 @@ public struct AssessmentCatalog: Identifiable, Codable, Sendable {
         guard !catalogId.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
             throw AssessmentCatalogError.missingCatalogId
         }
+
+        // Validate semantic version format (e.g., 1.0.0) with safe integer components (< 1,000,000)
+        let versionComponents = version.split(separator: ".", omittingEmptySubsequences: false)
+        guard versionComponents.count >= 1 && versionComponents.count <= 3 else {
+            throw AssessmentCatalogError.invalidVersionFormat(version: version)
+        }
+        for component in versionComponents {
+            guard let intVal = Int(component), intVal >= 0, intVal < 1_000_000 else {
+                throw AssessmentCatalogError.invalidVersionFormat(version: version)
+            }
+        }
+
         guard !dimensions.isEmpty else {
             throw AssessmentCatalogError.emptyDimensions
         }
@@ -106,10 +118,10 @@ public struct AssessmentCatalog: Identifiable, Codable, Sendable {
     /// so historical delta comparisons against the prior version must be invalidated.
     private func bumpedMajorVersion() -> String {
         let components = version.split(separator: ".")
-        if let majorStr = components.first, let major = Int(majorStr) {
+        if let majorStr = components.first, let major = Int(majorStr), major < 1_000_000 {
             return "\(major + 1).0.0"
         }
-        return "\(version).1.0"
+        return "2.0.0"
     }
 
     /// Returns a new catalog instance with an added question, ensuring catalog integrity.
@@ -153,6 +165,7 @@ public struct AssessmentCatalog: Identifiable, Codable, Sendable {
 
 public enum AssessmentCatalogError: LocalizedError, Equatable {
     case missingCatalogId
+    case invalidVersionFormat(version: String)
     case emptyDimensions
     case emptyQuestions
     case duplicateDimensionIds
@@ -168,6 +181,8 @@ public enum AssessmentCatalogError: LocalizedError, Equatable {
         switch self {
         case .missingCatalogId:
             return "Assessment catalog identifier cannot be empty."
+        case .invalidVersionFormat(let versionStr):
+            return "Assessment catalog version '\(versionStr)' is invalid. Expected semantic version format X.Y.Z with safe integer components."
         case .emptyDimensions:
             return "Assessment catalog must define at least one evaluation dimension."
         case .emptyQuestions:

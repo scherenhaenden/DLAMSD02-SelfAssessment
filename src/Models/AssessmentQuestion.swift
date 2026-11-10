@@ -126,7 +126,8 @@ public struct AssessmentQuestion: Identifiable, Codable, Sendable, Hashable {
             }
 
         case .likertSlider:
-            // Ensure slider endpoints and stepping are finite numbers to avoid arithmetic traps or NaN propagation
+            // Ensure slider endpoints, span, and stepping are finite numbers to avoid arithmetic traps,
+            // overflow, or NaN propagation.
             let minVal = sliderMin ?? 1.0
             let maxVal = sliderMax ?? 5.0
             guard minVal.isFinite && maxVal.isFinite else {
@@ -135,11 +136,28 @@ public struct AssessmentQuestion: Identifiable, Codable, Sendable, Hashable {
             guard minVal < maxVal else {
                 throw AssessmentValidationError.invalidSliderRange(questionId: id, min: minVal, max: maxVal)
             }
-            if let step = sliderStep {
-                guard step.isFinite && step > 0.0 else {
-                    throw AssessmentValidationError.invalidSliderStep(questionId: id, step: step)
-                }
+            let span = maxVal - minVal
+            guard span.isFinite else {
+                throw AssessmentValidationError.invalidSliderRange(questionId: id, min: minVal, max: maxVal)
             }
+
+            let step = sliderStep ?? 1.0
+            guard step.isFinite && step > 0.0 else {
+                throw AssessmentValidationError.invalidSliderStep(questionId: id, step: step)
+            }
+
+            // Ensure the discrete rating scale forms a valid grid: maxVal must be reachable
+            // from minVal in integer increments of step (within floating-point tolerance).
+            let stepCount = span / step
+            guard stepCount.isFinite && stepCount >= 1.0 else {
+                throw AssessmentValidationError.invalidSliderStep(questionId: id, step: step)
+            }
+            let remainder = span.truncatingRemainder(dividingBy: step)
+            let tolerance = 1e-5
+            guard abs(remainder) < tolerance || abs(remainder - step) < tolerance else {
+                throw AssessmentValidationError.invalidSliderStep(questionId: id, step: step)
+            }
+
             if let defaultVal = sliderDefault {
                 guard defaultVal.isFinite && defaultVal >= minVal && defaultVal <= maxVal else {
                     throw AssessmentValidationError.invalidSliderDefault(

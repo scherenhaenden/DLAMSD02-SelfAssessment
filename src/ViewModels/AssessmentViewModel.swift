@@ -247,10 +247,12 @@ public final class AssessmentViewModel: AssessmentViewModelProtocol {
             let clamped = min(max(rawDefault, minVal), maxVal)
             let snapped: Double
             if let step = question.sliderStep, step > 0.0 {
-                // Snap default to nearest valid grid step from minVal
-                let stepsFromMin = round((clamped - minVal) / step)
-                let candidate = minVal + stepsFromMin * step
-                snapped = min(max(candidate, minVal), maxVal)
+                // Snap default to nearest valid grid step from minVal, bound by the discrete step count
+                // so the initial answer always validates on the step grid and never falls off-grid.
+                let maxSteps = floor((maxVal - minVal) / step)
+                let candidateSteps = round((clamped - minVal) / step)
+                let validSteps = min(max(candidateSteps, 0.0), maxSteps)
+                snapped = minVal + validSteps * step
             } else {
                 snapped = clamped
             }

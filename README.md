@@ -4,17 +4,13 @@ Native SwiftUI self-assessment application developed for **DLAMSD02 Apple Mobile
 
 ## Current Development Stage
 
-Version **0.9.1** (Build `20261110.100001`), Sprint 9 Audit Remediation & Hardening:
-- **Independent Audit Remediation:** Resolved 7 high/medium findings (V09-01 to V09-07) and Dark Mode contrast token DT-01.
-- **Resilient Likert Slider & Stepping Invariants (V09-01):** Safe conversion with overflow prevention for extreme slider bounds, automatic step-grid alignment (*snapping*) for off-grid initial slider answers, and finite domain validation.
-- **Transactional Backup Integrity (V09-02):** Active catalog files corrupted on disk are never promoted to `.bak`, guaranteeing persistent recovery.
-- **Psychometric Instrument Comparability (V09-03):** Structural battery changes increment SemVer major version to invalidate invalid temporal delta comparisons.
-- **Dynamic Filter Reset (V09-04):** Automatic cleanup of orphaned dimension filters upon catalog reset or custom imports.
-- **In-App Feedback, Export & Deletion Safety (V09-05 & V09-06):** In-sheet error alerts, catalog JSON export via `ShareLink`, and confirmation alerts before question deletion.
-- **Dynamic Welcome Count (V09-07):** Live binding of total questions and dimension counts in `AssessmentFlowView`.
-- **WCAG AA Dark Mode Contrast (DT-01):** Elevated question identifier contrast to 5.71:1 on dark surfaces.
-- **Cross-Device UI Tests (iPadOS & iPhone):** Resolved floating tab bar duplicate queries via `.firstMatch`, enabling green test execution on both iPhone 17 and iPad 9 simulators.
-- **Linting & Code Quality:** Integrated SwiftLint configuration (`.swiftlint.yml`) and `scripts/lint.sh` passing with 0 violations across 45 Swift files.
+Version **0.9.2** (Build `20261110.110000`), Sprint 9 Hardening & Final Acceptance Closure:
+- **Binary Version Synchronization:** Fully aligned Xcode build settings (`MARKETING_VERSION = 0.9.2`, `CURRENT_PROJECT_VERSION = 20261110.110000`) across debug and release targets.
+- **Arithmetic & Boundary Hardening:** Rigorous step-grid validation on Likert scales (requiring finite bounds, integral step divisibility, and discrete boundary clamping), plus astronomical SemVer validation preventing integer overflow traps.
+- **Atomic Backup Preservation:** Atomic file write directly replacing `.bak` without intermediate removal, preventing backup loss on write interruption.
+- **Longitudinal Equivalence & Psychometric Integrity:** Enforced question item set identity for temporal delta comparisons even with matching SemVer major versions.
+- **Dynamic Welcome Screen:** Fully reactive welcome presentation adapting title, description, question count, and dimension overview directly from the active catalog.
+- **Automated Verification Pipeline:** 133 unit tests in SwiftPM, 146 native tests in Xcode (133 unit + 13 UI) on iPhone 17 and iPad 9, and strict static analysis via SwiftLint with 0 violations across 45 files.
 
 ### Implemented
 

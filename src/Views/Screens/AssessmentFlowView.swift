@@ -62,14 +62,14 @@ public struct AssessmentFlowView<VM: AssessmentViewModelProtocol>: View {
                         .foregroundColor(theme.colorToken(forDimension: "architecture").color)
                         .padding(.top, theme.spacing.md)
 
-                    Text("Willkommen zum DevProfile Self-Assessment")
+                    Text(welcomeTitleText)
                         .font(.title3)
                         .fontWeight(.bold)
                         .foregroundColor(theme.colors.textPrimary.color)
                         .multilineTextAlignment(.center)
                         .accessibilityIdentifier("flow.welcomeTitle")
 
-                    Text("Strukturierte Selbsteinschätzung Deiner Software-Engineering-Kompetenzen über 4 Kerndimensionen.")
+                    Text(welcomeDescriptionText)
                         .font(.body)
                         .foregroundColor(theme.colors.textSecondary.color)
                         .multilineTextAlignment(.center)
@@ -86,7 +86,7 @@ public struct AssessmentFlowView<VM: AssessmentViewModelProtocol>: View {
                     Divider()
 
                     VStack(alignment: .leading, spacing: theme.spacing.xs) {
-                        infoBullet(icon: "square.grid.2x2", title: "\(viewModel.activeDimensionCount) Dimensionen", detail: "Architecture, Platform, Quality & Agile")
+                        infoBullet(icon: "square.grid.2x2", title: "\(viewModel.activeDimensionCount) Dimensionen", detail: dimensionsDetailText)
                         infoBullet(icon: "list.number", title: "\(viewModel.totalQuestions) Fragen", detail: "Single Choice, Multi-Select, Likert & Freitext")
                         infoBullet(icon: "clock", title: "ca. 10–15 Min.", detail: "Reflexiv und ohne künstlichen Zeitdruck")
                     }
@@ -139,6 +139,27 @@ public struct AssessmentFlowView<VM: AssessmentViewModelProtocol>: View {
                     .foregroundColor(theme.colors.textSecondary.color)
             }
         }
+    }
+
+    private var welcomeTitleText: String {
+        if let title = viewModel.catalog?.title, !title.isEmpty && !title.hasPrefix("DevProfile") {
+            return "Willkommen zum \(title) Self-Assessment"
+        }
+        return "Willkommen zum DevProfile Self-Assessment"
+    }
+
+    private var welcomeDescriptionText: String {
+        if let description = viewModel.catalog?.description, !description.isEmpty {
+            return description
+        }
+        return "Strukturierte Selbsteinschätzung Deiner Software-Engineering-Kompetenzen über \(viewModel.activeDimensionCount) Kerndimensionen."
+    }
+
+    private var dimensionsDetailText: String {
+        if let dimensions = viewModel.catalog?.dimensions, !dimensions.isEmpty {
+            return dimensions.map(\.name).joined(separator: ", ")
+        }
+        return "Architecture, Platform, Quality & Agile"
     }
 
     private var loadingView: some View {

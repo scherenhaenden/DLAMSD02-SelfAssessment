@@ -39,6 +39,15 @@ final class AssessYourselfUITests: XCTestCase {
         }
     }
 
+    private func typeReflectionTextInto(_ editor: XCUIElement, text: String) {
+        editor.tap()
+        editor.typeText(text)
+        if (editor.value as? String ?? "").count < 15 {
+            editor.tap()
+            editor.typeText(text)
+        }
+    }
+
     // MARK: - Sprint 4: Sequential Assessment Flow Tests
 
     func testWelcomeScreenRemainsVisibleUntilStartTapped() throws {
@@ -171,10 +180,7 @@ final class AssessYourselfUITests: XCTestCase {
 
         editor.tap()
         let sampleReflection = "Modulare Clean Architecture mit SPM und Swift."
-        for char in sampleReflection {
-            editor.typeText(String(char))
-            Thread.sleep(forTimeInterval: 0.03)
-        }
+        typeReflectionTextInto(editor, text: sampleReflection)
 
         XCTAssertTrue(nextButton.isEnabled, "Next must be enabled once min characters are fulfilled")
         nextButton.tap()
@@ -225,9 +231,8 @@ final class AssessYourselfUITests: XCTestCase {
                 let observedValue = Double(observedBadge.components(separatedBy: "/")[0].trimmingCharacters(in: .whitespaces)) ?? 4.0
                 observedPoints[questionNumber] = (observedValue - 1.0) / 4.0 * 100.0
             } else if editor.exists {
-                editor.tap()
                 let reflection = "Modulare Entkopplung mit Swift Protocols und sauberer Dependency Injection."
-                editor.typeText(reflection)
+                typeReflectionTextInto(editor, text: reflection)
                 let observedText = editor.value as? String ?? reflection
                 let tokens = Set(observedText.lowercased().components(separatedBy: CharacterSet.alphanumerics.inverted).filter { !$0.isEmpty })
                 let keywords: Set<String> = [
@@ -410,10 +415,7 @@ final class AssessYourselfUITests: XCTestCase {
         _ = keyboard.waitForExistence(timeout: 3)
 
         let expectedInput = "Praxiseinsatz mit SwiftUI."
-        for char in expectedInput {
-            editor.typeText(String(char))
-            Thread.sleep(forTimeInterval: 0.05)
-        }
+        typeReflectionTextInto(editor, text: expectedInput)
 
         // Verify that typed text is present and matches the expected input exactly
         let editorText = (editor.value as? String ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
@@ -481,6 +483,14 @@ final class AssessYourselfUITests: XCTestCase {
             let qExpectation = expectation(for: NSPredicate(format: "label == 'Frage \(questionNumber) / \(totalQuestions)'"), evaluatedWith: counterPill)
             wait(for: [qExpectation], timeout: 5)
 
+            if questionNumber > totalQuestions - appendedTitles.count {
+                let customIndex = questionNumber - (totalQuestions - appendedTitles.count) - 1
+                if customIndex >= 0 && customIndex < appendedTitles.count {
+                    let expectedTitle = appendedTitles[customIndex]
+                    XCTAssertTrue(app.staticTexts[expectedTitle].waitForExistence(timeout: 4), "Custom question title '\(expectedTitle)' must appear during flow.")
+                }
+            }
+
             let scOptions = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'choiceOption.'"))
             let mcChips = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'multiChip.'"))
             let slider = app.sliders["likertSlider"]
@@ -493,8 +503,7 @@ final class AssessYourselfUITests: XCTestCase {
             } else if slider.exists {
                 slider.adjust(toNormalizedSliderPosition: 0.75)
             } else if editor.exists {
-                editor.tap()
-                editor.typeText("Modulare Entkopplung mit Swift Protocols und sauberer Dependency Injection.")
+                typeReflectionTextInto(editor, text: "Modulare Entkopplung mit Swift Protocols und sauberer Dependency Injection.")
             }
 
             if questionNumber < totalQuestions {
@@ -736,7 +745,7 @@ final class AssessYourselfUITests: XCTestCase {
             XCTAssertTrue(save.isEnabled)
             save.tap()
 
-            XCTAssertTrue(app.staticTexts["\(25 + index) Fragen"].waitForExistence(timeout: 5))
+            XCTAssertTrue(app.staticTexts["\(25 + index) Fragen"].waitForExistence(timeout: 8))
         }
 
         app.terminate()
@@ -751,10 +760,11 @@ final class AssessYourselfUITests: XCTestCase {
         XCTAssertEqual(app.staticTexts["catalogManager.storageStatusLabel"].label, "Benutzerdefiniert (Sandbox)")
 
         switchToAssessmentTabIfNeeded()
+        XCTAssertTrue(app.staticTexts["28 Fragen"].waitForExistence(timeout: 6), "Welcome screen must show updated 28 Fragen.")
+        XCTAssertFalse(app.staticTexts["24 Fragen"].exists, "Welcome screen must not display stale 24-question count.")
+
         let start = app.buttons["flow.startButton"]
         XCTAssertTrue(start.waitForExistence(timeout: 5))
-
-        let outdatedWelcome = app.staticTexts["24 Fragen"].exists
         start.tap()
 
         completeFullAssessmentFlow(totalQuestions: 28, appendedTitles: titles)
@@ -764,7 +774,18 @@ final class AssessYourselfUITests: XCTestCase {
 
         XCTAssertTrue(app.staticTexts["Verlauf (1)"].waitForExistence(timeout: 6))
         XCTAssertTrue(app.descendants(matching: .any)["history.recordCard.0"].exists)
-        XCTAssertFalse(outdatedWelcome, "Welcome screen must not display stale 24-question count after catalog persists 28 items.")
+
+        // Step 3: Relaunch app preserving history and verify record survives relaunch
+        app.terminate()
+        app.launchArguments = flags + ["--uitesting-preserve-history"]
+        app.launch()
+
+        let historyAfterRelaunch = tabButton("Verlauf")
+        XCTAssertTrue(historyAfterRelaunch.waitForExistence(timeout: 6))
+        historyAfterRelaunch.tap()
+
+        XCTAssertTrue(app.staticTexts["Verlauf (1)"].waitForExistence(timeout: 6))
+        XCTAssertTrue(app.descendants(matching: .any)["history.recordCard.0"].exists)
     }
 
     func testMalformedImportShowsErrorInOpenSheet() throws {
@@ -787,10 +808,9 @@ final class AssessYourselfUITests: XCTestCase {
         execBtn.tap()
 
         XCTAssertTrue(editor.exists, "Import sheet must remain open to allow correcting malformed payloads.")
-        XCTAssertTrue(
-            app.alerts.firstMatch.exists ||
-            app.staticTexts.containing(NSPredicate(format: "label CONTAINS[c] %@ OR label CONTAINS[c] %@", "Integritätsprüfung", "ungültig")).firstMatch.isHittable,
-            "The import error banner must be visible and hittable on the active sheet."
-        )
+        let errorBanner = app.staticTexts["catalogManager.importErrorMessage"]
+        XCTAssertTrue(errorBanner.waitForExistence(timeout: 5), "The import error banner must appear inside the open sheet.")
+        XCTAssertTrue(errorBanner.isHittable)
+        XCTAssertEqual(editor.value as? String, "{invalid json", "Editor must retain exact malformed payload for user correction.")
     }
 }

@@ -188,4 +188,87 @@ final class CatalogAcceptanceTests: XCTestCase {
             XCTAssertNil(vm.selectedDimensionFilter)
         }
     }
+
+    // MARK: - Invariant Boundary Hardening
+
+    /// Verifies that rating scales where maxVal is not reachable via integer steps
+    /// from minVal (e.g. 1..4 with step 2) are rejected at model validation time.
+    func testUnalignedSliderStepGridIsRejected() throws {
+        let question = AssessmentQuestion(
+            id: "probe-unaligned",
+            dimensionId: "architecture",
+            type: .likertSlider,
+            title: "Unaligned Step Audit",
+            prompt: "Prompt",
+            sliderMin: 1.0,
+            sliderMax: 4.0,
+            sliderStep: 2.0,
+            sliderDefault: 3.0
+        )
+        XCTAssertThrowsError(try question.validateInvariants()) { error in
+            guard let validationError = error as? AssessmentValidationError else {
+                return XCTFail("Expected AssessmentValidationError, got \(error)")
+            }
+            XCTAssertEqual(validationError, .invalidSliderStep(questionId: "probe-unaligned", step: 2.0))
+        }
+    }
+
+    /// Verifies that astronomical or malformed SemVer strings are rejected during catalog validation,
+    /// preventing integer overflow bugs upon bumping major versions.
+    func testAstronomicalSemVerIsRejected() throws {
+        let baseCatalog = try LocalCatalogService().loadBundledCatalog()
+        let overflowCatalog = AssessmentCatalog(
+            catalogId: baseCatalog.catalogId,
+            version: "9223372036854775807.0.0",
+            title: baseCatalog.title,
+            subtitle: baseCatalog.subtitle,
+            description: baseCatalog.description,
+            dimensions: baseCatalog.dimensions,
+            questions: baseCatalog.questions,
+            archetypes: baseCatalog.archetypes
+        )
+        XCTAssertThrowsError(try overflowCatalog.validateIntegrity()) { error in
+            guard let catalogError = error as? AssessmentCatalogError else {
+                return XCTFail("Expected AssessmentCatalogError, got \(error)")
+            }
+            XCTAssertEqual(catalogError, .invalidVersionFormat(version: "9223372036854775807.0.0"))
+        }
+    }
+
+    /// Verifies that two records sharing the same major version but containing differing question sets
+    /// in their answers return `nil` during delta comparison, guaranteeing psychometric equivalence.
+    func testIdenticalVersionWithDifferentAnswerQuestionSetsReturnsNilComparison() throws {
+        let baseCatalog = try LocalCatalogService().loadBundledCatalog()
+        let q1 = baseCatalog.questions[0]
+        let q2 = baseCatalog.questions[1]
+
+        let recordA = AssessmentRecord(
+            catalogId: baseCatalog.catalogId,
+            catalogVersion: "1.0.0",
+            completedAt: Date(),
+            durationSeconds: 60,
+            dimensionScores: ["architecture": 80.0],
+            overallScore: 80.0,
+            archetype: baseCatalog.archetypes[0],
+            answers: [
+                AssessmentAnswer(questionId: q1.id, dimensionId: q1.dimensionId, questionType: q1.type)
+            ]
+        )
+
+        let recordB = AssessmentRecord(
+            catalogId: baseCatalog.catalogId,
+            catalogVersion: "1.0.0",
+            completedAt: Date().addingTimeInterval(-100),
+            durationSeconds: 60,
+            dimensionScores: ["architecture": 70.0],
+            overallScore: 70.0,
+            archetype: baseCatalog.archetypes[0],
+            answers: [
+                AssessmentAnswer(questionId: q2.id, dimensionId: q2.dimensionId, questionType: q2.type)
+            ]
+        )
+
+        let comparison = HistoryComparisonService.compare(current: recordA, previous: recordB)
+        XCTAssertNil(comparison, "Assessments with differing question sets must not yield delta comparisons.")
+    }
 }

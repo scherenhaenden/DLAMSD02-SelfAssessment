@@ -110,20 +110,12 @@ public final class SandboxCatalogStore: SandboxCatalogStoreProtocol, @unchecked 
             // Safety invariant: Only promote active file to .bak if it contains valid, decodable catalog data.
             // If the active file was corrupted on disk, preserving the last known-good .bak prevents
             // clobbering recoverable state with malformed bytes.
+            // We write existing valid data atomically to .bak so that if writing fails, the previous
+            // backup is never lost or prematurely removed.
             if fileManager.fileExists(atPath: activeFileURL.path) {
-                let activeData = try? Data(contentsOf: activeFileURL)
-                let activeIsValid: Bool
-                if let data = activeData, (try? catalogLoader.decodeCatalog(from: data)) != nil {
-                    activeIsValid = true
-                } else {
-                    activeIsValid = false
-                }
-
-                if activeIsValid {
-                    if fileManager.fileExists(atPath: backupFileURL.path) {
-                        try? fileManager.removeItem(at: backupFileURL)
-                    }
-                    try fileManager.copyItem(at: activeFileURL, to: backupFileURL)
+                if let activeData = try? Data(contentsOf: activeFileURL),
+                   (try? catalogLoader.decodeCatalog(from: activeData)) != nil {
+                    try activeData.write(to: backupFileURL, options: .atomic)
                 }
             }
 
