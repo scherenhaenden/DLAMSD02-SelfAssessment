@@ -296,6 +296,10 @@ final class AssessYourselfUITests: XCTestCase {
         // Scroll down to recommendations and reset action
         app.swipeUp()
 
+        // Capture Screenshot: Dimension score bars visible after scroll
+        let resultBarsScreenshot = XCUIScreen.main.screenshot().pngRepresentation
+        try? resultBarsScreenshot.write(to: URL(fileURLWithPath: "/tmp/screenshot_04_dimension_bars.png"))
+
         let recommendations = app.descendants(matching: .any).matching(identifier: "pedagogicalRecommendations").firstMatch
         XCTAssertTrue(recommendations.waitForExistence(timeout: 5), "Pedagogical recommendations section must exist")
 
