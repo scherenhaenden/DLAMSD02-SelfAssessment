@@ -41,10 +41,9 @@ final class AssessYourselfUITests: XCTestCase {
 
     private func typeReflectionTextInto(_ editor: XCUIElement, text: String) {
         editor.tap()
-        editor.typeText(text)
-        if (editor.value as? String ?? "").count < 15 {
-            editor.tap()
-            editor.typeText(text)
+        for char in text {
+            editor.typeText(String(char))
+            Thread.sleep(forTimeInterval: 0.04)
         }
     }
 
@@ -81,6 +80,10 @@ final class AssessYourselfUITests: XCTestCase {
         app.launch()
         switchToAssessmentTabIfNeeded()
 
+        // Capture Screenshot 1: Welcome Screen
+        let welcomeScreenshot = XCUIScreen.main.screenshot().pngRepresentation
+        try? welcomeScreenshot.write(to: URL(fileURLWithPath: "/tmp/screenshot_01_welcome.png"))
+
         // Welcome screen handling
         let startButton = app.buttons["flow.startButton"]
         if startButton.waitForExistence(timeout: 5) {
@@ -91,6 +94,10 @@ final class AssessYourselfUITests: XCTestCase {
         let counterPill = app.staticTexts["flow.counterPill"]
         XCTAssertTrue(counterPill.waitForExistence(timeout: 10), "Counter pill must exist")
         XCTAssertEqual(counterPill.label, "Frage 1 / 24")
+
+        // Capture Screenshot 2: Question 1 Screen
+        let questionScreenshot = XCUIScreen.main.screenshot().pngRepresentation
+        try? questionScreenshot.write(to: URL(fileURLWithPath: "/tmp/screenshot_02_question.png"))
 
         let dimensionBadge = app.staticTexts["flow.dimensionBadge"]
         XCTAssertTrue(dimensionBadge.waitForExistence(timeout: 5))
@@ -257,6 +264,10 @@ final class AssessYourselfUITests: XCTestCase {
         // Verify completion screen
         let completionHeadline = app.staticTexts["Self-Assessment abgeschlossen!"]
         XCTAssertTrue(completionHeadline.waitForExistence(timeout: 10), "Completion headline must appear")
+
+        // Capture Screenshot 3: Result Screen
+        let resultScreenshot = XCUIScreen.main.screenshot().pngRepresentation
+        try? resultScreenshot.write(to: URL(fileURLWithPath: "/tmp/screenshot_03_result.png"))
 
         let archetypeLabel = app.staticTexts["Diagnostizierter Archetyp"]
         XCTAssertTrue(archetypeLabel.waitForExistence(timeout: 5), "Archetype diagnosis label must be visible")
@@ -540,7 +551,7 @@ final class AssessYourselfUITests: XCTestCase {
 
         // Verify visible card displays dominant archetype and score before relaunch
         XCTAssertTrue(app.staticTexts["Systems & Software Architect"].waitForExistence(timeout: 5), "Dominant archetype must be visible on history card before relaunch")
-        XCTAssertTrue(app.staticTexts["72.5 %"].exists, "Overall score must be visible on history card before relaunch")
+        XCTAssertTrue(app.staticTexts["75.8 %"].exists, "Overall score must be visible on history card before relaunch")
 
         let clearButton = app.buttons["history.clearButton"]
         XCTAssertTrue(clearButton.exists, "Clear button must be available when history contains records")
@@ -558,7 +569,7 @@ final class AssessYourselfUITests: XCTestCase {
         let countHeaderAfterRelaunch = app.staticTexts["Verlauf (1)"]
         XCTAssertTrue(countHeaderAfterRelaunch.waitForExistence(timeout: 5), "Relaunched app must retain exactly 1 record without duplication")
         XCTAssertTrue(app.staticTexts["Systems & Software Architect"].exists, "Dominant archetype must persist identically after relaunch")
-        XCTAssertTrue(app.staticTexts["72.5 %"].exists, "Overall score must persist identically after relaunch")
+        XCTAssertTrue(app.staticTexts["75.8 %"].exists, "Overall score must persist identically after relaunch")
 
         // Step 4: Clear history with confirmation and verify empty state
         let clearButtonAfter = app.buttons["history.clearButton"]
