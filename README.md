@@ -4,12 +4,12 @@ Native SwiftUI self-assessment application developed for **DLAMSD02 Apple Mobile
 
 ## Current Development Stage
 
-Version **0.9.3** (Build `20261112.093000`), Sprint 10 Release Candidate Closure:
+Version **0.9.3** (Build `20261112.093000`, `HEAD` at `5bcc173`), Sprint 10 Release Candidate Closure:
 - **Binary Version Synchronization:** Fully aligned Xcode build settings (`MARKETING_VERSION = 0.9.3`, `CURRENT_PROJECT_VERSION = 20261112.093000`) across debug and release targets.
 - **Freitext Input Hardening (Paced Typing):** Solved SwiftUI `TextEditor` keystroke dropping in UI tests via paced typing (40 ms inter-character delay), ensuring deterministic entry of reflection text and eliminating spurious key doubling.
 - **Mathematical Score Synchronization:** Synchronized full assessment evaluation score to 75.8% (reflecting verified domain keyword matches in reflection answers).
-- **Multi-Device Test Verification (100% Green):** 133 unit tests in SwiftPM, 146 native tests (133 unit + 13 UI) on iPhone 17 and iPad 9 simulators, and strict static analysis via SwiftLint with 0 violations across 45 files.
-- **Automated Evidence & Reporting Capture:** Integrated pixel-perfect screenshot generation for academic Projektbericht (`screenshot_01_welcome.png`, `screenshot_02_question.png`, `screenshot_03_result.png`).
+- **Multi-Device Test Verification & Coverage:** **141/141 unit/component tests** in SwiftPM (**95.11% line coverage**, 8,576 / 9,017 lines; **82.77% function coverage**), **154/154 native tests** (141 unit + 13 UI) on iPhone 17 Simulator (`iOS 27.0`), physical iPad 9 verification (`133/133` unit + `12/13` UI on `iPadOS 27.0.1` prior to the relative `--uitesting-catalog-dir` sandbox fix in `5bcc173`), and strict static analysis via SwiftLint with **0 violations across 45 files**.
+- **Automated Evidence & Reporting Capture:** Integrated pixel-perfect screenshot generation for the academic Projektbericht (`screenshot_01_welcome.png`, `screenshot_02_question.png`, `screenshot_03_result.png`, `screenshot_04_dimension_bars.png`).
 - **Atomic Backup Preservation:** Atomic file write directly replacing `.bak` without intermediate removal, preventing backup loss on write interruption.
 - **Longitudinal Equivalence & Psychometric Integrity:** Enforced question item set identity for temporal delta comparisons even with matching SemVer major versions.
 - **Dynamic Welcome Screen:** Fully reactive welcome presentation adapting title, description, question count, and dimension overview directly from the active catalog.
@@ -52,11 +52,9 @@ Version **0.9.3** (Build `20261112.093000`), Sprint 10 Release Candidate Closure
 - **Root Application Navigation:**
   - `AssessYourselfApp`: Quad-tab entry point connecting `AssessmentFlowView` as primary assessment experience (`tab.assessmentFlow`), `HistoryView` (`tab.history`), `CatalogManagerView` (`tab.catalogManager`), and `ComponentShowcaseView` (`tab.showcase`).
 - **Test Suite & Code Coverage:**
-  - **130 SwiftPM unit tests** passing on macOS 14 (`swift test`, `arm64e-apple-macos14.0`, 0 failures, 0 warnings, version `v0.9.1`), covering roundtrip persistence, idempotency, chronological sorting descending, FIFO 50 pruning, defensive error handling, `.bak` backup creation, automatic rollback on corruption, in-app question creation, JSON import/export, simulated multi-device hosting layouts on iPad viewports, and German VoiceOver token semantics.
-  - **13 XCUITest integration tests** (`ui-tests/AssessYourselfUITests.swift`) passing on **both iPhone 17 and iPad 9 Simulators** (`iOS 27.0`), verifying end-to-end traversal, dimension bars, score headers, reset affordances, history navigation, persistence across relaunch, explicit corruption recovery, catalog management, authoring 4 question types with persistence, and error feedback on import sheets (**143/143 native tests passed on both devices**). Physical iPad hardware acceptance (rotation, multi-window modes) and live VoiceOver screenreader passes remain open as planned validation tasks.
-  - *Archived Baseline Audit (v0.6.0, commit `8bb5c3a`, iPhone 17 Simulator runtime `iOS 27.0` / macOS 14):* **83 unit tests** (`audit-unit.log:231`, `audit-native.log:1189`) + **6 XCUITest UI tests**, totaling **89/89 passed native tests** (`audit-native-summary.json`).
-  - *Coverage Baseline (v0.6.0 audit, commit `8bb5c3a`):* **94.37% line coverage on macOS** (`llvm-cov report`: 4,847 / 5,136 lines in 24 `src` production files, `audit-macos-coverage.json`), with $\ge 82.22\%$ on every production source file (`PedagogicalRecommendationsView.swift`: 99.70%; 100% on `ArchetypeCardView`, `DimensionScoreBarView`, `AssessmentResultView`, `TactileButtonStyle`, `HapticFeedbackService`).
-  - *iOS Coverage Baseline (v0.6.0 audit, commit `8bb5c3a`):* **96.46% line coverage on native iOS target sources** (5,173 / 5,363 lines in 25 files, `audit-ios-coverage.json`).
+  - **141 SwiftPM unit/component tests** passing on macOS (`swift test`, `arm64e-apple-macos14.0`, 0 failures, 0 warnings, commit `5bcc173`), achieving **95.11% line coverage** (8,576 / 9,017 lines) and **82.77% function coverage** (567 / 685 functions) across 32 `src/` production files, covering roundtrip persistence, idempotency, chronological sorting descending, FIFO 50 pruning, defensive error handling, `.bak` backup creation, automatic rollback on corruption, in-app question creation across all 4 types, pasted JSON import/export, simulated multi-device hosting layouts on iPad viewports, and German VoiceOver token semantics.
+  - **13 XCUITest integration tests** (`ui-tests/AssessYourselfUITests.swift`) passing on **iPhone 17 Simulator** (`iOS 27.0`, **154/154 native tests** on `5bcc173`) and verified on **iPad 9 Simulator** (`146/146` on `v0.9.3`), plus physical iPad 9 (`iPadOS 27.0.1`) automated run (`133/133` unit + `12/13` UI on `1fe3433`, followed by the `5bcc173` relative sandbox path fix). Manual physical iPad acceptance (tactile typing, Split View, Dynamic Type XXXL, and live VoiceOver) remains open as the final hardware sign-off step.
+  - *Archived Baseline Audit (v0.6.0, commit `8bb5c3a`, iPhone 17 Simulator runtime `iOS 27.0` / macOS 14):* **83 unit tests** (`audit-unit.log:231`, `audit-native.log:1189`) + **6 XCUITest UI tests**, totaling **89/89 passed native tests** (`audit-native-summary.json`), with **94.37% line coverage on macOS** (`4,847 / 5,136` lines) and **96.46% on iOS** (`5,173 / 5,363` lines).
 
 ## Open and Build
 
@@ -64,7 +62,7 @@ The project supports both standalone SwiftPM workflows and native Xcode Simulato
 
 ### SwiftPM Tests, Linting & Coverage
 ```sh
-# Run SwiftPM Unit Tests (130 tests)
+# Run SwiftPM Unit Tests (141 tests)
 swift test
 
 # Run Code Coverage
@@ -129,6 +127,7 @@ docs/                      Sprint documentation and technical verification repor
 | **0.7.1** | Save-failure UI warning & retry, major version matching, explicit corruption recovery | ✅ Completed |
 | **0.8.0** | Multi-device layout (iPad 640pt container), VoiceOver a11y, history isolation & acceptance (device acceptance open) | ✅ Completed |
 | **0.9.0** | In-app authoring (`CatalogManagerView`), sandbox storage, `.bak` backup with automatic rollback, JSON import/export | ✅ Completed |
-| **1.0.0** | Final code freeze, $\ge 80\%$ llvm-cov, UI acceptance suite, academic report | 🟡 Next |
+| **0.9.3** | Release Candidate: paced Freitext typing, 75.8% score sync, 95.11% `llvm-cov`, 154/154 iPhone 17 Sim | ✅ Completed |
+| **1.0.0** | Physical iPad manual sign-off, final code freeze, academic report | 🟡 Next |
 
 Author: Edward Sergio José Flores Mogollón · B.Sc. Softwareentwicklung · IU.
