@@ -550,4 +550,120 @@ final class EvaluationEngineTests: XCTestCase {
             XCTAssertFalse(err.errorDescription!.isEmpty)
         }
     }
+
+    /// Verifies strict payload validation for type mismatches, multiple-choice bounds, slider steps, and short-text limits.
+    func testEvaluateRejectsMismatchedTypeAndEdgePayloads() {
+        var answers = makeCompleteAnswers()
+
+        // 1. Mismatched question type
+        let first = answers[0]
+        answers[0] = AssessmentAnswer(
+            questionId: first.questionId,
+            dimensionId: first.dimensionId,
+            questionType: .likertSlider,
+            sliderValue: 3.0
+        )
+        XCTAssertThrowsError(try engine.evaluate(answers: answers, catalog: catalog, durationSeconds: 60.0)) { error in
+            guard case EvaluationEngineError.mismatchedType = error else {
+                XCTFail("Expected mismatchedType, got \(error)")
+                return
+            }
+        }
+
+        // 2. Multiple choice: unknown option ID & out-of-bounds selection
+        answers = makeCompleteAnswers()
+        if let mcIdx = answers.firstIndex(where: { $0.questionType == .multipleChoice }) {
+            let mc = answers[mcIdx]
+            answers[mcIdx] = AssessmentAnswer(
+                questionId: mc.questionId,
+                dimensionId: mc.dimensionId,
+                questionType: .multipleChoice,
+                selectedOptionIds: ["non-existent-option"]
+            )
+            XCTAssertThrowsError(try engine.evaluate(answers: answers, catalog: catalog, durationSeconds: 60.0))
+
+            answers[mcIdx] = AssessmentAnswer(
+                questionId: mc.questionId,
+                dimensionId: mc.dimensionId,
+                questionType: .multipleChoice,
+                selectedOptionIds: []
+            )
+            XCTAssertThrowsError(try engine.evaluate(answers: answers, catalog: catalog, durationSeconds: 60.0))
+        }
+
+        // 3. Likert slider: missing value & step violation
+        answers = makeCompleteAnswers()
+        if let lkIdx = answers.firstIndex(where: { $0.questionType == .likertSlider }) {
+            let lk = answers[lkIdx]
+            answers[lkIdx] = AssessmentAnswer(
+                questionId: lk.questionId,
+                dimensionId: lk.dimensionId,
+                questionType: .likertSlider,
+                sliderValue: nil
+            )
+            XCTAssertThrowsError(try engine.evaluate(answers: answers, catalog: catalog, durationSeconds: 60.0))
+
+            answers[lkIdx] = AssessmentAnswer(
+                questionId: lk.questionId,
+                dimensionId: lk.dimensionId,
+                questionType: .likertSlider,
+                sliderValue: 2.3
+            )
+            XCTAssertThrowsError(try engine.evaluate(answers: answers, catalog: catalog, durationSeconds: 60.0))
+        }
+
+        // 4. Short text: empty & exceeding maxCharacters
+        answers = makeCompleteAnswers()
+        if let txIdx = answers.firstIndex(where: { $0.questionType == .shortText }) {
+            let tx = answers[txIdx]
+            answers[txIdx] = AssessmentAnswer(
+                questionId: tx.questionId,
+                dimensionId: tx.dimensionId,
+                questionType: .shortText,
+                textInput: "   "
+            )
+            XCTAssertThrowsError(try engine.evaluate(answers: answers, catalog: catalog, durationSeconds: 60.0))
+
+            answers[txIdx] = AssessmentAnswer(
+                questionId: tx.questionId,
+                dimensionId: tx.dimensionId,
+                questionType: .shortText,
+                textInput: String(repeating: "a", count: 500)
+            )
+            XCTAssertThrowsError(try engine.evaluate(answers: answers, catalog: catalog, durationSeconds: 60.0))
+        }
+    }
+
+    /// Verifies defensive fallback return values in scoreQuestion for invalid or out-of-range inputs.
+    func testScoreQuestionDefensiveFallbacks() {
+        let mcQuestion = AssessmentQuestion(
+            id: "mc-fb",
+            dimensionId: "architecture",
+            type: .multipleChoice,
+            title: "MC",
+            prompt: "Choose",
+            options: [
+                ChoiceOption(id: "o1", title: "O1", scoreWeight: 50.0),
+                ChoiceOption(id: "o2", title: "O2", scoreWeight: 50.0)
+            ],
+            minSelectCount: 2,
+            maxSelectCount: 2
+        )
+        XCTAssertEqual(engine.scoreQuestion(question: mcQuestion, selectedOptionIds: nil, sliderValue: nil, textInput: nil), 0.0)
+        XCTAssertEqual(engine.scoreQuestion(question: mcQuestion, selectedOptionIds: ["unknown"], sliderValue: nil, textInput: nil), 0.0)
+        XCTAssertEqual(engine.scoreQuestion(question: mcQuestion, selectedOptionIds: ["o1"], sliderValue: nil, textInput: nil), 0.0)
+
+        let degenerateSlider = AssessmentQuestion(
+            id: "lk-fb",
+            dimensionId: "architecture",
+            type: .likertSlider,
+            title: "LK",
+            prompt: "Rate",
+            sliderMin: 5.0,
+            sliderMax: 5.0,
+            sliderStep: 1.0
+        )
+        XCTAssertEqual(engine.scoreQuestion(question: degenerateSlider, selectedOptionIds: nil, sliderValue: nil, textInput: nil), 0.0)
+        XCTAssertEqual(engine.scoreQuestion(question: degenerateSlider, selectedOptionIds: nil, sliderValue: 5.0, textInput: nil), 50.0)
+    }
 }

@@ -1,6 +1,7 @@
 import SwiftUI
 
 #if !SWIFT_PACKAGE
+/// Root SwiftUI application entry point configuring shared persistence stores and tab navigation.
 @main
 struct AssessYourselfApp: App {
     private let historyStore: UserDefaultsHistoryStore
@@ -10,6 +11,7 @@ struct AssessYourselfApp: App {
     @StateObject private var catalogManagerViewModel: CatalogManagerViewModel
     @State private var selectedTab: Int = 0
 
+    /// Initializes the history and catalog stores, applying isolated UI-test overrides in DEBUG builds.
     init() {
         #if DEBUG
         var activeStorageKey = UserDefaultsHistoryStore.defaultStorageKey
@@ -32,7 +34,14 @@ struct AssessYourselfApp: App {
         var catalogDir: URL?
         if let customCatalogDirIndex = CommandLine.arguments.firstIndex(of: "--uitesting-catalog-dir"),
            customCatalogDirIndex + 1 < CommandLine.arguments.count {
-            catalogDir = URL(fileURLWithPath: CommandLine.arguments[customCatalogDirIndex + 1], isDirectory: true)
+            let rawPath = CommandLine.arguments[customCatalogDirIndex + 1]
+            // Resolve relative directory names inside NSTemporaryDirectory so UI tests work inside physical iOS/iPadOS sandboxes.
+            if rawPath.hasPrefix("/") {
+                catalogDir = URL(fileURLWithPath: rawPath, isDirectory: true)
+            } else {
+                catalogDir = URL(fileURLWithPath: NSTemporaryDirectory(), isDirectory: true)
+                    .appendingPathComponent(rawPath, isDirectory: true)
+            }
         } else if CommandLine.arguments.contains("--uitesting") && !CommandLine.arguments.contains("--uitesting-preserve-catalog") {
             let tempDir = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("AssessYourselfUITestCatalog_\(ProcessInfo.processInfo.processIdentifier)", isDirectory: true)
             catalogDir = tempDir

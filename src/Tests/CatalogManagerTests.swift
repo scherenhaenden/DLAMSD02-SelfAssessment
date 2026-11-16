@@ -415,4 +415,82 @@ final class CatalogManagerTests: XCTestCase {
         XCTAssertNotNil(padController.view)
         #endif
     }
+
+    /// Verifies ViewModel authoring across all question types, form validation guards, deletion, export, and reset.
+    @MainActor
+    func testCatalogManagerViewModelAuthoringAllTypesDeleteExportAndReset() {
+        let vm = CatalogManagerViewModel(catalogStore: sutStore, hapticService: nil)
+        let initialCount = vm.totalQuestionsCount
+
+        // Form validation guard checks
+        vm.resetForm()
+        XCTAssertFalse(vm.isFormValid)
+        vm.formTitle = "Valid Title"
+        vm.formPrompt = "Valid Prompt?"
+        vm.formOption1Title = "Same"
+        vm.formOption2Title = "Same"
+        XCTAssertFalse(vm.isFormValid)
+        vm.formOption2Title = "Different"
+        XCTAssertTrue(vm.isFormValid)
+
+        // 1. Save Multiple Choice
+        vm.formType = .multipleChoice
+        vm.formQuestionId = "custom_mc_cov"
+        XCTAssertTrue(vm.saveNewQuestion())
+
+        // 2. Save Likert Slider (and verify invalid slider guard)
+        vm.resetForm()
+        vm.formType = .likertSlider
+        vm.formQuestionId = "custom_lk_cov"
+        vm.formTitle = "Likert Cov"
+        vm.formPrompt = "Wie gut?"
+        vm.formSliderMin = 5.0
+        vm.formSliderMax = 5.0
+        XCTAssertFalse(vm.isFormValid)
+        vm.formSliderMin = 1.0
+        XCTAssertTrue(vm.saveNewQuestion())
+
+        // 3. Save Short Text (and verify invalid length guard)
+        vm.resetForm()
+        vm.formType = .shortText
+        vm.formQuestionId = "custom_tx_cov"
+        vm.formTitle = "Text Cov"
+        vm.formPrompt = "Warum?"
+        vm.formMinCharacters = 2
+        XCTAssertFalse(vm.isFormValid)
+        vm.formMinCharacters = 15
+        XCTAssertTrue(vm.saveNewQuestion())
+
+        XCTAssertEqual(vm.totalQuestionsCount, initialCount + 3)
+        XCTAssertNotNil(vm.exportCatalogJSON())
+
+        // 4. Delete custom question and reset to bundled
+        XCTAssertTrue(vm.deleteQuestion(id: "custom_mc_cov"))
+        XCTAssertEqual(vm.totalQuestionsCount, initialCount + 2)
+
+        XCTAssertTrue(vm.resetToBundledCatalog())
+        XCTAssertEqual(vm.totalQuestionsCount, initialCount)
+        XCTAssertFalse(vm.hasCustomCatalog)
+
+        // 5. Empty import guard & store failure propagation
+        XCTAssertFalse(vm.importCatalogJSON("   "))
+        XCTAssertNotNil(vm.errorMessage)
+
+        final class FailingCatalogStore: SandboxCatalogStoreProtocol {
+            var activeFileURL: URL { URL(fileURLWithPath: "/dev/null") }
+            var backupFileURL: URL { URL(fileURLWithPath: "/dev/null") }
+            var hasCustomCatalog: Bool { true }
+            var corruptedRollbackTriggered: Bool { false }
+            func loadActiveCatalog() throws -> AssessmentCatalog { throw NSError(domain: "Store", code: 1) }
+            func saveCustomCatalog(_ catalog: AssessmentCatalog) throws { throw NSError(domain: "Store", code: 2) }
+            func importCatalog(from data: Data) throws -> AssessmentCatalog { throw NSError(domain: "Store", code: 3) }
+            func exportCatalogData() throws -> Data { throw NSError(domain: "Store", code: 4) }
+            func resetToBundledCatalog() throws { throw NSError(domain: "Store", code: 5) }
+        }
+        let failingVM = CatalogManagerViewModel(catalogStore: FailingCatalogStore(), hapticService: nil)
+        XCTAssertNotNil(failingVM.errorMessage)
+        XCTAssertFalse(failingVM.saveNewQuestion())
+        XCTAssertFalse(failingVM.deleteQuestion(id: "nonexistent"))
+        XCTAssertFalse(failingVM.resetToBundledCatalog())
+    }
 }

@@ -223,7 +223,8 @@ public struct CatalogManagerView: View {
     }
 
     @ViewBuilder
-    private var statusBannerSection: some View {
+    /// Renders transient status or error feedback banners above the question list.
+    var statusBannerSection: some View {
         if let status = viewModel.statusMessage {
             HStack(spacing: theme.spacing.sm) {
                 Image(systemName: "checkmark.circle.fill")
@@ -270,7 +271,8 @@ public struct CatalogManagerView: View {
 
     // MARK: - Add Question Sheet
 
-    private var addQuestionSheet: some View {
+    /// Modal form sheet for authoring and validating a new custom assessment question.
+    var addQuestionSheet: some View {
         NavigationStack {
             Form {
                 if let error = viewModel.errorMessage {
@@ -371,7 +373,8 @@ public struct CatalogManagerView: View {
 
     // MARK: - Import Sheet
 
-    private var importSheet: some View {
+    /// Modal sheet allowing users to paste and validate a custom JSON catalog payload.
+    var importSheet: some View {
         NavigationStack {
             VStack(alignment: .leading, spacing: theme.spacing.md) {
                 Text("Fügen Sie ein vollständiges JSON-Katalog-Payload ein, um es zu importieren. Bestehende Daten werden zuvor als .bak gesichert.")
@@ -434,7 +437,8 @@ public struct CatalogManagerView: View {
 
     // MARK: - Export Sheet
 
-    private var exportSheet: some View {
+    /// Modal sheet displaying the active catalog JSON with a system ShareLink export action.
+    var exportSheet: some View {
         NavigationStack {
             VStack(alignment: .leading, spacing: theme.spacing.md) {
                 Text("Aktiver Fragenkatalog im JSON-Format zur Sicherung oder Weiterverwendung.")

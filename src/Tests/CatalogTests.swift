@@ -397,4 +397,83 @@ final class CatalogTests: XCTestCase {
             }
         }
     }
+
+    /// Verifies all invariant validation branches on AssessmentQuestion and score clamping on AssessmentAnswer.
+    func testQuestionInvariantsAndAnswerClamping() throws {
+        let validOptions = [
+            ChoiceOption(id: "a", title: "A", scoreWeight: 100.0),
+            ChoiceOption(id: "b", title: "B", scoreWeight: 0.0)
+        ]
+
+        // Empty id / dimensionId / prompt
+        XCTAssertThrowsError(try AssessmentQuestion(id: " ", dimensionId: "arch", type: .singleChoice, title: "T", prompt: "P", options: validOptions).validateInvariants())
+        XCTAssertThrowsError(try AssessmentQuestion(id: "q1", dimensionId: " ", type: .singleChoice, title: "T", prompt: "P", options: validOptions).validateInvariants())
+        XCTAssertThrowsError(try AssessmentQuestion(id: "q1", dimensionId: "arch", type: .singleChoice, title: "T", prompt: " ", options: validOptions).validateInvariants())
+
+        // Duplicate option IDs & < 2 options
+        let dupOptions = [
+            ChoiceOption(id: "a", title: "A", scoreWeight: 50.0),
+            ChoiceOption(id: "a", title: "B", scoreWeight: 50.0)
+        ]
+        XCTAssertThrowsError(try AssessmentQuestion(id: "q2", dimensionId: "arch", type: .singleChoice, title: "T", prompt: "P", options: dupOptions).validateInvariants())
+        XCTAssertThrowsError(try AssessmentQuestion(id: "q3", dimensionId: "arch", type: .singleChoice, title: "T", prompt: "P", options: [validOptions[0]]).validateInvariants())
+
+        // Multiple choice min/max bounds
+        XCTAssertThrowsError(try AssessmentQuestion(id: "q4", dimensionId: "arch", type: .multipleChoice, title: "T", prompt: "P", options: validOptions, minSelectCount: 0, maxSelectCount: 2).validateInvariants())
+        XCTAssertThrowsError(try AssessmentQuestion(id: "q5", dimensionId: "arch", type: .multipleChoice, title: "T", prompt: "P", options: validOptions, minSelectCount: 2, maxSelectCount: 1).validateInvariants())
+
+        // Short text bounds
+        XCTAssertThrowsError(try AssessmentQuestion(id: "q6", dimensionId: "arch", type: .shortText, title: "T", prompt: "P", minCharacters: 0, maxCharacters: 100).validateInvariants())
+        XCTAssertThrowsError(try AssessmentQuestion(id: "q7", dimensionId: "arch", type: .shortText, title: "T", prompt: "P", minCharacters: 50, maxCharacters: 20).validateInvariants())
+
+        // Slider bounds
+        XCTAssertThrowsError(try AssessmentQuestion(id: "q8", dimensionId: "arch", type: .likertSlider, title: "T", prompt: "P", sliderMin: 5.0, sliderMax: 1.0, sliderStep: 1.0).validateInvariants())
+        XCTAssertThrowsError(try AssessmentQuestion(id: "q9", dimensionId: "arch", type: .likertSlider, title: "T", prompt: "P", sliderMin: 1.0, sliderMax: 5.0, sliderStep: 0.0).validateInvariants())
+
+        // Answer clamping
+        let clamped = AssessmentAnswer(questionId: "q1", dimensionId: "arch", questionType: .singleChoice, normalizedScore: 150.0)
+        XCTAssertEqual(clamped.normalizedScore, 100.0)
+
+        // All AssessmentValidationError descriptions
+        let validationErrors: [AssessmentValidationError] = [
+            .emptyIdentifier,
+            .emptyDimensionIdentifier(questionId: "q1"),
+            .emptyPrompt(questionId: "q1"),
+            .insufficientOptions(questionId: "q1", count: 1),
+            .emptyOptionIdentifier(questionId: "q1"),
+            .emptyOptionTitle(questionId: "q1", optionId: "o1"),
+            .duplicateOptionIdentifiers(questionId: "q1"),
+            .invalidMultiSelectBounds(questionId: "q1", min: 2, max: 1, optionCount: 2),
+            .invalidSliderRange(questionId: "q1", min: 5, max: 1),
+            .invalidSliderStep(questionId: "q1", step: 0),
+            .invalidSliderDefault(questionId: "q1", defaultVal: 9, min: 1, max: 5),
+            .invalidTextBounds(questionId: "q1", min: 50, max: 10)
+        ]
+        for err in validationErrors {
+            XCTAssertFalse(err.errorDescription!.isEmpty)
+        }
+
+        // AssessmentRecord 4-tier Comparable ordering
+        let arch = ArchetypeProfile(
+            id: "a1",
+            title: "T",
+            subtitle: "S",
+            dominantDimensionId: "architecture",
+            description: "D",
+            strengths: [],
+            growthOpportunities: [],
+            badgeSymbol: "star"
+        )
+        let baseDate = Date(timeIntervalSince1970: 1000)
+        let rScoreLow = AssessmentRecord(id: UUID(uuidString: "00000000-0000-0000-0000-000000000001")!, catalogId: "c", completedAt: baseDate, durationSeconds: 50, dimensionScores: [:], overallScore: 50, archetype: arch, answers: [])
+        let rScoreHigh = AssessmentRecord(id: UUID(uuidString: "00000000-0000-0000-0000-000000000002")!, catalogId: "c", completedAt: baseDate, durationSeconds: 50, dimensionScores: [:], overallScore: 80, archetype: arch, answers: [])
+        let rLater = AssessmentRecord(id: UUID(uuidString: "00000000-0000-0000-0000-000000000003")!, catalogId: "c", completedAt: baseDate.addingTimeInterval(10), durationSeconds: 50, dimensionScores: [:], overallScore: 50, archetype: arch, answers: [])
+        let rFaster = AssessmentRecord(id: UUID(uuidString: "00000000-0000-0000-0000-000000000004")!, catalogId: "c", completedAt: baseDate, durationSeconds: 20, dimensionScores: [:], overallScore: 50, archetype: arch, answers: [])
+        let rTieUUID = AssessmentRecord(id: UUID(uuidString: "00000000-0000-0000-0000-000000000009")!, catalogId: "c", completedAt: baseDate, durationSeconds: 50, dimensionScores: [:], overallScore: 50, archetype: arch, answers: [])
+
+        XCTAssertTrue(rScoreLow < rScoreHigh)
+        XCTAssertTrue(rScoreLow < rLater)
+        XCTAssertTrue(rScoreLow < rFaster)
+        XCTAssertTrue(rScoreLow < rTieUUID)
+    }
 }

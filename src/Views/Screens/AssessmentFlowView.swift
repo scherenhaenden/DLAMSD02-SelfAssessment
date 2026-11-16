@@ -162,7 +162,8 @@ public struct AssessmentFlowView<VM: AssessmentViewModelProtocol>: View {
         return "Architecture, Platform, Quality & Agile"
     }
 
-    private var loadingView: some View {
+    /// Progress indicator displayed while the active catalog is being loaded.
+    var loadingView: some View {
         VStack(spacing: theme.spacing.md) {
             ProgressView()
                 .scaleEffect(1.2)

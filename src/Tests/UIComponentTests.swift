@@ -597,4 +597,175 @@ final class UIComponentTests: XCTestCase {
         let mgSize = renderInHost(multiGrid)
         XCTAssertGreaterThan(mgSize.height, 0)
     }
+
+    // MARK: - CatalogManagerView, Result Warning & Flow Edge States
+
+    @MainActor
+    func testCatalogManagerViewSheetsBannersAndCustomStates() throws {
+        let tempDir = FileManager.default.temporaryDirectory
+            .appendingPathComponent("CatalogManagerUITest_\(UUID().uuidString)", isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: tempDir) }
+
+        let store = SandboxCatalogStore(baseURL: tempDir)
+        let vm = CatalogManagerViewModel(catalogStore: store, hapticService: nil)
+        let managerView = CatalogManagerView(viewModel: vm)
+
+        // 1. Trigger validation error on import sheet and render importSheet + error banner
+        vm.importJSONText = "{ invalid json"
+        _ = vm.importCatalogJSON(vm.importJSONText)
+        XCTAssertNotNil(vm.errorMessage)
+        XCTAssertGreaterThan(renderInHost(managerView.importSheet, width: 600, height: 700).height, 0)
+        XCTAssertGreaterThan(renderInHost(managerView.statusBannerSection).height, 0)
+
+        // 2. Save a custom question to activate statusMessage, hasCustomCatalog, and dimension filter
+        vm.clearMessages()
+        vm.resetForm()
+        vm.formTitle = "Coverage Test Question"
+        vm.formPrompt = "Wie testet man alle Formulare?"
+        XCTAssertTrue(vm.saveNewQuestion())
+        XCTAssertTrue(vm.hasCustomCatalog)
+        XCTAssertNotNil(vm.statusMessage)
+        vm.selectedDimensionFilter = vm.dimensions.first?.id
+        XCTAssertGreaterThan(renderInHost(managerView, width: 768, height: 1024).height, 0)
+        XCTAssertGreaterThan(renderInHost(managerView.statusBannerSection).height, 0)
+
+        // 3. Render addQuestionSheet for every QuestionType variant and error state
+        for qType in QuestionType.allCases {
+            vm.formType = qType
+            XCTAssertGreaterThan(renderInHost(managerView.addQuestionSheet, width: 600, height: 700).height, 0)
+        }
+
+        // 4. Render exportSheet
+        XCTAssertGreaterThan(renderInHost(managerView.exportSheet, width: 600, height: 700).height, 0)
+    }
+
+    @MainActor
+    func testAssessmentResultViewWithPersistenceWarningAndRetry() throws {
+        let catalog = try LocalCatalogService().loadBundledCatalog()
+        let record = AssessmentRecord(
+            catalogId: catalog.catalogId,
+            catalogVersion: catalog.version,
+            durationSeconds: 120.0,
+            dimensionScores: ["architecture": 80.0, "platform": 70.0, "quality": 90.0, "agile": 60.0],
+            overallScore: 75.0,
+            archetype: catalog.archetypes[0],
+            answers: []
+        )
+
+        var retryTapped = false
+        let resultView = AssessmentResultView(
+            record: record,
+            catalog: catalog,
+            persistenceWarning: "Benutzerdefinierter Speicherfehler",
+            theme: theme,
+            onRestart: {},
+            onRetryPersistence: { retryTapped = true }
+        )
+
+        let size = renderInHost(resultView, width: 768, height: 1024)
+        XCTAssertGreaterThan(size.height, 0)
+        XCTAssertFalse(retryTapped)
+    }
+
+    @MainActor
+    func testAssessmentFlowViewLoadingCompletedAndLastQuestionStates() throws {
+        let vm = AssessmentViewModel()
+        let flowView = AssessmentFlowView(viewModel: vm)
+
+        // 1. Loading indicator view
+        XCTAssertGreaterThan(renderInHost(flowView.loadingView).height, 0)
+
+        // 1b. Error view branch
+        struct FailingCatalogLoader: CatalogLoaderProtocol {
+            func loadBundledCatalog() throws -> AssessmentCatalog { throw NSError(domain: "Test", code: 1) }
+            func loadCatalog(from fileURL: URL) throws -> AssessmentCatalog { throw NSError(domain: "Test", code: 1) }
+            func decodeCatalog(from data: Data) throws -> AssessmentCatalog { throw NSError(domain: "Test", code: 1) }
+        }
+        let errorVM = AssessmentViewModel(catalogLoader: FailingCatalogLoader())
+        errorVM.loadCatalog()
+        let errorFlowView = AssessmentFlowView(viewModel: errorVM)
+        XCTAssertGreaterThan(renderInHost(errorFlowView, width: 768, height: 1024).height, 0)
+
+        // 2. Advance to last question and render submitButton branch
+        vm.loadCatalog()
+        guard let catalog = vm.catalog else {
+            XCTFail("Expected bundled catalog")
+            return
+        }
+        for (idx, q) in catalog.questions.enumerated() {
+            switch q.type {
+            case .singleChoice:
+                if let first = q.options?.first {
+                    vm.recordSingleChoice(questionId: q.id, selectedOptionId: first.id)
+                }
+            case .multipleChoice:
+                if let first = q.options?.first {
+                    vm.toggleMultipleChoice(questionId: q.id, optionId: first.id)
+                }
+            case .likertSlider:
+                vm.recordSliderValue(questionId: q.id, value: 4.0)
+            case .shortText:
+                vm.recordShortText(questionId: q.id, text: "Modulare Entkopplung mit Swift Protocols und sauberer Architektur.")
+            }
+            if idx < catalog.questions.count - 1 {
+                vm.advance()
+            }
+        }
+        XCTAssertTrue(vm.isLastQuestion)
+        XCTAssertGreaterThan(renderInHost(flowView, width: 768, height: 1024).height, 0)
+
+        // 3. Submit and render completed state
+        vm.submitAssessment()
+        XCTAssertGreaterThan(renderInHost(flowView, width: 768, height: 1024).height, 0)
+    }
+
+    @MainActor
+    func testLikertSliderCardAndHistoryBaselineCards() throws {
+        let card = LikertSliderCard(
+            value: 6.0,
+            minVal: 0.0,
+            maxVal: 10.0,
+            step: 2.0,
+            minLabel: "Niedrig",
+            maxLabel: "Hoch",
+            dimensionId: "architecture",
+            onValueChange: { _ in }
+        )
+        XCTAssertGreaterThan(renderInHost(card).height, 0)
+
+        // HistoryView with two incompatible records (different question IDs -> no delta)
+        let catalog = try LocalCatalogService().loadBundledCatalog()
+        let suiteKey = "test.history.cov.\(UUID().uuidString)"
+        defer { UserDefaults.standard.removeObject(forKey: suiteKey) }
+        let store = UserDefaultsHistoryStore(storageKey: suiteKey)
+        let r1 = AssessmentRecord(
+            catalogId: catalog.catalogId,
+            catalogVersion: catalog.version,
+            completedAt: Date(timeIntervalSince1970: 1000),
+            durationSeconds: 90.0,
+            dimensionScores: ["architecture": 75.0],
+            overallScore: 75.0,
+            archetype: catalog.archetypes[0],
+            answers: [AssessmentAnswer(questionId: "q1", dimensionId: "architecture", questionType: .singleChoice, selectedOptionIds: ["a"], normalizedScore: 75.0)]
+        )
+        let r2 = AssessmentRecord(
+            catalogId: catalog.catalogId,
+            catalogVersion: catalog.version,
+            completedAt: Date(timeIntervalSince1970: 2000),
+            durationSeconds: 95.0,
+            dimensionScores: ["architecture": 80.0],
+            overallScore: 80.0,
+            archetype: catalog.archetypes[0],
+            answers: [
+                AssessmentAnswer(questionId: "q1", dimensionId: "architecture", questionType: .singleChoice, selectedOptionIds: ["a"], normalizedScore: 75.0),
+                AssessmentAnswer(questionId: "q2", dimensionId: "architecture", questionType: .singleChoice, selectedOptionIds: ["a"], normalizedScore: 85.0)
+            ]
+        )
+        try store.save(record: r1)
+        try store.save(record: r2)
+
+        let historyVM = HistoryViewModel(historyStore: store)
+        let historyView = HistoryView(viewModel: historyVM)
+        XCTAssertGreaterThan(renderInHost(historyView, width: 768, height: 1024).height, 0)
+    }
 }

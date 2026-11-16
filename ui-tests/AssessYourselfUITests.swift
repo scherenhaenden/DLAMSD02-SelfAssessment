@@ -717,7 +717,7 @@ final class AssessYourselfUITests: XCTestCase {
 
     func testAuthorFourQuestionTypesRelaunchCompleteAndPersist() throws {
         let key = "de.iu.assessyourself.audit.history.\(UUID().uuidString)"
-        let dir = "/tmp/assessyourself-audit-catalog-\(UUID().uuidString)"
+        let dir = "assessyourself-audit-catalog-\(UUID().uuidString)"
         let flags = ["--uitesting", "--uitesting-storage-key", key, "--uitesting-catalog-dir", dir]
         app.launchArguments = flags
         app.launch()
