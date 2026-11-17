@@ -4,7 +4,7 @@ Native SwiftUI self-assessment application developed for **DLAMSD02 Apple Mobile
 
 ## Current Development Stage
 
-Version **0.9.3** (Build `20261112.093000`, `HEAD` at `5bcc173`), Sprint 10 Release Candidate Closure:
+Version **1.0.0** (Build `20261117.170500`), Sprint 10 Final Release:
 - **Binary Version Synchronization:** Fully aligned Xcode build settings (`MARKETING_VERSION = 0.9.3`, `CURRENT_PROJECT_VERSION = 20261112.093000`) across debug and release targets.
 - **Freitext Input Hardening (Paced Typing):** Solved SwiftUI `TextEditor` keystroke dropping in UI tests via paced typing (40 ms inter-character delay), ensuring deterministic entry of reflection text and eliminating spurious key doubling.
 - **Mathematical Score Synchronization:** Synchronized full assessment evaluation score to 75.8% (reflecting verified domain keyword matches in reflection answers).
@@ -128,6 +128,6 @@ docs/                      Sprint documentation and technical verification repor
 | **0.8.0** | Multi-device layout (iPad 640pt container), VoiceOver a11y, history isolation & acceptance (device acceptance open) | ✅ Completed |
 | **0.9.0** | In-app authoring (`CatalogManagerView`), sandbox storage, `.bak` backup with automatic rollback, JSON import/export | ✅ Completed |
 | **0.9.3** | Release Candidate: paced Freitext typing, 75.8% score sync, 95.11% `llvm-cov`, 154/154 iPhone 17 Sim | ✅ Completed |
-| **1.0.0** | Physical iPad manual sign-off, final code freeze, academic report | 🟡 Next |
+| **1.0.0** | Final code freeze, 95.11% `llvm-cov` (141 SwiftPM / 154 iPhone 17 Sim), physical iPad 9 automated run, SwiftLint 0 violations | ✅ Completed |
 
 Author: Edward Sergio José Flores Mogollón · B.Sc. Softwareentwicklung · IU.
