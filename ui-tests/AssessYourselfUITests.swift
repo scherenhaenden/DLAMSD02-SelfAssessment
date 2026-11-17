@@ -81,8 +81,7 @@ final class AssessYourselfUITests: XCTestCase {
         switchToAssessmentTabIfNeeded()
 
         // Capture Screenshot 1: Welcome Screen
-        let welcomeScreenshot = XCUIScreen.main.screenshot().pngRepresentation
-        try? welcomeScreenshot.write(to: URL(fileURLWithPath: "/tmp/screenshot_01_welcome.png"))
+        captureEvidenceScreenshot(named: "screenshot_01_welcome")
 
         // Welcome screen handling
         let startButton = app.buttons["flow.startButton"]
@@ -96,8 +95,7 @@ final class AssessYourselfUITests: XCTestCase {
         XCTAssertEqual(counterPill.label, "Frage 1 / 24")
 
         // Capture Screenshot 2: Question 1 Screen
-        let questionScreenshot = XCUIScreen.main.screenshot().pngRepresentation
-        try? questionScreenshot.write(to: URL(fileURLWithPath: "/tmp/screenshot_02_question.png"))
+        captureEvidenceScreenshot(named: "screenshot_02_question")
 
         let dimensionBadge = app.staticTexts["flow.dimensionBadge"]
         XCTAssertTrue(dimensionBadge.waitForExistence(timeout: 5))
@@ -266,8 +264,7 @@ final class AssessYourselfUITests: XCTestCase {
         XCTAssertTrue(completionHeadline.waitForExistence(timeout: 10), "Completion headline must appear")
 
         // Capture Screenshot 3: Result Screen
-        let resultScreenshot = XCUIScreen.main.screenshot().pngRepresentation
-        try? resultScreenshot.write(to: URL(fileURLWithPath: "/tmp/screenshot_03_result.png"))
+        captureEvidenceScreenshot(named: "screenshot_03_result")
 
         let archetypeLabel = app.staticTexts["Diagnostizierter Archetyp"]
         XCTAssertTrue(archetypeLabel.waitForExistence(timeout: 5), "Archetype diagnosis label must be visible")
@@ -297,8 +294,7 @@ final class AssessYourselfUITests: XCTestCase {
         app.swipeUp()
 
         // Capture Screenshot: Dimension score bars visible after scroll
-        let resultBarsScreenshot = XCUIScreen.main.screenshot().pngRepresentation
-        try? resultBarsScreenshot.write(to: URL(fileURLWithPath: "/tmp/screenshot_04_dimension_bars.png"))
+        captureEvidenceScreenshot(named: "screenshot_04_dimension_bars")
 
         let recommendations = app.descendants(matching: .any).matching(identifier: "pedagogicalRecommendations").firstMatch
         XCTAssertTrue(recommendations.waitForExistence(timeout: 5), "Pedagogical recommendations section must exist")
@@ -827,5 +823,15 @@ final class AssessYourselfUITests: XCTestCase {
         XCTAssertTrue(errorBanner.waitForExistence(timeout: 5), "The import error banner must appear inside the open sheet.")
         XCTAssertTrue(errorBanner.isHittable)
         XCTAssertEqual(editor.value as? String, "{invalid json", "Editor must retain exact malformed payload for user correction.")
+    }
+
+    /// Captures a screen image as a persistent XCTest attachment (for physical devices and simulators) and mirrors it to /tmp.
+    private func captureEvidenceScreenshot(named name: String) {
+        let screenshot = XCUIScreen.main.screenshot()
+        let attachment = XCTAttachment(screenshot: screenshot)
+        attachment.name = name
+        attachment.lifetime = .keepAlways
+        add(attachment)
+        try? screenshot.pngRepresentation.write(to: URL(fileURLWithPath: "/tmp/\(name).png"))
     }
 }
