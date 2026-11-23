@@ -101,7 +101,7 @@ public struct AssessmentResultView: View {
                     .multilineTextAlignment(.center)
                     .accessibilityIdentifier("flow.completionTitle")
 
-                Text("Dein diagnostisches Entwicklerprofil wurde erfolgreich synthetisiert.")
+                Text("Dein Entwicklerprofil wurde anhand deiner Antworten erstellt.")
                     .font(.subheadline)
                     .foregroundColor(theme.colors.textSecondary.color)
                     .multilineTextAlignment(.center)

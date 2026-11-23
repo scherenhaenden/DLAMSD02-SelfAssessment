@@ -33,11 +33,11 @@ public struct ArchetypeCardView: View {
                 }
 
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("Diagnostizierter Archetyp")
+                    Text("Ermittelter Archetyp")
                         .font(.caption)
                         .fontWeight(.semibold)
                         .foregroundColor(theme.colors.textSecondary.color)
-                        .accessibilityLabel("Diagnostizierter Archetyp")
+                        .accessibilityLabel("Ermittelter Archetyp")
 
                     Text(archetype.title)
                         .font(.headline)
@@ -63,7 +63,7 @@ public struct ArchetypeCardView: View {
                 }
             }
             .accessibilityElement(children: .combine)
-            .accessibilityLabel("Diagnostizierter Archetyp: \(archetype.title), \(archetype.subtitle). Gesamtpunktzahl: \(String(format: "%.1f", overallScore)) Prozent.")
+            .accessibilityLabel("Ermittelter Archetyp: \(archetype.title), \(archetype.subtitle). Gesamtpunktzahl: \(String(format: "%.1f", overallScore)) Prozent.")
 
             // Description
             Text(archetype.description)

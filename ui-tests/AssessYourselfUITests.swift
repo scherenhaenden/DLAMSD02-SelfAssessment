@@ -266,7 +266,7 @@ final class AssessYourselfUITests: XCTestCase {
         // Capture Screenshot 3: Result Screen
         captureEvidenceScreenshot(named: "screenshot_03_result")
 
-        let archetypeLabel = app.staticTexts["Diagnostizierter Archetyp"]
+        let archetypeLabel = app.staticTexts["Ermittelter Archetyp"]
         XCTAssertTrue(archetypeLabel.waitForExistence(timeout: 5), "Archetype diagnosis label must be visible")
 
         // Permanent integrated verification of the 4 dimension competency score bars
