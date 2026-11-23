@@ -4,8 +4,8 @@ Native SwiftUI self-assessment application developed for **DLAMSD02 Apple Mobile
 
 ## Current Development Stage
 
-Version **1.0.0** (Build `20261117.170500`), Sprint 10 Final Release:
-- **Binary Version Synchronization:** Fully aligned Xcode build settings (`MARKETING_VERSION = 1.0.0`, `CURRENT_PROJECT_VERSION = 20261117.170500`) across debug and release targets.
+Version **1.0.1** (Build `20261123.091200`), Sprint 10 Maintenance & Wording Release:
+- **Binary Version Synchronization:** Fully aligned Xcode build settings (`MARKETING_VERSION = 1.0.1`, `CURRENT_PROJECT_VERSION = 20261123.091200`) across debug and release targets.
 - **Freitext Input Hardening (Paced Typing):** Solved SwiftUI `TextEditor` keystroke dropping in UI tests via paced typing (40 ms inter-character delay), ensuring deterministic entry of reflection text and eliminating spurious key doubling.
 - **Mathematical Score Synchronization:** Synchronized full assessment evaluation score to 75.8% (reflecting verified domain keyword matches in reflection answers).
 - **Multi-Device Test Verification & Coverage:** **141/141 unit/component tests** in SwiftPM (**95.11% line coverage**, 8,576 / 9,017 lines; **82.77% function coverage**), **154/154 native tests** (141 unit + 13 UI) on iPhone 17 Simulator (`iOS 27.0`), physical iPad 9 verification (`133/133` unit + `12/13` UI on `iPadOS 27.0.1` prior to the relative `--uitesting-catalog-dir` sandbox fix in `5bcc173`), and strict static analysis via SwiftLint with **0 violations across 45 files**.
@@ -129,5 +129,6 @@ docs/                      Sprint documentation and technical verification repor
 | **0.9.0** | In-app authoring (`CatalogManagerView`), sandbox storage, `.bak` backup with automatic rollback, JSON import/export | ✅ Completed |
 | **0.9.3** | Release Candidate: paced Freitext typing, 75.8% score sync, 95.11% `llvm-cov`, 154/154 iPhone 17 Sim | ✅ Completed |
 | **1.0.0** | Final code freeze, 95.11% `llvm-cov` (141 SwiftPM / 154 iPhone 17 Sim), physical iPad 9 automated run, SwiftLint 0 violations | ✅ Completed |
+| **1.0.1** | Result screen wording refinement (*Ermittelter Archetyp*), synchronized UI tests & verified screenshots | ✅ Completed |
 
 Author: Edward Sergio José Flores Mogollón · B.Sc. Softwareentwicklung · IU.
